@@ -1,0 +1,28 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Local data & secrets — never commit these
+*.pkl
+E0_recon.csv
+E0_market.csv
+E0_blend.csv
+odds.json
+.fpl_odds_cache/
+.env
+*_KEY*
+solio_cache.md
+
+# The private FPL-Core-Insights data repo, if checked out alongside this one
+FPL-Core-Insights-main/
+data/

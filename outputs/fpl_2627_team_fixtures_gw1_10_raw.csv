@@ -1,0 +1,201 @@
+gw,team,opp,venue,xGA,cs_prob
+10,Arsenal,Hull,H,0.495,0.6204
+1,Arsenal,Coventry,H,0.61,0.557
+8,Arsenal,Everton,H,0.7025,0.5053
+7,Man City,Ipswich,H,0.7255,0.501
+6,Arsenal,Leeds,H,0.7291,0.492
+3,Man City,Coventry,H,0.7509,0.4895
+7,Fulham,Hull,H,0.7915,0.4715
+5,Man City,Sunderland,H,0.7811,0.4686
+4,Chelsea,Hull,H,0.8116,0.4632
+4,Arsenal,Sunderland,A,0.8038,0.4593
+5,Newcastle,Hull,H,0.8363,0.4528
+3,Arsenal,Chelsea,H,0.8429,0.4419
+2,Man United,Ipswich,H,0.9199,0.42
+7,Arsenal,Nott'm Forest,A,0.9007,0.4194
+5,Everton,Ipswich,H,0.937,0.4135
+4,Crystal Palace,Ipswich,H,0.9408,0.4122
+9,Man City,Brighton,H,0.9356,0.4051
+10,Everton,Coventry,H,0.9703,0.4014
+1,Man United,Hull,A,0.9763,0.4003
+3,Aston Villa,Hull,A,0.9826,0.3979
+5,Nott'm Forest,Coventry,H,0.9847,0.3962
+5,Arsenal,Brighton,A,0.9616,0.3958
+7,Brighton,Crystal Palace,H,0.9631,0.3944
+6,Everton,Hull,A,0.9932,0.3936
+2,Coventry,Hull,H,1.0503,0.3859
+8,Brentford,Hull,A,1.0225,0.3836
+2,Man City,Crystal Palace,A,1.0092,0.3784
+2,Arsenal,Aston Villa,A,1.0145,0.3766
+1,Man City,Bournemouth,H,1.0295,0.3706
+1,Everton,Crystal Palace,H,1.0303,0.3702
+7,Tottenham,Coventry,H,1.0634,0.37
+3,Brentford,Sunderland,H,1.0395,0.3674
+3,Fulham,Crystal Palace,H,1.0389,0.3673
+7,Bournemouth,Sunderland,H,1.0685,0.3572
+2,Sunderland,Fulham,H,1.0786,0.3535
+3,Brighton,Leeds,H,1.0845,0.3522
+6,Man United,Tottenham,H,1.1025,0.3461
+9,Aston Villa,Fulham,H,1.1021,0.3456
+10,Man City,Nott'm Forest,A,1.1067,0.3454
+9,Arsenal,Liverpool,A,1.1093,0.3446
+1,Sunderland,Ipswich,A,1.1452,0.344
+4,Brighton,Coventry,A,1.1478,0.3438
+4,Aston Villa,Nott'm Forest,H,1.1156,0.3414
+5,Leeds,Crystal Palace,H,1.1217,0.3403
+8,Sunderland,Leeds,H,1.12,0.3402
+9,Tottenham,Crystal Palace,H,1.1293,0.3379
+6,Crystal Palace,Nott'm Forest,H,1.1343,0.336
+3,Nott'm Forest,Tottenham,H,1.1405,0.3342
+4,Liverpool,Fulham,H,1.1375,0.3341
+9,Sunderland,Coventry,A,1.1859,0.3323
+2,Liverpool,Nott'm Forest,H,1.1523,0.33
+6,Fulham,Ipswich,A,1.195,0.3295
+1,Brentford,Tottenham,H,1.1563,0.3292
+8,Chelsea,Tottenham,H,1.16,0.3281
+8,Nott'm Forest,Ipswich,A,1.2045,0.3272
+9,Brentford,Nott'm Forest,H,1.1629,0.3268
+6,Sunderland,Brighton,H,1.1677,0.3259
+3,Liverpool,Ipswich,A,1.2096,0.3255
+1,Nott'm Forest,Leeds,H,1.1777,0.3228
+2,Bournemouth,Everton,H,1.1809,0.3217
+9,Newcastle,Everton,H,1.1872,0.3198
+6,Brighton,Sunderland,A,1.1943,0.3188
+1,Brighton,Aston Villa,H,1.1919,0.3187
+10,Brighton,Brentford,H,1.1914,0.3186
+8,Fulham,Coventry,A,1.2371,0.3177
+10,Bournemouth,Ipswich,A,1.2561,0.3126
+4,Tottenham,Everton,H,1.222,0.31
+10,Leeds,Tottenham,H,1.2223,0.3099
+9,Bournemouth,Leeds,H,1.2276,0.3078
+8,Liverpool,Brighton,H,1.2329,0.3067
+8,Crystal Palace,Newcastle,H,1.2413,0.3041
+8,Man City,Aston Villa,A,1.2485,0.303
+2,Chelsea,Brighton,H,1.248,0.3025
+10,Fulham,Newcastle,H,1.2471,0.3023
+10,Man United,Aston Villa,H,1.2511,0.3014
+6,Newcastle,Coventry,A,1.3079,0.2992
+6,Aston Villa,Brentford,H,1.2591,0.2991
+9,Ipswich,Hull,A,1.3801,0.2944
+2,Fulham,Sunderland,A,1.2865,0.2921
+9,Coventry,Sunderland,H,1.3478,0.2897
+10,Sunderland,Chelsea,H,1.2952,0.2893
+8,Man United,Bournemouth,H,1.3055,0.2864
+10,Chelsea,Sunderland,A,1.3195,0.284
+6,Nott'm Forest,Crystal Palace,A,1.324,0.2826
+10,Liverpool,Crystal Palace,A,1.3293,0.2807
+7,Everton,Chelsea,H,1.3407,0.2775
+1,Ipswich,Sunderland,H,1.4034,0.2767
+4,Leeds,Newcastle,H,1.3465,0.2762
+4,Bournemouth,Brentford,H,1.3497,0.2749
+1,Fulham,Chelsea,H,1.3504,0.2746
+2,Tottenham,Newcastle,H,1.3551,0.2738
+7,Newcastle,Aston Villa,H,1.3561,0.273
+6,Man City,Liverpool,A,1.3657,0.272
+6,Chelsea,Bournemouth,H,1.3747,0.2689
+5,Brentford,Chelsea,H,1.3788,0.2674
+3,Man United,Everton,A,1.3845,0.2671
+5,Man United,Fulham,A,1.385,0.2662
+8,Newcastle,Crystal Palace,A,1.3892,0.2662
+8,Leeds,Sunderland,A,1.3877,0.2661
+2,Leeds,Brentford,H,1.3848,0.2658
+5,Tottenham,Aston Villa,H,1.3962,0.2637
+10,Crystal Palace,Liverpool,H,1.3982,0.2628
+5,Aston Villa,Tottenham,A,1.4022,0.2622
+1,Crystal Palace,Everton,A,1.4146,0.2596
+3,Crystal Palace,Fulham,A,1.4168,0.2589
+3,Newcastle,Bournemouth,H,1.4174,0.2585
+9,Hull,Ipswich,H,1.5464,0.2583
+4,Everton,Tottenham,A,1.4205,0.2582
+9,Crystal Palace,Tottenham,A,1.4256,0.2572
+5,Brighton,Arsenal,H,1.4246,0.2571
+8,Coventry,Fulham,H,1.4925,0.2563
+7,Brentford,Liverpool,H,1.4349,0.2542
+7,Man United,Leeds,A,1.4392,0.2537
+7,Chelsea,Everton,A,1.4567,0.2499
+1,Chelsea,Fulham,A,1.4584,0.2491
+4,Man City,Man United,A,1.4684,0.2475
+5,Crystal Palace,Leeds,A,1.4722,0.2464
+4,Sunderland,Arsenal,H,1.4721,0.2458
+5,Bournemouth,Liverpool,H,1.4761,0.2446
+6,Ipswich,Fulham,H,1.5516,0.2435
+1,Newcastle,Liverpool,H,1.4829,0.2427
+8,Ipswich,Nott'm Forest,H,1.5742,0.2401
+3,Everton,Man United,H,1.4993,0.2396
+10,Newcastle,Fulham,A,1.5038,0.239
+2,Aston Villa,Arsenal,H,1.5056,0.2385
+1,Aston Villa,Brighton,A,1.5115,0.2383
+2,Brentford,Leeds,A,1.5096,0.2379
+2,Newcastle,Tottenham,A,1.5126,0.2373
+5,Fulham,Man United,H,1.511,0.2368
+7,Crystal Palace,Brighton,A,1.5333,0.2331
+4,Coventry,Brighton,H,1.6138,0.2315
+7,Aston Villa,Newcastle,A,1.5458,0.2301
+7,Nott'm Forest,Arsenal,H,1.5475,0.2297
+9,Chelsea,Man United,H,1.5484,0.2291
+1,Leeds,Nott'm Forest,A,1.5552,0.2284
+9,Liverpool,Arsenal,H,1.5533,0.2279
+3,Sunderland,Brentford,A,1.5573,0.2276
+4,Newcastle,Leeds,A,1.5617,0.2268
+3,Tottenham,Nott'm Forest,A,1.5665,0.2262
+9,Everton,Newcastle,A,1.5647,0.2262
+10,Brentford,Brighton,A,1.5737,0.2248
+6,Coventry,Newcastle,H,1.6519,0.2237
+2,Brighton,Chelsea,A,1.5851,0.2224
+1,Liverpool,Newcastle,A,1.5964,0.2198
+10,Tottenham,Leeds,A,1.6072,0.2181
+4,Man United,Man City,H,1.6206,0.2145
+9,Fulham,Aston Villa,A,1.6237,0.2139
+7,Sunderland,Bournemouth,A,1.6261,0.2139
+7,Leeds,Man United,H,1.6292,0.2124
+8,Aston Villa,Man City,H,1.6303,0.2123
+9,Nott'm Forest,Brentford,A,1.6372,0.212
+4,Nott'm Forest,Aston Villa,A,1.6368,0.212
+7,Liverpool,Brentford,A,1.6433,0.2102
+8,Brighton,Liverpool,A,1.6499,0.21
+3,Bournemouth,Newcastle,A,1.6583,0.2081
+6,Brentford,Aston Villa,A,1.6595,0.2076
+2,Crystal Palace,Man City,H,1.6562,0.2075
+3,Leeds,Brighton,A,1.6616,0.2073
+9,Man United,Chelsea,A,1.6647,0.2069
+5,Chelsea,Brentford,A,1.6639,0.2064
+10,Nott'm Forest,Man City,H,1.6767,0.2039
+2,Everton,Bournemouth,A,1.6841,0.2033
+6,Liverpool,Man City,H,1.6837,0.2023
+4,Ipswich,Crystal Palace,A,1.816,0.1975
+5,Liverpool,Bournemouth,A,1.7172,0.197
+4,Brentford,Bournemouth,A,1.7332,0.1944
+6,Hull,Everton,H,1.8391,0.1926
+10,Ipswich,Bournemouth,H,1.8511,0.1905
+1,Tottenham,Brentford,A,1.7661,0.1887
+4,Fulham,Liverpool,A,1.7778,0.1864
+10,Coventry,Everton,A,1.8865,0.1858
+2,Nott'm Forest,Liverpool,A,1.7901,0.1843
+6,Bournemouth,Chelsea,A,1.7965,0.1837
+7,Coventry,Tottenham,A,1.8977,0.1835
+5,Coventry,Nott'm Forest,A,1.9081,0.1815
+2,Hull,Coventry,A,2.0215,0.1796
+9,Leeds,Bournemouth,A,1.8308,0.1779
+3,Ipswich,Liverpool,H,1.9377,0.177
+5,Ipswich,Everton,A,1.9616,0.1746
+8,Tottenham,Chelsea,A,1.8575,0.1739
+10,Aston Villa,Man United,A,1.8751,0.1711
+8,Everton,Arsenal,A,1.9287,0.1632
+9,Brighton,Man City,A,1.9536,0.1597
+3,Hull,Aston Villa,H,2.1026,0.1555
+8,Hull,Brentford,H,2.101,0.1554
+3,Chelsea,Arsenal,A,1.9912,0.1542
+8,Bournemouth,Man United,A,2.0087,0.1515
+5,Sunderland,Man City,A,2.0191,0.1504
+6,Tottenham,Man United,A,2.0789,0.1428
+6,Leeds,Arsenal,A,2.0961,0.1403
+7,Hull,Fulham,A,2.3265,0.1299
+1,Bournemouth,Man City,A,2.2132,0.1265
+1,Hull,Man United,H,2.4763,0.1162
+1,Coventry,Arsenal,A,2.5762,0.1074
+5,Hull,Newcastle,A,2.5828,0.1072
+2,Ipswich,Man United,A,2.6376,0.1024
+4,Hull,Chelsea,A,2.7972,0.091
+3,Coventry,Man City,A,2.7898,0.0907
+7,Ipswich,Man City,A,2.9052,0.0837
+10,Hull,Arsenal,A,3.1795,0.0684
