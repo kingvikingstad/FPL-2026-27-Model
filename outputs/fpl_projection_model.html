@@ -82,6 +82,7 @@
 <div class="tabs">
   <button class="tab-btn active" data-tab="players">Player Projections</button>
   <button class="tab-btn" data-tab="fixtures">Team Fixture Outlook (GW1–10)</button>
+  <button class="tab-btn" data-tab="compare">Gameweek Compare</button>
   <button class="tab-btn" data-tab="notes">Methodology &amp; Data Notes</button>
 </div>
 
@@ -219,6 +220,71 @@
   </div>
 </div>
 
+<!-- COMPARE TAB -->
+<div class="panel" id="panel-compare">
+  <div class="card">
+    <div class="controls">
+      <div class="ctrl">
+        <label>Position</label>
+        <div class="pos-toggle" id="cmpPosToggle">
+          <button class="on" data-pos="GK">GK</button>
+          <button class="on" data-pos="DEF">DEF</button>
+          <button class="on" data-pos="MID">MID</button>
+          <button class="on" data-pos="FWD">FWD</button>
+        </div>
+      </div>
+      <div class="ctrl">
+        <label>Team</label>
+        <select id="cmpTeamFilter"><option value="ALL">All teams</option></select>
+      </div>
+      <div class="ctrl">
+        <label>Search</label>
+        <input type="text" id="cmpSearchBox" placeholder="Player name…">
+      </div>
+      <div class="ctrl">
+        <label>Max price (£m)</label>
+        <input type="number" id="cmpMaxPrice" value="15.5" min="4" max="15.5" step="0.5" style="min-width:70px">
+      </div>
+      <div class="ctrl">
+        <label>Min ownership %</label>
+        <input type="number" id="cmpMinOwn" value="0" min="0" max="100" step="0.5" style="min-width:70px">
+      </div>
+      <div class="ctrl">
+        <label>&nbsp;</label>
+        <label style="display:flex;align-items:center;gap:5px;font-weight:500;text-transform:none;font-size:12px;">
+          <input type="checkbox" id="cmpHideFringe" checked> Hide unpriced fringe/youth (0% own, no id)
+        </label>
+      </div>
+      <div class="ctrl" style="margin-left:auto;">
+        <label>&nbsp;</label>
+        <button class="btn btn-primary" id="cmpExportBtn">Export CSV (wide)</button>
+      </div>
+    </div>
+  </div>
+  <div class="count-line" id="cmpCountLine"></div>
+  <div class="table-wrap">
+    <table id="compareTable">
+      <thead>
+        <tr>
+          <th data-key="player">Player</th>
+          <th data-key="pos">Pos</th>
+          <th data-key="team">Team</th>
+          <th data-key="cost" class="num">Price</th>
+          <th data-key="gw1" class="num">GW1</th>
+          <th data-key="gw2" class="num">GW2</th>
+          <th data-key="gw3" class="num">GW3</th>
+          <th data-key="gw4" class="num">GW4</th>
+          <th data-key="gw5" class="num">GW5</th>
+          <th data-key="gw6" class="num">GW6</th>
+          <th data-key="total" class="num">Total</th>
+        </tr>
+      </thead>
+      <tbody id="compareBody"></tbody>
+    </table>
+  </div>
+  <div class="footer-note">Cells are colour-coded by that gameweek's clean-sheet probability (fixture ease), same scale as the Fixture Outlook tab. Click any GW header (or Total) to sort by that week — use this to find complementary rotation pairs, e.g. a defender strong in GW1/3/5 paired with one strong in GW2/4/6.</div>
+</div>
+
 <!-- NOTES TAB -->
 <div class="panel" id="panel-notes">
   <div class="card meth">
@@ -226,13 +292,14 @@
     <p>Interactive view over the FPL-Core-Insights 2026/27 hierarchical Bayesian projection system — a component model (minutes → events → FPL scoring rules composition, never points regression) built and validated across the project's chat history. The embedded board is the <strong>depth-prior + minutes-shrinkage variant</strong>, the project's current best board as of the last synced session (Aug 4, 2026): two-season priors (<code>older_weight=0.5</code>), ownership-aware cold-start depth prior, evidence-weighted minutes shrinkage, team strength from reconstructed 25/26 Opta xG + ClubElo blending (live betting-odds feed swap not yet wired in — see Open Items).</p>
 
     <h2>Gameweek split — read this before trusting single-GW numbers</h2>
-    <p><span class="badge badge-approx">Derived, not modeled</span> The synced project data contains each player's <strong>GW1–6 aggregate</strong> (mean, SD, full percentile posterior) but not a saved per-gameweek breakdown — that lives in <code>run_2627.py</code>'s raw output, which wasn't part of what synced to this session. The per-GW numbers shown here are a <strong>fixture-weighted proportional split</strong> of the validated 6-GW total, computed as follows:</p>
+    <p><span class="badge badge-approx">Update, Aug 5 2026</span> The core engine that was missing when this caveat was first written is <strong>now code-complete in this repo</strong> — <code>bayes_model.py</code>, <code>core_insights.py</code>, <code>roster.py</code>, <code>signals.py</code>, <code>schedule_2627.py</code>, <code>build_pms.py</code>, <code>multiseason_priors.py</code>, <code>betting_features.py</code>, <code>apifootball.py</code>, <code>captaincy.py</code>, the <code>run_2627.py</code> CLI driver, and every transitive dependency all live under <code>src/</code> (see <code>MISSING_MODULES_CHECKLIST.md</code> for the full resolution log). Direct code inspection confirms <code>bayes_model.project(players, tm, tsamp, gw_lo, gw_hi, S=...)</code> filters internally to <code>gameweek >= gw_lo &amp; <= gw_hi</code> — so calling it once per <strong>single</strong> gameweek (<code>gw_lo == gw_hi</code>) produces a genuine per-GW posterior, not an aggregate split across weeks. This is the exact capability this caveat has been asking for since the project began.</p>
+    <p><span class="badge badge-approx">Still true right now</span> Nothing in this repo has actually been <em>executed</em> yet — sandbox code execution was unavailable for the entire integration session, so the files are unverified in this environment. The per-GW numbers currently shown in this table are still the <strong>fixture-weighted proportional split</strong> of the validated 6-GW total described below, pending someone running <code>python src/run_2627.py --gw-from 1 --gw-to 1</code> (repeated per GW) locally against a clone of the public <code>olbauday/FPL-Core-Insights</code> data repo and swapping the real output in here. The proportional-split methodology:</p>
     <ul>
       <li>For each of a player's team's 6 fixtures, compute a defensive-ease signal (that GW's clean-sheet probability) and an attacking-ease signal (the opponent's expected goals conceded to this team that GW, i.e. the opponent's own xGA row).</li>
       <li>Blend by position: GK/DEF = 75% defensive-ease + 25% attacking-ease; MID = 15% defensive-ease + 85% attacking-ease (MID scores the 1pt clean-sheet bonus too); FWD = 100% attacking-ease.</li>
       <li>Normalize the blended weight across the player's 6 fixtures to average 1.0, then allocate <code>mean_total/6 × share</code> to each GW (shares sum to 6, so the 6 GW means always re-sum to the exact validated total). SD is allocated as <code>sd_total × sqrt(share/6)</code>, consistent with the project's Gamma-Poisson/Beta-Binomial variance structure.</li>
     </ul>
-    <p>This is a reasonable allocation, not the model's true per-GW posterior — it doesn't capture e.g. rotation risk concentrated in cup weeks (tested null in this project, so low risk) or GW-specific lineup news. Treat single-GW columns as fixture-adjusted planning numbers; treat the GW1–6 total (and its full percentile spread, available by switching the GW selector back to "total") as the validated figure. Swap in the real per-GW file the moment <code>run_2627.py</code>'s output is available and this caveat goes away.</p>
+    <p>This is a reasonable allocation, not the model's true per-GW posterior — it doesn't capture e.g. rotation risk concentrated in cup weeks (tested null in this project once player fixed effects control for the squad-quality confound — see <code>src/rotation.py</code>) or GW-specific lineup news. Treat single-GW columns as fixture-adjusted planning numbers; treat the GW1–6 total (and its full percentile spread, available by switching the GW selector back to "total") as the validated figure. Swap in the real per-GW output from <code>run_2627.py</code> once it's been run locally and this caveat goes away entirely.</p>
 
     <h2>Adaptability — encoding your own judgment</h2>
     <p>Two dials are built in, both persisted locally in your browser (no server, nothing lost on refresh):</p>
@@ -240,6 +307,7 @@
       <li><strong>Adj Δ column</strong> — a manual per-player point adjustment. Use it for anything not yet in the model: a confirmed XI change, a fee-floor judgment call, a regime-discount tweak, a differential punt theory you want to test against the board. It flows straight into "Adj Total" and can be sorted/exported like any other column.</li>
       <li><strong>Risk tilt slider</strong> — computes <code>Score = mean + tilt×SD</code>. Tilt toward +1 to surface high-ceiling/boom-bust picks (captaincy-tail framing, consistent with the project's validated "captaincy is a tail problem" finding); toward −1 to surface the safest floor picks. Sort by the Score column to use it.</li>
     </ul>
+    <p>The <strong>Gameweek Compare</strong> tab lays every filtered player's GW1–6 scores side by side in one sortable table (click any GW header, or Total, to re-sort). Each cell is colour-coded by that week's fixture ease and shows the opponent on hover — built for exactly this kind of rotation question: find one player who's strong in the odd-numbered weeks and one strong in the even-numbered weeks, and you've got a complementary pair.</p>
 
     <h2>Known model caveats (carried forward from the project)</h2>
     <ul>
@@ -250,6 +318,8 @@
       <li>Isak is the single most parameter-sensitive player in the board (EV range 16.9–28.5 across the <code>older_weight</code> sweep) — treat with wider-than-usual uncertainty until 2023-24 walk-forward data resolves it.</li>
       <li>Team strength currently last-season Opta xG + ClubElo, not live 26/27 betting odds — the feed-swap machinery (<code>betting_odds_ingest.py</code>) exists but isn't fed live data yet. This is flagged in the project as the single biggest remaining accuracy gain.</li>
       <li>26/27 BPS rule changes are baked in (DEF −10.4%, MID +4.5%, FWD +4.1%, GK +1.9%), with a known refinement open: the DEF hit is bimodal (full-backs gain, centre-backs lose) and not yet split out.</li>
+      <li>An Aug 5 session-update package added reconstruction scripts (<code>reconstruct_e0.py</code>, <code>reconstruct_coldstart.py</code>) that rebuild the team-strength and cold-start inputs directly from repo-native Opta xG when the original odds-based files aren't available. Spot-checked by hand (no code execution available in this environment): the fair-odds Poisson inversion's implied 1X2 probabilities sum to 1.000 and the O/U2.5 pair is exactly complementary on every row sampled from <code>data/E0_recon.csv</code>; the cold-start aggregation in <code>data/coldstart_hist.csv</code> correctly identifies known player profiles by their stat signature alone (e.g. the £14.7m forward with 2958 minutes and 25.46 non-penalty goal involvements is unmistakably Haaland).</li>
+      <li>A second Aug 5 delivery (<code>fpl-core-engine</code>) supplied the entire previously-missing core engine — <code>bayes_model.py</code>, <code>core_insights.py</code>, and everything else listed in the Gameweek-split note above — plus two new prior sources worth knowing about: <code>fm_priors.py</code> (Football Manager attributes as a ridge-calibrated Bayesian prior for players with zero PL history — i.e. the three promoted clubs) and <code>history.py</code> (30-season football-data.co.uk calibration of the model's reversion, promoted-team, and home-advantage hyperparameters, replacing hand-picked guesses). Still unverified: whether any of this — reconstructed inputs, core engine, or new priors — actually matches execution-tested numbers, since no code has been run in this environment all session. Run it locally before trusting it over the current board.</li>
     </ul>
 
     <h2>Data sources &amp; refresh</h2>
@@ -263,7 +333,8 @@
 
     <h2>Open items (ranked, from the project handoff)</h2>
     <ol>
-      <li>Live 26/27 betting-odds team ratings (feed swap, biggest remaining gain)</li>
+      <li>Run the now-complete core engine locally (<code>python src/run_2627.py</code>) and swap real per-GW output into this board — the single highest-value remaining step</li>
+      <li>Live 26/27 betting-odds team ratings (feed swap, biggest remaining <em>modeling</em> gain)</li>
       <li>Live lineups/injuries feed (layer built, needs a feed)</li>
       <li>2023-24 walk-forward data to resolve the Isak/<code>older_weight</code> parameter dependence</li>
       <li>Live FPL API refresh once GW1 plays</li>
@@ -1365,6 +1436,121 @@ document.getElementById('fxExportBtn').addEventListener('click', ()=>{
   downloadCSV('fpl_2627_team_fixtures_gw'+gwMin+'-'+gwMax+'.csv', rows, ['gw','team','opp','venue','xGA','cs_prob']);
 });
 
+// ---- Gameweek Compare tab ----
+const cmpState = {
+  pos: new Set(['GK','DEF','MID','FWD']),
+  team: 'ALL',
+  search: '',
+  maxPrice: 15.5,
+  minOwn: 0,
+  hideFringe: true,
+  sortKey: 'total',
+  sortDir: 'desc'
+};
+
+function cmpFilteredPlayers(){
+  return players.filter(p=>{
+    if(!cmpState.pos.has(p.pos)) return false;
+    if(cmpState.team!=='ALL' && p.team!==cmpState.team) return false;
+    if(cmpState.search && !p.player.toLowerCase().includes(cmpState.search.toLowerCase())) return false;
+    if(p.cost>cmpState.maxPrice) return false;
+    if(p.own<cmpState.minOwn) return false;
+    if(cmpState.hideFringe && p.id===-1 && p.own<0.5) return false;
+    return true;
+  });
+}
+
+function cmpBuildRows(){
+  const list = cmpFilteredPlayers().map(p=>{
+    const row = { p, total: p.mean };
+    for(let g=1; g<=6; g++){
+      const gg = p.gw ? p.gw[g] : null;
+      row['gw'+g] = gg ? gg.mean : null;
+      row['gw'+g+'_fx'] = gg ? (gg.opp+' ('+gg.venue+')') : null;
+      row['gw'+g+'_cs'] = gg ? gg.cs_prob : null;
+    }
+    return row;
+  });
+  const key = cmpState.sortKey;
+  list.sort((a,b)=>{
+    let av, bv;
+    if(key==='player'){ av=a.p.player.toLowerCase(); bv=b.p.player.toLowerCase(); }
+    else if(key==='pos'){ av=a.p.pos; bv=b.p.pos; }
+    else if(key==='team'){ av=a.p.team; bv=b.p.team; }
+    else if(key==='cost'){ av=a.p.cost; bv=b.p.cost; }
+    else if(key==='total'){ av=a.total; bv=b.total; }
+    else { av = (a[key]===null||a[key]===undefined) ? -1 : a[key]; bv = (b[key]===null||b[key]===undefined) ? -1 : b[key]; }
+    let cmp = av<bv?-1:av>bv?1:0;
+    return cmpState.sortDir==='asc'?cmp:-cmp;
+  });
+  return list;
+}
+
+function renderCompare(){
+  const rows = cmpBuildRows();
+  document.getElementById('cmpCountLine').textContent = rows.length+' players shown · sorted by '+cmpState.sortKey+' ('+cmpState.sortDir+')';
+  document.getElementById('compareBody').innerHTML = rows.map(r=>{
+    const p = r.p;
+    let cells = '';
+    for(let g=1; g<=6; g++){
+      const v = r['gw'+g];
+      const fx = r['gw'+g+'_fx'];
+      const cs = r['gw'+g+'_cs'];
+      if(v===null || v===undefined){ cells += '<td class="num">—</td>'; }
+      else {
+        const cls = fixtureBadgeClass(cs);
+        cells += '<td class="num"><span class="fixture-badge '+cls+'" title="'+fx+'">'+v.toFixed(1)+'</span></td>';
+      }
+    }
+    return '<tr>'
+      +'<td>'+p.player+(p.cold_start?' <span class="badge badge-cold">cold-start</span>':'')+'</td>'
+      +'<td><span class="badge badge-pos-'+p.pos+'">'+p.pos+'</span></td>'
+      +'<td>'+p.team+'</td>'
+      +'<td class="num">£'+p.cost.toFixed(1)+'m</td>'
+      +cells
+      +'<td class="num"><strong>'+r.total.toFixed(1)+'</strong></td>'
+      +'</tr>';
+  }).join('');
+}
+
+document.getElementById('cmpPosToggle').addEventListener('click', e=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  const pos = btn.dataset.pos;
+  if(cmpState.pos.has(pos)){ if(cmpState.pos.size>1){ cmpState.pos.delete(pos); btn.classList.remove('on'); } }
+  else { cmpState.pos.add(pos); btn.classList.add('on'); }
+  renderCompare();
+});
+allTeams.forEach(t=>{
+  const opt = document.createElement('option'); opt.value=t; opt.textContent=t;
+  document.getElementById('cmpTeamFilter').appendChild(opt);
+});
+document.getElementById('cmpTeamFilter').addEventListener('change', e=>{ cmpState.team=e.target.value; renderCompare(); });
+document.getElementById('cmpSearchBox').addEventListener('input', e=>{ cmpState.search=e.target.value; renderCompare(); });
+document.getElementById('cmpMaxPrice').addEventListener('input', e=>{ cmpState.maxPrice=+e.target.value||15.5; renderCompare(); });
+document.getElementById('cmpMinOwn').addEventListener('input', e=>{ cmpState.minOwn=+e.target.value||0; renderCompare(); });
+document.getElementById('cmpHideFringe').addEventListener('change', e=>{ cmpState.hideFringe=e.target.checked; renderCompare(); });
+document.getElementById('compareTable').querySelector('thead').addEventListener('click', e=>{
+  const th = e.target.closest('th'); if(!th) return;
+  const key = th.dataset.key;
+  if(cmpState.sortKey===key){ cmpState.sortDir = cmpState.sortDir==='asc'?'desc':'asc'; }
+  else { cmpState.sortKey=key; cmpState.sortDir='desc'; }
+  renderCompare();
+});
+document.getElementById('cmpExportBtn').addEventListener('click', ()=>{
+  const rows = cmpFilteredPlayers().map(p=>{
+    const row = { player:p.player, pos:p.pos, team:p.team, price:p.cost, own_pct:p.own, total_mean:p.mean.toFixed(2) };
+    for(let g=1; g<=6; g++){
+      const gg = p.gw ? p.gw[g] : null;
+      row['gw'+g+'_mean'] = gg?gg.mean.toFixed(2):'';
+      row['gw'+g+'_opp'] = gg?gg.opp+' ('+gg.venue+')':'';
+    }
+    return row;
+  }).sort((a,b)=> parseFloat(b.total_mean)-parseFloat(a.total_mean));
+  const headers = ['player','pos','team','price','own_pct','total_mean'];
+  for(let g=1; g<=6; g++){ headers.push('gw'+g+'_mean','gw'+g+'_opp'); }
+  downloadCSV('fpl_2627_gameweek_compare.csv', rows, headers);
+});
+
 // ---- Tabs ----
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -1382,6 +1568,7 @@ document.getElementById('lastUpdated').textContent = 'last updated ' + buildDate
 document.getElementById('notesCheckDate').textContent = buildDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
 render();
 renderFixtures();
+renderCompare();
 </script>
 </body>
 </html>

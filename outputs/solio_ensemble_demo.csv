@@ -1,0 +1,32 @@
+key,player,pos,team,cost,own,our_proj,solio_proj,prG,prA,defcon_pct,solio_own,ensemble,disagreement
+haaland,Haaland,FWD,Man City,15.5,70.3,7.438,7.24,0.87,0.22,,73.1,7.339,0.198
+bfernandes,B.Fernandes,MID,Man United,12.0,44.9,6.466,6.75,,0.54,,47.4,6.608,-0.284
+gabriel,Gabriel,DEF,Arsenal,8.0,23.3,5.402,5.98,,,,24.8,5.691,-0.578
+mbeumo,Mbeumo,MID,Man United,8.0,13.6,6.412,4.86,0.35,,,13.5,5.636,1.552
+semenyo,Semenyo,MID,Man City,8.5,20.0,5.076,5.1,0.34,,,20.2,5.088,-0.024
+cunha,Cunha,MID,Man United,8.0,14.5,4.825,4.85,,,,14.7,4.837,-0.025
+gibbswhite,Gibbs-White,MID,Nott'm Forest,8.0,13.5,4.256,5.13,,0.27,,13.2,4.693,-0.874
+palmer,Palmer,MID,Chelsea,9.5,13.1,4.36,5.02,0.34,,,13.4,4.69,-0.66
+thiago,Thiago,FWD,Brentford,8.0,20.2,4.686,4.59,0.46,,,18.2,4.638,0.096
+raya,Raya,GK,Arsenal,6.0,29.0,4.238,4.65,,,,29.7,4.444,-0.412
+tarkowski,Tarkowski,DEF,Everton,6.0,12.9,4.247,4.64,,,55.0,11.2,4.444,-0.393
+ndiaye,Ndiaye,MID,Everton,6.0,17.3,4.049,4.82,,,,19.2,4.434,-0.771
+schade,Schade,MID,Brentford,6.0,2.5,4.384,4.37,,,,2.3,4.377,0.014
+gyokeres,Gyökeres,FWD,Arsenal,7.5,16.6,4.201,4.46,0.49,,,15.2,4.331,-0.259
+calafiori,Calafiori,DEF,Arsenal,5.5,11.7,4.23,4.41,,,,11.5,4.32,-0.18
+anderson,Anderson,MID,Man City,6.5,12.6,3.888,4.62,,,56.0,12.4,4.254,-0.732
+cherki,Cherki,MID,Man City,7.5,11.1,3.909,4.51,,0.42,,10.4,4.21,-0.601
+joao pedro,João Pedro,FWD,Chelsea,7.5,45.9,3.525,4.76,0.38,0.21,,46.3,4.143,-1.235
+szoboszlai,Szoboszlai,MID,Liverpool,7.0,36.2,3.572,4.69,,0.26,,39.4,4.131,-1.118
+odango,O.Dango,MID,Brentford,6.5,2.0,4.061,4.14,,0.23,,1.7,4.101,-0.079
+mosquera,Mosquera,DEF,Arsenal,5.5,13.7,2.606,5.58,,,,15.3,4.093,-2.974
+bruno g,Bruno G.,MID,Newcastle,7.0,9.5,3.586,4.57,,0.23,,8.7,4.078,-0.984
+dalot,Dalot,DEF,Man United,5.0,3.7,3.985,4.13,,,,3.5,4.058,-0.145
+wirtz,Wirtz,MID,Liverpool,7.5,14.8,3.702,4.34,,,,12.7,4.021,-0.638
+maguire,Maguire,DEF,Man United,5.0,6.2,3.349,4.69,,,,6.3,4.019,-1.341
+nwilliams,N.Williams,DEF,Nott'm Forest,5.0,9.4,3.529,4.47,,,,11.4,4.0,-0.941
+watkins,Watkins,FWD,Aston Villa,8.0,15.3,3.524,4.44,0.39,,,13.6,3.982,-0.916
+garner,Garner,MID,Everton,6.0,3.9,3.521,4.2,,,45.0,4.1,3.86,-0.679
+dewsburyhall,Dewsbury-Hall,MID,Everton,6.5,5.3,3.158,4.32,,0.25,,4.7,3.739,-1.162
+murillo,Murillo,DEF,Nott'm Forest,5.5,0.1,2.523,4.17,,,48.0,0.2,3.346,-1.647
+</content>
