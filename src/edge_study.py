@@ -126,4 +126,3 @@ sig = pd.DataFrame({"feature": o3.names, "coef": o3.beta, "p": o3.pval}).iloc[1:
 sig = sig.reindex(sig.coef.abs().sort_values(ascending=False).index)
 print("\nLinear probability model for haul (HC1), by |coef|:")
 print(sig.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
-</content>

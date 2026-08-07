@@ -177,4 +177,3 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"[apifootball] {type(e).__name__}: {e}")
         print("Set APIFOOTBALL_KEY (free signup at api-sports.io) and re-run.")
-</content>

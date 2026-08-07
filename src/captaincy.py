@@ -190,4 +190,3 @@ def best_differential(players, tm, tsamp, gameweek, horizon=1, S=4000,
     d = m[(m.own <= max_own) & (m["mean"] >= min_mean)].copy()
     d["differential_score"] = d.p_haul * (1 - d.own / 100.0) * (d["mean"] / m["mean"].max())
     return d.sort_values("differential_score", ascending=False).head(top).reset_index(drop=True)
-</content>

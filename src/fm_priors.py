@@ -287,4 +287,3 @@ if __name__ == "__main__":
           "  fm = fmp.load_fm_export('fm26_export.html')\n"
           "  m  = fmp.calibrate(fm)                 # fit on FM x PL overlap\n"
           "  players = fmp.apply_fm_priors(players, fm, m)\n")
-</content>

@@ -35,4 +35,3 @@ for H in [3, 6]:
     print(f"\n>> VALUE (pts/£m, <=6.5m):")
     print(r[r.cost<=6.5].nlargest(6,"ppm")[["player","pos","team","cost","mean","ppm"]].round(2).to_string(index=False))
     print()
-</content>

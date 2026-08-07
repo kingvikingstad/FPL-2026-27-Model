@@ -52,4 +52,3 @@ for lab,col in [("lagged PIT ownership","own_lag"),("contemporaneous PIT ownersh
     sp=stats.spearmanr(t[col],t.total_points).correlation
     print(f"  {lab:32s} Spearman={sp:.4f}")
 print("\n  (earlier claim, using END-OF-SEASON ownership replicated: 0.5115)")
-</content>

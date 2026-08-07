@@ -231,4 +231,3 @@ def attach_fixture_inputs(player_df, ratings, league_avg_xg=1.45):
         return pd.Series({"opp_xg90": xg_for, "team_xga90": xg_against,
                           "fixmult": xg_for / league_avg_xg})
     return df.join(df.apply(row, axis=1))
-</content>

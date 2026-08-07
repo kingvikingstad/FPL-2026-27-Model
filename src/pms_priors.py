@@ -109,4 +109,3 @@ if __name__ == "__main__":
     pri = to_model_priors(r)
     pri.to_pickle("/tmp/pms_priors.pkl")
     print(f"\nwrote priors for {len(pri)} players -> /tmp/pms_priors.pkl")
-</content>

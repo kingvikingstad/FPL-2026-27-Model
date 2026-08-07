@@ -212,4 +212,3 @@ if __name__ == "__main__":
     rank.to_csv("/mnt/user-data/outputs/sample_projection_gw20_next6.csv", index=False)
     print("\n" + "="*66); print(f"Sample: top-25 projected NEXT-{H}-GW totals from GW{ORIGIN}"); print("="*66)
     print(rank.round(2).to_string())
-</content>

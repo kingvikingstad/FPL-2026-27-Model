@@ -118,4 +118,3 @@ if __name__ == "__main__":
     print(r.round(3).to_string(index=False))
     print(f"\nRelegated (pos 18-20): {RELEGATED_2526}")
     print(f"Promoted for 26/27:    {PROMOTED_2627} (no FPL data yet)")
-</content>

@@ -125,21 +125,43 @@ Live 26/27 betting-odds team ratings (the feed-swap machinery in `betting_odds_i
 
 ## Paths to set
 
+**Only needed for step 1 onward below — `run_2627.py` (step 0) needs none of this.** It pulls
+everything it needs live over the network (FPL bootstrap-static, football-data.co.uk results,
+optionally Understat/ClubElo) and falls back gracefully if a source is unreachable.
+
 `reconstruct_e0.py`, `reconstruct_coldstart.py`, `rotation.py`, and `pit_ownership.py` each
 hard-code `REPO`/`BASE = "/home/claude/repo/FPL-Core-Insights-main/data"` at the top; `core_
 insights.load()` takes a `base` argument with the same default shape (`.../data/2026-2027`).
 Point all of these at wherever you've cloned the public `olbauday/FPL-Core-Insights` data repo
-before running `build_all.py` or `run_2627.py`. Scratch pickles are written to `/tmp/`
+before running `build_all.py`. Scratch pickles are written to a platform temp dir
 (`pms_panel.pkl`, `ms_priors.pkl`, `own_start_cal.pkl`).
+
+## Windows setup (PowerShell)
+
+Confirmed working with Python 3.13 on Windows PowerShell. If `pip` alone isn't recognized (a
+common PATH gap even when `python` itself works), run pip **as a module through Python**
+instead — this sidesteps the PATH issue entirely:
+
+```powershell
+cd "C:\path\to\FPL-2026-27-Model"
+python -m pip install -r requirements.txt
+
+cd src
+python run_2627.py --gw-from 1 --gw-to 1 --top 30
+```
+
+`python -m pip ...` (not bare `pip ...`) is the reliable form on Windows — use it for every
+install command below too. No repo clone or extra setup needed for this command; see the note
+above for what step 1+ additionally requires.
 
 ## Quick start
 
 ```bash
-# 0. true per-gameweek projection (the core engine's main entry point)
+# 0. true per-gameweek projection (the core engine's main entry point) — no repo clone needed
 python src/run_2627.py --gw-from 1 --gw-to 1     # single GW -> real per-GW posterior
 python src/run_2627.py --gw-from 1 --gw-to 6     # GW range -> aggregate over the range
 
-# 1. regenerate data/E0_recon.csv, data/coldstart_hist.csv + priors (writes /tmp/*.pkl)
+# 1. regenerate data/E0_recon.csv, data/coldstart_hist.csv + priors (needs the data repo clone)
 python src/build_all.py
 
 # 2. integrated GW1-6 board (depth prior + minutes shrinkage; injuries/XIs override)
@@ -184,10 +206,12 @@ Requires Python 3.10+, `numpy`, `pandas`, `scipy`, `sklearn`, and a local clone 
 a `--selftest` flag that validates the logic offline with synthetic data, no repo needed.
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 python src/identifiability.py --selftest      # sanity-check the market-odds identifiability logic
 python src/oddsapi_feed.py --selftest         # sanity-check the odds pipeline wiring
 ```
+
+(On Windows, always prefer `python -m pip` over bare `pip` — see "Windows setup" above.)
 
 See "Quick start" above for the reconstruction + analysis scripts added in the 2026/27
 session update.

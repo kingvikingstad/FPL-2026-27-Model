@@ -75,28 +75,132 @@ def load_roster_csv(path):
 
 
 # ---------------------------------------------------------------------------
+# Season-aggregate builders — the prior evidence layer
+# ---------------------------------------------------------------------------
+# Both `player_posteriors` (bayes_model) and `calibrate_cold_start` (below) were
+# originally written against a per-gameweek panel CSV (`fpl-data-stats.csv`) that
+# only ever existed in the authoring sandbox. Everything they actually consume
+# from it is a SEASON TOTAL per player, and the official FPL bootstrap-static
+# payload already carries exactly those totals — so we can rebuild an equivalent
+# aggregate from data the pipeline is already pulling live, with no extra file.
+#
+# APPROXIMATIONS (documented deliberately — these are the only places the
+# rebuilt aggregate differs from the original per-gameweek panel):
+#   * npxGI: bootstrap exposes expected_goals INCLUDING penalties and does not
+#     report penalties taken/scored (only `penalties_missed`), so we subtract the
+#     xG of missed penalties only. Converted penalties therefore remain in the
+#     figure, slightly inflating rates for regular penalty takers. The Understat
+#     layer (`signals.apply_understat_prior`) supplies true non-penalty shot data
+#     downstream and corrects this for every player it matches.
+#   * appearances: bootstrap gives `starts` but not total appearances, so
+#     substitute appearances are inferred from residual minutes. This only feeds
+#     `sub_app_rate` (the bench-cameo term), not the starting-probability prior.
+AGG_COLUMNS = ["id", "web_name", "pos", "team", "minutes", "npxgi", "xa",
+               "defcon", "starts", "apps", "games", "own", "cost"]
+PEN_XG = 0.79           # standard expected value of a penalty kick
+
+
+def _infer_apps(minutes, starts, games, start_len=82.0, sub_len=18.0):
+    """Estimate total appearances from minutes + starts.
+    Minutes beyond what the starts plausibly account for must have come from
+    substitute cameos; convert them at an average cameo length."""
+    resid = np.clip(minutes - start_len * starts, 0, None)
+    subs = np.clip(resid / sub_len, 0, np.clip(games - starts, 0, None))
+    return starts + subs
+
+
+def season_aggregate_from_bootstrap(path):
+    """Build the season-total aggregate the prior layers need, straight from the
+    official FPL bootstrap-static JSON. Returns a frame with AGG_COLUMNS."""
+    with open(path, encoding="utf-8") as f:
+        b = json.load(f)
+    teams = {t["id"]: t["name"] for t in b["teams"]}
+    etype = {e["id"]: e["singular_name_short"] for e in b["element_types"]}
+    games = sum(1 for ev in b.get("events", []) if ev.get("finished")) or 38
+
+    def f(e, k):
+        try:
+            return float(e.get(k) or 0.0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    rows = []
+    for e in b["elements"]:
+        xg = f(e, "expected_goals"); xa = f(e, "expected_assists")
+        npxg = max(xg - PEN_XG * f(e, "penalties_missed"), 0.0)
+        rows.append({
+            "id": e["id"], "web_name": e["web_name"],
+            "pos": POS_MAP[etype[e["element_type"]]],
+            "team": norm_team(teams[e["team"]]),
+            "minutes": f(e, "minutes"), "npxgi": npxg + xa, "xa": xa,
+            "defcon": f(e, "defensive_contribution"),
+            "starts": f(e, "starts"), "games": float(games),
+            "own": f(e, "selected_by_percent"), "cost": f(e, "now_cost"),
+        })
+    d = pd.DataFrame(rows)
+    d["apps"] = _infer_apps(d.minutes.values, d.starts.values, d.games.values)
+    return d[AGG_COLUMNS]
+
+
+def season_aggregate_from_pull_csv(path):
+    """Same aggregate, from a `fpl_players.csv` written by pull_fpl.py."""
+    d = pd.read_csv(path)
+    num = lambda c: pd.to_numeric(d[c], errors="coerce").fillna(0.0) if c in d else 0.0
+    xg, xa = num("xg"), num("xa")
+    out = pd.DataFrame({
+        "id": d["id"] if "id" in d else np.arange(len(d)),
+        "web_name": d["web_name"],
+        "pos": d["pos"].map(lambda x: POS_MAP.get(x, x)),
+        "team": d["team"].map(norm_team),
+        "minutes": num("minutes"), "npxgi": xg + xa, "xa": xa,
+        "defcon": num("defensive_contribution"), "starts": num("starts"),
+        "games": 38.0, "own": num("own"), "cost": num("price"),
+    })
+    out["apps"] = _infer_apps(out.minutes.values, out.starts.values, out.games.values)
+    return out[AGG_COLUMNS]
+
+
+# ---------------------------------------------------------------------------
 # Cold-start prior calibration (price + position -> rates, start prob)
 # ---------------------------------------------------------------------------
 def calibrate_cold_start(hist_csv="/mnt/user-data/uploads/fpl-data-stats.csv",
-                         min_minutes=450):
-    d = pd.read_csv(hist_csv)
-    d["pos"] = d.element_type.map({1: "GK", 2: "DEF", 3: "MID", 4: "FWD"})
-    ag = d.groupby(["id", "pos"]).agg(
-        minutes=("minutes", "sum"),
-        npxgi=("non_penalty_expected_goal_involvements", "sum"),
-        xa=("expected_assists", "sum"),
-        defcon=("defensive_contribution", "sum"),
-        starts=("minutes", lambda s: (s >= 60).sum()),
-        apps=("minutes", lambda s: (s > 0).sum()),
-        games=("minutes", "size"), price=("now_cost", "last")).reset_index()
-    ag = ag[ag.minutes >= min_minutes]
+                         min_minutes=450, agg=None):
+    """Fit price -> (involvement rate, start rate) per position on last season's
+    players. Pass `agg` (from season_aggregate_from_*) to skip the CSV entirely."""
+    if agg is not None:
+        ag = agg.copy()
+    else:
+        d = pd.read_csv(hist_csv)
+        d["pos"] = d.element_type.map({1: "GK", 2: "DEF", 3: "MID", 4: "FWD"})
+        ag = d.groupby(["id", "pos"]).agg(
+            minutes=("minutes", "sum"),
+            npxgi=("non_penalty_expected_goal_involvements", "sum"),
+            xa=("expected_assists", "sum"),
+            defcon=("defensive_contribution", "sum"),
+            starts=("minutes", lambda s: (s >= 60).sum()),
+            apps=("minutes", lambda s: (s > 0).sum()),
+            games=("minutes", "size"), cost=("now_cost", "last")).reset_index()
+    # price MUST be in millions here: `_coldstart_row` evaluates the fitted line
+    # at the roster's price, which is always millions. The raw FPL field is in
+    # tenths, so normalise before fitting or the intercept/slope are unusable.
+    ag = ag.rename(columns={"cost": "price"}) if "price" not in ag else ag
+    ag = ag[ag.minutes >= min_minutes].copy()
+    if len(ag) and ag.price.max() > 30:
+        ag["price"] = ag.price / 10.0
     nnf = ag.minutes / 90.0
     ag["inv90"] = ag.npxgi / nnf; ag["xa90"] = ag.xa / nnf; ag["dc90"] = ag.defcon / nnf
-    ag["startrate"] = ag.starts / ag.games
-    ag["subrate"] = (ag.apps - ag.starts).clip(lower=0) / ag.games
+    ag["startrate"] = (ag.starts / ag.games).clip(0, 1)
+    ag["subrate"] = ((ag.apps - ag.starts).clip(lower=0) / ag.games).clip(0, 1)
     cal = {}
     for p in ["GK", "DEF", "MID", "FWD"]:
-        s = ag[ag.pos == p]; x = s.price.values
+        s = ag[ag.pos == p]
+        if len(s) < 3:      # too thin to fit a line — fall back to flat means
+            cal[p] = dict(inv_b=0.0, inv_a=float(np.log(max(s.inv90.mean(), 1e-3) + 0.02)) if len(s) else np.log(0.05),
+                          st_b=0.0, st_a=float(s.startrate.mean()) if len(s) else 0.5,
+                          xa_share=0.4, dc90=float(s.dc90.mean()) if len(s) else 5.0,
+                          subrate=float(s.subrate.mean()) if len(s) else 0.1)
+            continue
+        x = s.price.values
         b_inv = np.polyfit(x, np.log(s.inv90 + 0.02), 1)
         b_st = np.polyfit(x, s.startrate, 1)
         cal[p] = dict(inv_b=b_inv[0], inv_a=b_inv[1],
@@ -126,10 +230,13 @@ def _coldstart_row(name, team, pos, price, own, cal, k0=1.5, kstart=4.0):
 # ---------------------------------------------------------------------------
 # Build the unified 2026/27 player frame
 # ---------------------------------------------------------------------------
-def build_players_2627(roster, cal=None, revert=0.70):
+def build_players_2627(roster, cal=None, revert=0.70, agg=None):
+    """`agg` — optional season-total frame (see season_aggregate_from_bootstrap).
+    When supplied, both the cold-start calibration and the returning-player
+    posteriors are derived from it instead of the legacy per-gameweek CSV."""
     if cal is None:
-        cal = calibrate_cold_start()
-    hist = player_posteriors(revert=revert)                 # 25/26 posteriors
+        cal = calibrate_cold_start(agg=agg)
+    hist = player_posteriors(revert=revert, agg=agg)         # 25/26 posteriors
     hist["key"] = hist.web_name.str.lower().str.strip()
     roster = roster.copy(); roster["key"] = roster.name.str.lower().str.strip()
 
@@ -254,4 +361,3 @@ def load_pull_csv(path):
         "corner_order": pd.to_numeric(df.get("corner_order"), errors="coerce"),
     })
     return roster, signals
-</content>

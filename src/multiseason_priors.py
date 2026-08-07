@@ -116,4 +116,3 @@ if __name__ == "__main__":
     print(f"  players THIN in 25/26 (<900 min) who gain: {(thin.extra > 50).sum()} "
           f"— these are where it matters most")
     print(f"\nwrote priors for {len(pri)} players -> /tmp/ms_priors.pkl")
-</content>

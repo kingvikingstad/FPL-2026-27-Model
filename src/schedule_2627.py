@@ -80,4 +80,3 @@ if __name__ == "__main__":
     print("fixtures:", len(df), "teams:", long.team.nunique())
     print("promoted present:", [t for t in PROMOTED if t in set(long.team)])
     print(df.head(10).to_string(index=False))
-</content>

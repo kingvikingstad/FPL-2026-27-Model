@@ -45,4 +45,3 @@ for gw in [1,2]:
     print()
     c.round(4).to_csv(f'/mnt/user-data/outputs/captain_gw{gw}.csv',index=False)
     d.round(4).to_csv(f'/mnt/user-data/outputs/differentials_gw{gw}.csv',index=False)
-</content>

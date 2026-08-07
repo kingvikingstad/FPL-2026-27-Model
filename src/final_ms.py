@@ -71,4 +71,3 @@ print("\nBiggest DOWNGRADES:")
 print(cmp.nsmallest(6,'delta')[['pos','team','cost','single','multi','delta']].round(2).to_string())
 print("\nTop-10 GW1-6 under TWO-SEASON priors:")
 print(b.nlargest(10,'mean')[['pos','team','cost','mean','p5','p95','ppm','own']].round(2).to_string())
-</content>

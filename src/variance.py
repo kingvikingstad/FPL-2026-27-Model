@@ -54,4 +54,3 @@ print(f"  goal or assist        {(s.ga>0).mean():.3f}")
 print(f"  clean sheet           {s.cs.mean():.3f}")
 print(f"  defcon hit            {s.dc_hit.mean():.3f}")
 print(f"  any bonus             {(s.get('bonus',pd.Series(0,index=s.index))>0).mean() if 'bonus' in s else float('nan'):.3f}")
-</content>

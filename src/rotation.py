@@ -191,4 +191,3 @@ if __name__ == "__main__":
     piv.columns = ["rested", "congested"]
     piv["delta"] = piv.congested - piv.rested
     print(piv.round(3).to_string())
-</content>

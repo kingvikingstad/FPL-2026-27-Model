@@ -124,4 +124,3 @@ if __name__ == "__main__":
             write_all(json.load(f))
     else:
         main()
-</content>

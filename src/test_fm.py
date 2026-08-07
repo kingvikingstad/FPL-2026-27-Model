@@ -72,4 +72,3 @@ for mins in [0, 300, 900, 2000, 3400]:
                  "resulting_inv90_prior":round(float((o.npxgi_alpha/o.npxgi_beta).iloc[0]),3)})
 print(pd.DataFrame(rows).to_string(index=False))
 print("\n(observed rate baseline = 0.200; FM-elite pull shrinks as minutes accumulate)")
-</content>

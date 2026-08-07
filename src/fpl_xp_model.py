@@ -464,4 +464,3 @@ def walk_forward_backtest(panel: pd.DataFrame, gw_col="gw", start_gw=6):
 if __name__ == "__main__":
     print("fpl_xp_model loaded. See run_demo.py for a synthetic end-to-end test,")
     print("and load_fbref() to ingest real FBref data in a networked environment.")
-</content>

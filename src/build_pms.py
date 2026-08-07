@@ -122,4 +122,3 @@ if __name__ == "__main__":
     m = p.dropna(subset=["fpl_minutes"])
     print(f"  corr={np.corrcoef(m.mins, m.fpl_minutes)[0,1]:.4f}  "
           f"mean abs diff={np.abs(m.mins-m.fpl_minutes).mean():.2f} min")
-</content>

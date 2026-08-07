@@ -273,4 +273,3 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"[history] {type(e).__name__}: {e}")
         print("Needs network. Run in your environment: python history.py")
-</content>

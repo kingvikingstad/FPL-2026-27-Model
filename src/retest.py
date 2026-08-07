@@ -157,4 +157,3 @@ def walk(feats, name):
 out = [walk(FPL, "FPL aggregates (old)"), walk(PMS, "per-match stats (new)"),
        walk(list(dict.fromkeys(PMS + FPL)), "both combined")]
 print(pd.DataFrame(out).to_string(index=False, float_format=lambda x: f"{x:.4f}"))
-</content>

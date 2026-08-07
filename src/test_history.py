@@ -59,4 +59,3 @@ for name, t, e in out:
     print(f"  {name:20s} true={t:+.3f}  est={e:+.3f}  err={e-t:+.3f}")
 print(f"\n  n_pairs={rev['n_pairs']}  n_promoted={prom['n_promoted']}")
 print(f"  promoted sd: att={prom['promoted_att_sd']:.3f} def={prom['promoted_def_sd']:.3f}")
-</content>

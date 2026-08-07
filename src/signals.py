@@ -73,16 +73,80 @@ def _norm_elo(name):
     return CLUBELO_NORM.get(str(name).strip(), str(name).strip())
 
 
-def load_clubelo(when="today", club=None):
+def _name_key(name):
+    """Normalise a player name for cross-source joins: strip accents, drop
+    punctuation, expand initial-dotted forms ('B.Fernandes' -> 'b fernandes'),
+    collapse whitespace, lowercase. Understat, FPL and FM all spell the same
+    player differently, and this is the join key that makes them agree."""
+    import re, unicodedata
+    s = str(name or "").strip()
+    if not s:
+        return ""
+    # decompose accents: Ødegaard -> Odegaard, Martínez -> Martinez
+    s = s.replace("ø", "o").replace("Ø", "O").replace("ð", "d").replace("Đ", "D")
+    s = unicodedata.normalize("NFKD", s)
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    s = s.replace(".", " ").replace("-", " ").replace("'", "")
+    s = re.sub(r"[^A-Za-z ]", " ", s)
+    return re.sub(r"\s+", " ", s).strip().lower()
+
+
+def load_clubelo(when="today", club=None, timeout=45, retries=3):
     """ClubElo ratings. FREE. Snapshot for a date (all clubs) or one club's
-    history. Returns a frame with normalised `team` and `Elo`. Requires network."""
-    import io, urllib.request
-    url = CLUBELO_API + (club.replace(" ", "") if club else str(when))
-    with urllib.request.urlopen(url, timeout=20) as r:
-        df = pd.read_csv(io.BytesIO(r.read()))
-    if "Club" in df:
-        df["team"] = df["Club"].map(_norm_elo)
-    return df
+    history. Returns a frame with normalised `team` and `Elo`. Requires network.
+
+    ClubElo's endpoint is frequently slow to first byte (it renders the CSV on
+    demand), so a short single-shot timeout drops the source unnecessarily. We
+    allow a generous timeout and retry with backoff before giving up — losing
+    ClubElo costs real information in the team prior, especially preseason when
+    it is the only forward-looking team signal available."""
+    import io, time, urllib.request
+    from datetime import date, timedelta
+
+    # Endpoint semantics (learned the hard way):
+    #  * there is NO "today" endpoint — the literal string 404s;
+    #  * a date only resolves if ClubElo has published that day's snapshot, so a
+    #    machine running ahead of their publishing clock (or simply in a timezone
+    #    east of theirs) asks for a date that does not exist yet and gets a 404;
+    #  * https can return an empty body where http returns the CSV.
+    # So: walk backwards a few days over both schemes and take the first real hit.
+    if club:
+        candidates = [club.replace(" ", "")]
+    elif str(when).lower() in ("today", "now", "", "none"):
+        today = date.today()
+        candidates = [(today - timedelta(days=d)).isoformat() for d in range(0, 8)]
+    else:
+        candidates = [str(when)]
+
+    bases = [CLUBELO_API]
+    if CLUBELO_API.startswith("http://"):
+        bases.append("https://" + CLUBELO_API[len("http://"):])
+
+    last = None
+    for endpoint in candidates:
+        for base in bases:
+            req = urllib.request.Request(base + endpoint,
+                                         headers={"User-Agent": "Mozilla/5.0"})
+            for attempt in range(retries):
+                try:
+                    with urllib.request.urlopen(req, timeout=timeout) as r:
+                        payload = r.read()
+                    if not payload.strip():
+                        raise ValueError("empty body")
+                    df = pd.read_csv(io.BytesIO(payload))
+                    if not len(df) or "Club" not in df.columns:
+                        raise ValueError("no Club column / no rows")
+                    df["team"] = df["Club"].map(_norm_elo)
+                    df.attrs["clubelo_date"] = endpoint
+                    return df
+                except Exception as e:               # noqa: BLE001 - try next candidate
+                    last = e
+                    # only worth retrying transport hiccups, not a 404/empty
+                    if isinstance(e, ValueError) or "HTTP Error 4" in str(e):
+                        break
+                    if attempt < retries - 1:
+                        time.sleep(2 * (attempt + 1))
+    raise RuntimeError(f"ClubElo unreachable for {candidates[0]}..{candidates[-1]}: {last}")
 
 
 def load_football_data(season_code):
@@ -200,20 +264,73 @@ def apply_understat_prior(players: pd.DataFrame, ushots: pd.DataFrame,
     mean xG/shot (repeatable) rather than realised goals (noisy), and blend with
     the FPL-derived npxGI prior. Matches on lowercased player name."""
     p = players.copy()
+    if ushots is None or not len(ushots):
+        return p
     u = ushots.copy()
+    # A season that has not kicked off returns an EMPTY player list with no
+    # columns at all, so guard on schema rather than assuming shape.
+    need = ["time", "shots", "npxG", "key_passes", "player_name"]
+    missing = [c for c in need if c not in u.columns]
+    if missing:
+        return p
+    for c in ["time", "shots", "npxG", "key_passes"]:
+        u[c] = pd.to_numeric(u[c], errors="coerce")
+    u = u.dropna(subset=["time", "shots"])
+    if not len(u):
+        return p
     u["nnf"] = u["time"] / 90.0
     u["shotvol90"] = u["shots"] / u["nnf"].clip(lower=1e-6)
     u["xgpsh"] = (u["npxG"] / u["shots"].clip(lower=1)).clip(0.03, 0.3)
     u["inv90_understat"] = (u["shotvol90"] * u["xgpsh"] +
                             u["key_passes"] / u["nnf"].clip(lower=1e-6) * 0.08)
-    key = u.assign(k=u["player_name"].str.lower().str.strip()).set_index("k")["inv90_understat"]
+
+    # NAME MATCHING. Understat stores full names ("Mohamed Salah", "Martin
+    # Odegaard"); FPL's web_name is usually just the surname, sometimes
+    # initial-dotted ("B.Fernandes"), and either side may carry accents. Exact
+    # lowercase matching therefore finds only a small fraction of the squad and
+    # silently discards the sharpest attacking signal we have. Match on a
+    # normalised full name first, then fall back to surname.
+    full, sur = {}, {}
+    for _, r in u.iterrows():
+        v = r["inv90_understat"]
+        if not np.isfinite(v):
+            continue
+        mins = float(r.get("time", 0) or 0)
+        f = _name_key(r["player_name"])
+        if f:
+            # keep the higher-minutes player on collision (the real starter)
+            if f not in full or mins > full[f][1]:
+                full[f] = (float(v), mins)
+        s = f.split()[-1] if f else ""
+        if s:
+            if s not in sur:
+                sur[s] = [(float(v), mins)]
+            else:
+                sur[s].append((float(v), mins))
+
+    n = 0
     for i, r in p.iterrows():
-        nm = str(r.web_name).lower().strip()
-        if nm in key.index and np.isfinite(key[nm]):
-            hist_mean = r.npxgi_alpha / r.npxgi_beta
-            blended = (1 - blend) * hist_mean + blend * float(key[nm])
-            k0 = r.npxgi_beta
-            p.at[i, "npxgi_alpha"] = max(blended, 1e-3) * k0
+        nm = _name_key(r.web_name)
+        if not nm:
+            continue
+        val = None
+        if nm in full:
+            val = full[nm][0]
+        else:
+            s = nm.split()[-1]
+            cands = sur.get(s, [])
+            # only trust a surname match when it is UNAMBIGUOUS — several PL
+            # players share surnames (two Jameses, two Hendersons), and a wrong
+            # join here quietly corrupts a player's attacking prior.
+            if len(cands) == 1:
+                val = cands[0][0]
+        if val is None or not np.isfinite(val):
+            continue
+        hist_mean = r.npxgi_alpha / r.npxgi_beta
+        blended = (1 - blend) * hist_mean + blend * val
+        p.at[i, "npxgi_alpha"] = max(blended, 1e-3) * r.npxgi_beta
+        n += 1
+    p.attrs["understat_matched"] = n
     return p
 
 
@@ -245,4 +362,3 @@ if __name__ == "__main__":
     print("signals.py loaded. Free loaders: load_fpl_signals, load_clubelo, "
           "load_understat_shots. Prior mods: apply_availability, apply_setpieces, "
           "apply_clubelo_prior, apply_understat_prior. Paid hook: fuse_prop_odds.")
-</content>

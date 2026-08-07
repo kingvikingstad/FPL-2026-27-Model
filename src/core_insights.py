@@ -120,4 +120,3 @@ if __name__ == "__main__":
     print(f"flagged (not 'a'): {(d.status != 'a').sum()}")
     print(f"penalty takers (order 1): {(d.penalties_order == 1).sum()}")
     print("\nElo-derived promoted prior:", promoted_prior_from_elo(t))
-</content>
