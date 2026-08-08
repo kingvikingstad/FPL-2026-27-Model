@@ -1,231 +1,153 @@
-# FPL-2026-27-Model
+# FPL 2026/27 Model
 
-Fantasy Premier League 2026/27 projection system — a hierarchical Bayesian, component-based
-model (minutes → events → FPL scoring rules) plus an interactive projection board.
+A hierarchical Bayesian Fantasy Premier League projection system for the 2026/27 season.
+It estimates the underlying events (minutes, team strength, attacking share, clean sheets,
+defensive contributions) and composes them through the FPL scoring rules to produce
+posterior-predictive point distributions, then turns those into decisions — who to hold,
+who to captain, where the differential edge is.
 
-**Philosophy:** FPL points are a deterministic function of underlying match events. Estimate
-E[minutes], E[goals], E[assists], E[clean sheets], E[bonus] with well-specified models and
-compose through the scoring rules — never regress total points directly.
+**Start with [`docs/PROJECT_KNOWLEDGE_2627.md`](docs/PROJECT_KNOWLEDGE_2627.md)** — the
+authoritative context (settled decisions, validations, open questions, corrections). This
+README is the how-to-run and the map.
 
-## What's in this repo
+---
+
+## Layout
 
 ```
-FPL-2026-27-Model/
-├── README.md
-├── requirements.txt
-├── docs/
-│   ├── PROJECT_KNOWLEDGE_2627.md   — full project handoff: methodology, validated findings,
-│   │                                  open questions, corrections log
-│   ├── FPL_RULES.md                — 2026/27 official scoring & squad rules (reference)
-│   └── INTEGRATION.md              — live betting-odds feed integration notes
-├── src/
-│   ├── CORE ENGINE (now present — previously the project's central gap, see Status below)
-│   ├── bayes_model.py              — hierarchical Bayesian core: `TeamModel`, `player_posteriors`,
-│   │                                  `project()` — call once per single GW for a TRUE per-gameweek
-│   │                                  posterior (not just a GW-range aggregate)
-│   ├── core_insights.py            — `load()`/`to_signals()`/`to_roster()` for the public
-│   │                                  olbauday/FPL-Core-Insights data repo
-│   ├── roster.py                   — cold-start calibration, bootstrap/pull loaders
-│   ├── signals.py                  — availability, set-pieces, ClubElo/Understat priors, odds fusion
-│   ├── schedule_2627.py            — real 380-fixture 2026/27 schedule + promoted clubs
-│   ├── betting_features.py         — odds de-vig → xG inversion, Dixon-Coles team ratings
-│   ├── captaincy.py                — haul/blank/regret-based captain & differential picks
-│   ├── apifootball.py              — optional live injuries/XI feed
-│   ├── build_pms.py                — 25/26 per-match panel builder
-│   ├── multiseason_priors.py / multiseason.py — two-season pooled priors
-│   ├── pms_priors.py               — single-season per-match priors
-│   ├── fpl_xp_model.py             — scoring constants + component xP, OLS helpers
-│   ├── run_2627.py                 — CLI entry point / true per-GW projection driver
-│   ├── final_ms.py                 — two-season runner (PATCHES.md edits pre-applied)
-│   ├── final_2627.py               — joins on stable `player_code` (avoids name-reassignment bugs)
-│   ├── holds_real.py / run_captain.py — GW1-3/6 holds + captaincy runners
-│   ├── fm_priors.py                — Football Manager attributes as Bayesian priors for cold-start
-│   │                                  (no-PL-history) players, ridge-calibrated on the FM x PL overlap
-│   ├── history.py                  — 30-season hyperparameter calibration (reversion, promoted-team
-│   │                                  prior, home advantage) from football-data.co.uk, replaces
-│   │                                  hard-coded guesses
-│   ├── fpl_live_data.py            — captured live FPL API snapshot (team strength, scoring config)
-│   ├── pull_fpl.py                 — standalone script to pull fresh FPL bootstrap data locally
-│   ├── rotation.py / pit_ownership.py / retest.py / edge_study.py / variance.py /
-│   │   multihorizon.py / test_history.py / test_fm.py — validation & study scripts (rotation null,
-│   │   corrected point-in-time ownership signal, per-match vs aggregate retest, haul-prediction edge
-│   │   study, variance decomposition, multi-horizon (3/6/12 GW) projection, estimator self-tests)
-│   ├── LAYERS ADDED THIS PROJECT (sit on top of the core engine)
-│   ├── betting_odds_ingest.py      — de-vig betting odds → market-implied expected goals
-│   ├── oddsapi_feed.py             — The Odds API fetch/snapshot/identifiability/stacking
-│   ├── identifiability.py          — checks whether a market-odds fit is under-identified
-│   ├── ab_market_vs_recon.py       — A/B team model: backward-looking xG vs market odds
-│   ├── starter_prior.py            — ownership-aware cold-start depth prior + minutes shrinkage
-│   ├── lineups.py                  — confirmed/predicted XI ingestion (file or API-Football)
-│   ├── decision_v2.py              — integrated GW1-6 board builder (priors + injuries + XIs)
-│   ├── decision_2627.py            — consolidated board + GW1 captaincy/differential picks
-│   ├── cs_fixtures.py              — GW1-10 clean-sheet fixture ranking
-│   ├── solio_ensemble.py           — blend/benchmark against Solio Analytics' public feed
-│   ├── run_solio_ensemble.py       — end-to-end ensemble run script
-│   ├── build_all.py                — regenerate every reconstructed input + prior, in order
-│   ├── reconstruct_e0.py           — builds E0_recon.csv from repo 25/26 Opta xG (fair-odds
-│   │                                  Poisson inversion — no betting-odds file required)
-│   ├── reconstruct_coldstart.py    — builds coldstart_hist.csv from the per-match panel
-│   ├── sweep_older_weight.py       — older_weight prior-sensitivity sweep
-│   ├── validate_shrinkage.py       — A/B of the minutes-shrinkage fix vs. the Solio benchmark
-│   └── style_matchup.py            — OFF BY DEFAULT: experimental style x style interaction
-│                                      model (not yet validated — see module docstring)
-├── data/                           — reconstructed pipeline inputs (gitignored — see note below)
-│   ├── E0_recon.csv                — team-model input, rebuilt from real 25/26 Opta xG
-│   ├── coldstart_hist.csv          — cold-start calibration input, rebuilt from the match panel
-│   └── solio_cache.md              — cached Solio Analytics GW1 snapshot (2026-07-25) used for
-│                                      the ensemble benchmark
-└── outputs/
-    ├── fpl_projection_model.html    — interactive sortable/filterable projection board
-    ├── fpl_2627_team_fixtures_gw1_10_raw.csv
-    ├── older_weight_sweep.csv       — older_weight sensitivity sweep results (330 players)
-    └── solio_ensemble_demo.csv      — sample our-model-vs-Solio ensemble/benchmark output
+src/        all importable modules (flat, so cross-imports resolve)
+  core engine   bayes_model, core_insights, roster, signals, betting_features,
+                schedule_2627, multiseason_priors, multiseason, build_pms, pms_priors,
+                fpl_xp_model, captaincy, apifootball, fm_priors, history, fpl_live_data, pull_fpl
+  signal layers starter_prior (depth prior + minutes shrinkage + regime κ/δ),
+                regime_panel (appointment split), defcon_env (DefCon environment),
+                lineups (XI ingestion), solio_ensemble (benchmark + ensemble)
+scripts/    runnable entry points (run_final_board is canonical)
+tests/      acceptance/validation tests (regime, panel, defcon, shrinkage)
+studies/    validation studies & the null-finding record (rotation, ownership, variance, ...)
+data/       reconstructed inputs (E0_recon.csv, coldstart_hist.csv) + a Solio feed snapshot
+outputs/    result boards (CSV)
+docs/       project knowledge + the design notes (regime, reduced-form, DefCon handoff)
 ```
 
-Not added: `decision_gw1_6_depthprior.csv` (591 rows) — its contents are already embedded
-verbatim as the board's player data, so a standalone copy would just duplicate it — and
-`decision_gw1_6_realistic.csv` (429 rows), an alternate-assumptions variant not currently
-wired into the board. Both are available in the source update package if needed later.
+`src/` is flat on purpose: the engine modules import each other by name, so they must share
+one path. Scripts/tests/studies add `../src` to `sys.path` automatically.
 
-## Status
+---
 
-**As of Aug 5 2026, the core engine is code-complete in this repo.** Every module previously
-flagged as missing (`bayes_model.py`, `core_insights.py`, `roster.py`, `signals.py`,
-`schedule_2627.py`, `multiseason_priors.py`, `build_pms.py`, `betting_features.py`,
-`apifootball.py`, `captaincy.py`) plus the two top-level runners (`run_2627.py`, `final_ms.py`),
-their transitive dependencies (`fpl_xp_model.py`, `multiseason.py`, `pms_priors.py`), and 15
-supporting/validation scripts have all been copied into `src/` — see the file tree above. The
-pipeline (`src/`) is written to run against the public `olbauday/FPL-Core-Insights` data repo
-(match-level Opta stats, per-season player panels); point `core_insights.load()`'s `base` arg
-and the `REPO` constant in the reconstruction scripts at a local clone of it. `outputs/`
-contains the most recent computed board as static snapshots.
+## Setup
 
-**Per-gameweek output is now possible.** `bayes_model.project(players, tm, tsamp, gw_lo, gw_hi,
-S=...)` filters internally to `gameweek >= gw_lo & <= gw_hi`, so calling it once per single GW
-(`gw_lo == gw_hi`) produces a genuine per-GW posterior — not the fixture-weighted proportional
-split the board's "Gameweek Compare" tab currently approximates. `run_2627.py` is the CLI
-driver for this. This directly resolves the original ask behind that tab.
+```bash
+pip install -r requirements.txt
+# clone the public data repo somewhere and point the scripts at it:
+git clone https://github.com/olbauday/FPL-Core-Insights
+```
 
-**Not yet done in this session (sandbox execution was unavailable throughout):** nothing has
-been run end-to-end here — the files are code-complete but unexecuted and unvalidated in this
-environment. Run `python src/run_2627.py --gw-from <n> --gw-to <n>` locally to produce and
-verify true per-GW output before trusting it over the board's current approximation.
+All paths are centralized in `src/config.py` and resolve automatically. The only thing you may
+need to set is where the data repo lives, via the **`FPL_DATA`** environment variable.
 
-**`data/` is present on disk but gitignored, on purpose.** `E0_recon.csv` is derived from
-Opta match data and `solio_cache.md` is a cached scrape of a third-party commercial product
-(Solio Analytics) — neither should be republished in a public repo. They're regenerated
-locally via `python src/build_all.py` (which also needs a local clone of
-`olbauday/FPL-Core-Insights` — see "Paths to set" below) rather than checked in.
-
-Team strength currently comes from reconstructed 25/26 Opta xG + ClubElo blending, with
-`fpl_live_data.py` adding FPL's own live team-strength ratings as an additional prior source.
-Live 26/27 betting-odds team ratings (the feed-swap machinery in `betting_odds_ingest.py` /
-`oddsapi_feed.py`) is built but not yet wired to a live odds source — see
-`docs/PROJECT_KNOWLEDGE_2627.md` §7 for the full ranked list of open items.
-
-## Paths to set
-
-**Only needed for step 1 onward below — `run_2627.py` (step 0) needs none of this.** It pulls
-everything it needs live over the network (FPL bootstrap-static, football-data.co.uk results,
-optionally Understat/ClubElo) and falls back gracefully if a source is unreachable.
-
-`reconstruct_e0.py`, `reconstruct_coldstart.py`, `rotation.py`, and `pit_ownership.py` each
-hard-code `REPO`/`BASE = "/home/claude/repo/FPL-Core-Insights-main/data"` at the top; `core_
-insights.load()` takes a `base` argument with the same default shape (`.../data/2026-2027`).
-Point all of these at wherever you've cloned the public `olbauday/FPL-Core-Insights` data repo
-before running `build_all.py`. Scratch pickles are written to a platform temp dir
-(`pms_panel.pkl`, `ms_priors.pkl`, `own_start_cal.pkl`).
-
-## Windows setup (PowerShell)
-
-Confirmed working with Python 3.13 on Windows PowerShell. If `pip` alone isn't recognized (a
-common PATH gap even when `python` itself works), run pip **as a module through Python**
-instead — this sidesteps the PATH issue entirely:
-
+**Windows (PowerShell):**
 ```powershell
-cd "C:\path\to\FPL-2026-27-Model"
-python -m pip install -r requirements.txt
-
-cd src
-python run_2627.py --gw-from 1 --gw-to 1 --top 30
+$env:FPL_DATA = "C:\Users\you\FPL-Core-Insights\data"
+py scripts\build_all.py
+py scripts\run_final_board.py
 ```
+**Windows (cmd):** `set FPL_DATA=C:\Users\you\FPL-Core-Insights\data` then `py scripts\build_all.py`.
+**macOS / Linux:** `export FPL_DATA=~/FPL-Core-Insights/data` then `python scripts/build_all.py`.
 
-`python -m pip ...` (not bare `pip ...`) is the reliable form on Windows — use it for every
-install command below too. No repo clone or extra setup needed for this command; see the note
-above for what step 1+ additionally requires.
+Check paths any time with `py src\config.py` (or `python src/config.py`) — it prints where it
+reads data and writes outputs, and flags `FPL_DATA` if the data repo isn't found. Regenerable
+pickles go to `<repo>\.cache`, boards to `<repo>\outputs`, reconstructed inputs to `<repo>\data`
+— all inside the repo, no `/tmp` or absolute paths (override with `FPL_SCRATCH` / `FPL_OUTPUTS`).
+Original `E0.csv` and `fpl-data-stats.csv` are **not needed** — `build_all.py` reconstructs them.
+
+> Windows: use `py` (the Python launcher) wherever these docs say `python`. The scripts run
+> identically under either and resolve their own imports relative to the repo.
+
+---
 
 ## Quick start
 
 ```bash
-# 0. true per-gameweek projection (the core engine's main entry point) — no repo clone needed
-python src/run_2627.py --gw-from 1 --gw-to 1     # single GW -> real per-GW posterior
-python src/run_2627.py --gw-from 1 --gw-to 6     # GW range -> aggregate over the range
+# 1. regenerate inputs + priors (writes /tmp/*.pkl, data/E0_recon.csv, data/coldstart_hist.csv)
+python scripts/build_all.py
 
-# 1. regenerate data/E0_recon.csv, data/coldstart_hist.csv + priors (needs the data repo clone)
-python src/build_all.py
+# 2. WEEK-BY-WEEK per-player predictions (primary output): true per-GW projections,
+#    betting-odds team strength + GW1 Solio blend, -> outputs/gw_board_{long,wide}.csv
+python scripts/gw_board.py          # env: GW_HI=10 SOLIO_W_OURS=0.5 SOLIO=off ...
 
-# 2. integrated GW1-6 board (depth prior + minutes shrinkage; injuries/XIs override)
-python src/decision_v2.py
-#    optional: LINEUPS_PATH=xi.csv  APIFOOTBALL_KEY=...  DEPTH_OFF=1
+# 2b. horizon-aggregate board (GW1-6 totals; defcon_ev / cs_ev surfaced)
+python scripts/run_final_board.py
+#    flags: DEFCON_ENV=off | REGIME_PANEL=on | REGIME=proposed
+#    optional feeds: LINEUPS_PATH=xi.csv  APIFOOTBALL_KEY=...
 
-# 3. consolidated board + GW1 captaincy/differential picks
-python src/decision_2627.py
+# 3. clean-sheet fixture ranking, GW1-10
+python scripts/cs_fixtures.py
 
-# 4. clean-sheet fixture ranking, GW1-10
-python src/cs_fixtures.py
+# 4. ensemble / benchmark vs Solio (live on your machine; cached snapshot offline)
+python scripts/run_solio_ensemble.py
 
-# 5. ensemble/benchmark vs Solio (live on your machine; data/solio_cache.md offline)
-python src/run_solio_ensemble.py
-
-# 6. parameter robustness
-python src/sweep_older_weight.py
-python src/validate_shrinkage.py
+# 5. robustness / A-B
+python scripts/sweep_older_weight.py
+python scripts/decision_v2.py           # depth + shrinkage + regime A/B
+python tests/test_regime.py             # regime variance acceptance tests
+python tests/test_defcon_env.py         # DefCon environment natural experiment
 ```
 
-See `docs/PATCHES.md` for the three one-line edits the existing runner needs to point at the
-reconstructed inputs instead of the originals.
+---
 
-## Key validated findings (see docs/PROJECT_KNOWLEDGE_2627.md for full detail + evidence)
+## Live-data integrations
 
-- Minutes/availability is the dominant single-GW lever (~32% of variance)
-- No rotation multiplier — tested null, not modeled
-- Trust xG over goals; "he's due" has ~zero predictive value
-- GK picked on team defence, not save volume (save volume is *negatively* correlated with points)
-- Two-season priors roughly double early-season predictive power vs. single-season
-- Ownership is the strongest predictor after minutes (Spearman ~0.48) — used as a start-probability
-  input, never as a projection shortcut
-- Cold-start players: ownership predicts start-rate at Spearman ~0.68, used as a depth prior
-- Evidence-weighted minutes shrinkage improves every agreement metric vs. the Solio benchmark
-  (Pearson 0.73→0.78, MAE 0.75→0.70) while leaving rich-history players untouched
+Two external signals are embedded as static snapshots (so the model runs offline) with
+live-refresh hooks for your machine:
 
-## Running the pipeline
+- **Betting odds → team strength** (`src/market_odds.py`). The 26/27 outright markets
+  (title + relegation, de-vigged) become a per-team market Elo that blends into
+  `TeamModel.fit()` through the existing ClubElo path — no model change. This is the
+  documented biggest predictive gain (the market prices in transfers, new managers, and
+  pre-season form that last-season xG can't). Snapshot 7 Aug 2026; refresh via
+  `fetch_live_odds(api_key)` (The Odds API). Flags: `MARKET_ODDS=off`, `MARKET_WEIGHT=0.6`.
+- **Press index (PPDA) → CBIRT DefCon** (`src/press_index.py`). Pressing intensity conditions
+  the MID/FWD DefCon channel (recoveries scale with press, not xGA). Manager-aware for the
+  26/27 regime clubs. This closes the CBIRT gap the DefCon handoff flagged (§4.4): Anderson
+  correctly holds up at Man City (Forest's press ≈ City's under Maresca), while midfielders at
+  high-press sides (Iraola's Liverpool, De Zerbi's Spurs) get boosted.
 
-Requires Python 3.10+, `numpy`, `pandas`, `scipy`, `sklearn`, and a local clone of the public
-`olbauday/FPL-Core-Insights` data repo (update the `REPO`/`base` path at the top of each script
-— see "Paths to set" above). See each module's docstring for its exact CLI / usage — most have
-a `--selftest` flag that validates the logic offline with synthetic data, no repo needed.
+Caveats: the odds→strength map is an *overall* team signal (not an attack/defence split — that
+needs match/supremacy odds), and new-manager PPDA is a judgment estimate from each manager's
+prior club, flagged low-confidence and sweepable. Both are on by default as validated
+corrections; disable with the flags above.
 
-```bash
-python -m pip install -r requirements.txt
-python src/identifiability.py --selftest      # sanity-check the market-odds identifiability logic
-python src/oddsapi_feed.py --selftest         # sanity-check the odds pipeline wiring
-```
+## What the model does, in one pass
 
-(On Windows, always prefer `python -m pip` over bare `pip` — see "Windows setup" above.)
+1. **Team strength** — hierarchical Poisson on 25/26 results, priors from betting-implied xG,
+   blended with ClubElo; promoted sides get informative Elo priors. (`bayes_model.TeamModel`)
+2. **Player rates** — conjugate Gamma-Poisson per-90 involvement / assists / DefCon, two-season
+   pooled by `player_code`, reverted for the new season. (`multiseason_priors`)
+3. **Minutes** — the dominant lever. Ownership-aware cold-start depth prior → evidence-weighted
+   shrinkage (trust history by sample size, shrink thin cases to the market) → regime variance
+   widening for new-manager clubs → injuries/confirmed XIs override. (`starter_prior`,
+   `regime_panel`, `lineups`)
+4. **DefCon** — conditioned on the team defensive-action environment (xGA), not treated as a
+   team-invariant trait. (`defcon_env`)
+5. **Composition** — Monte-Carlo through the scoring rules; retains full posterior draws for the
+   captaincy tail. Surfaces `mean, sd, defcon_ev, cs_ev, p5..p95`. (`bayes_model.project`)
+6. **Validation** — benchmarked against Solio Analytics' public feed, pooled and within-team.
+   (`solio_ensemble`)
 
-See "Quick start" above for the reconstruction + analysis scripts added in the 2026/27
-session update.
+## Design principles
 
-## Interactive board
+Empirical over asserted. Reject unvalidated heuristics (rotation and mean-reversion are
+tested-null; directional style priors are deliberately not built). New components ship
+off-by-default or as validated corrections. Report uncertainty honestly — regime change is a
+variance statement, not a mean one.
 
-Open `outputs/fpl_projection_model.html` in any browser — no server needed. Sortable/filterable
-player table, a derived per-gameweek split (flagged as an approximation — see the Notes tab in
-the file itself for the exact methodology), CSV export by gameweek, and a GW1-10 team fixture
-outlook tab.
+## Known limitations
 
-## Automatic refresh
+- Team strength is reconstructed 25/26 xGA + ClubElo, **not live odds** — the biggest open
+  predictive gain (`betting_features` already has the de-vig machinery; it needs a feed).
+- `older_weight` (and Isak's projection) is parameter-dependent until 2023-24 data enables a
+  walk-forward fit.
+- The CBIRT DefCon channel is left unconditioned pending a press index.
 
-A Cowork scheduled task checks this repo every 3 days for a newer board under `outputs/` and
-pulls it into the live interactive view; until a fresher board is pushed here it falls back to
-checking live public inputs (official FPL API, football-data.co.uk fixtures, Solio Analytics'
-public feed) and flags anything material that's changed.
+See `docs/PROJECT_KNOWLEDGE_2627.md` §6-§7 for the full open-items and not-built lists.

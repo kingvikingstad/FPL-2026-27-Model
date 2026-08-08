@@ -1,3 +1,5 @@
+from __future__ import annotations
+import config
 """
 build_pms.py — consolidate per-match player stats into a modelling panel
 ========================================================================
@@ -16,11 +18,10 @@ Why this beats the FPL aggregates the model used before:
     shot-stopping, which the model had no equivalent of
   * `start_min` / `finish_min`                -> exact time on pitch
 """
-from __future__ import annotations
 import glob, os
 import numpy as np, pandas as pd
 
-BASE = "/home/claude/repo/FPL-Core-Insights-main/data/2025-2026"
+BASE = config.repo("2025-2026")
 OUT = "/tmp/pms_panel.parquet"
 
 
@@ -97,7 +98,7 @@ def build():
 
     # ---- attach realised FPL points ---------------------------------------
     try:
-        h = pd.read_csv("/mnt/user-data/uploads/fpl-data-stats.csv")
+        h = pd.read_csv(config.FPL_DATA_STATS)
         h = h[["id", "gameweek", "total_points", "minutes", "defensive_contribution"]]
         h = h.rename(columns={"id": "player_id", "minutes": "fpl_minutes",
                               "defensive_contribution": "fpl_defcon"})
@@ -110,7 +111,7 @@ def build():
 if __name__ == "__main__":
     import warnings; warnings.filterwarnings("ignore")
     p = build()
-    p.to_parquet(OUT) if False else p.to_pickle("/tmp/pms_panel.pkl")
+    p.to_parquet(OUT) if False else p.to_pickle(config.PMS_PANEL)
     print(f"panel: {len(p)} player-matches | {p.player_id.nunique()} players | "
           f"GW {p.gameweek.min()}-{p.gameweek.max()} | teams {p.team.nunique()}")
     print(f"points joined: {p.total_points.notna().sum()} rows")

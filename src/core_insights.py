@@ -1,3 +1,5 @@
+from __future__ import annotations
+import config
 """
 core_insights.py — ingest the REAL 2026/27 dataset (FPL-Core-Insights)
 ======================================================================
@@ -18,7 +20,6 @@ This replaces every stopgap the model was using:
   * ClubElo name-matching  -> Elo shipped in teams.csv, keyed by FPL team code
   * guessed promoted prior -> Elo-derived prior for Coventry/Hull/Ipswich
 """
-from __future__ import annotations
 import numpy as np, pandas as pd
 
 POS = {"Goalkeeper": "GK", "Defender": "DEF", "Midfielder": "MID", "Forward": "FWD"}
@@ -100,7 +101,7 @@ def promoted_prior_from_elo(t, promoted=("Coventry", "Hull", "Ipswich"), scale=0
     return {"per_club": out, "mean": float(vals.mean()), "sd": float(max(vals.std(), 0.12))}
 
 
-def price_changes_vs_last_season(d, hist_csv="/mnt/user-data/uploads/fpl-data-stats.csv"):
+def price_changes_vs_last_season(d, hist_csv=config.FPL_DATA_STATS):
     """Compare 26/27 launch prices with 25/26 end-of-season prices."""
     try:
         h = pd.read_csv(hist_csv).sort_values(["id", "gameweek"])

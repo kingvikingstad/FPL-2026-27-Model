@@ -1,3 +1,5 @@
+from __future__ import annotations
+import config
 """
 solio_ensemble.py — blend our projections with Solio Analytics' public feed
 ===========================================================================
@@ -18,12 +20,11 @@ This module does four things:
 IMPORTANT basis rule: Solio publishes SINGLE-gameweek projections. Align against
 OUR single-GW projection (project(gw,gw)), never the GW1-6 cumulative board.
 """
-from __future__ import annotations
 import re, io, os, unicodedata
 import numpy as np, pandas as pd
 
 SOLIO_MD_URL = "https://fpl.solioanalytics.com/api/data/latest.md"
-CACHE = "/home/claude/fpl/solio_cache.md"
+CACHE = config.SOLIO_CACHE
 
 # Solio short codes -> our schedule short names (extend as needed)
 TEAM_MAP = {"MCI": "Man City", "MUN": "Man United", "MUN.": "Man United",
@@ -200,3 +201,24 @@ def disagreements(aligned: pd.DataFrame, n: int = 12) -> pd.DataFrame:
 def leverage(df: pd.DataFrame, proj="solio_proj", own="own") -> pd.Series:
     """Solio's own differential metric: proj * (1 - ownership)."""
     return df[proj] * (1 - df[own].astype(float) / 100.0)
+
+
+def benchmark_within_team(aligned: pd.DataFrame, min_n: int = 3) -> dict:
+    """Within-team rank agreement — isolates the attacking-SHARE term that pooled
+    correlation masks (pooled is dominated by between-team variance both models get
+    right). This is the decision-relevant metric: 'which of our players', not 'which
+    team'. Spearman computed within each club (>=min_n matched), averaged, n-weighted.
+    """
+    rows = []
+    for team, g in aligned.groupby("team"):
+        if len(g) < min_n:
+            continue
+        rho = g["our_proj"].corr(g["solio_proj"], method="spearman")
+        if pd.notna(rho):
+            rows.append((team, len(g), rho))
+    if not rows:
+        return {"within_team_spearman": float("nan"), "n_clubs": 0}
+    d = pd.DataFrame(rows, columns=["team", "n", "rho"])
+    return {"within_team_spearman": float(np.average(d.rho, weights=d.n)),
+            "n_clubs": len(d), "n_players": int(d.n.sum()),
+            "by_club": d.sort_values("rho").reset_index(drop=True)}

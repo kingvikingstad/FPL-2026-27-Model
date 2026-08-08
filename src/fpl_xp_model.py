@@ -34,8 +34,8 @@ ingest), statsmodels (richer inference; a numpy robust-OLS fallback is built in)
 
 Author: (built for an econometrician who lives in per-90 space)
 """
-
 from __future__ import annotations
+
 import numpy as np
 import pandas as pd
 from dataclasses import dataclass, field

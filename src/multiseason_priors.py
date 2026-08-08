@@ -1,3 +1,5 @@
+from __future__ import annotations
+import config
 """
 multiseason_priors.py — two-season hierarchical priors for 2026/27
 ===================================================================
@@ -21,19 +23,18 @@ IMPLEMENTATION
   means tighter Gamma posteriors and less estimation noise, especially for
   players with a short 25/26 (injury, mid-season transfer, late debut).
 """
-from __future__ import annotations
 import numpy as np, pandas as pd
-import sys; sys.path.insert(0, "/home/claude/fpl")
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
 from multiseason import build_2425_panel
 
-BASE = "/home/claude/repo/FPL-Core-Insights-main/data"
+BASE = config.REPO
 
 
 def two_season_evidence(older_weight=0.5, min_minutes_total=270):
     """Player-level evidence pooled across 24/25 and 25/26, keyed by player_code.
     Returns summed events and minutes with the older season down-weighted."""
     # --- 25/26 (recent, full weight) ---
-    p25 = pd.read_pickle("/tmp/pms_panel.pkl")
+    p25 = pd.read_pickle(config.PMS_PANEL)
     codes25 = pd.read_csv(f"{BASE}/2025-2026/players.csv")[["player_id", "player_code"]]
     p25 = p25.merge(codes25, on="player_id", how="left")
     a25 = p25.groupby(["player_code", "pos"], dropna=False).agg(
@@ -99,12 +100,12 @@ if __name__ == "__main__":
     import warnings; warnings.filterwarnings("ignore")
     ev = two_season_evidence()
     pri = to_priors(ev)
-    pri.to_pickle("/tmp/ms_priors.pkl")
+    pri.to_pickle(config.MS_PRIORS)
     print(f"two-season evidence: {len(ev)} players")
     print(f"  mean pooled minutes {ev.mins.mean():.0f} "
           f"(vs single-season typical ~1500)")
     # how much extra evidence does pooling buy?
-    p25 = pd.read_pickle("/tmp/pms_panel.pkl")
+    p25 = pd.read_pickle(config.PMS_PANEL)
     codes25 = pd.read_csv(f"{BASE}/2025-2026/players.csv")[["player_id", "player_code"]]
     p25 = p25.merge(codes25, on="player_id", how="left")
     m25 = p25.groupby("player_code").mins.sum()

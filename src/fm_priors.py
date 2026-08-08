@@ -1,3 +1,5 @@
+from __future__ import annotations
+import config
 """
 fm_priors.py — Football Manager attributes as Bayesian priors
 =============================================================
@@ -40,7 +42,6 @@ A CSV with the same column names works too. Community sites (e.g. sortitoutsi)
 browse the same database but are HTML-per-player and are SI/Sega IP — prefer
 your own in-game export.
 """
-from __future__ import annotations
 import numpy as np, pandas as pd
 
 # ---------------------------------------------------------------------------
@@ -141,7 +142,7 @@ def _ridge(X, y, lam=1.0):
 # 1. CALIBRATE the attribute -> rate mapping on the overlap population
 # ---------------------------------------------------------------------------
 def calibrate(fm: pd.DataFrame,
-              hist_csv="/mnt/user-data/uploads/fpl-data-stats.csv",
+              hist_csv=config.FPL_DATA_STATS,
               min_minutes=600, lam=1.0, verbose=True):
     """Fit FM attributes -> observed 25/26 per-90 rates on players present in both.
     Returns a mapping dict consumed by `apply_fm_priors`."""

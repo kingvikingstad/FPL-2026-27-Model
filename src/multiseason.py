@@ -1,3 +1,5 @@
+from __future__ import annotations
+import config
 """
 multiseason.py — does prior-season data improve early-season projection?
 ========================================================================
@@ -17,12 +19,11 @@ TEST DESIGN (clean, and it avoids circularity)
 
 Players are joined across seasons on `player_code`, the stable FPL identifier.
 """
-from __future__ import annotations
 import glob, os
 import numpy as np, pandas as pd
 from scipy import stats
 
-BASE = "/home/claude/repo/FPL-Core-Insights-main/data"
+BASE = config.REPO
 
 
 def build_2425_panel():
@@ -75,7 +76,7 @@ def run_test(K_grid=(0, 180, 450, 900, 1800, 4000), max_gw=10):
           f"rates for {len(r24)} with >=450 min")
 
     # --- current season (25/26) with FPL points ---
-    p25 = pd.read_pickle("/tmp/pms_panel.pkl")
+    p25 = pd.read_pickle(config.PMS_PANEL)
     codes = pd.read_csv(f"{BASE}/2025-2026/players.csv")[["player_id", "player_code"]]
     p25 = p25.merge(codes, on="player_id", how="left")
     cur = p25.groupby(["player_code", "pos", "gameweek"], dropna=False).agg(

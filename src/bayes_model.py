@@ -1,3 +1,5 @@
+from __future__ import annotations
+import config
 """
 bayes_model.py  —  Hierarchical Bayesian FPL projection for 2026/27
 ===================================================================
@@ -23,10 +25,9 @@ accumulate. Design choices are the ones the earlier analysis validated: xG over
 goals, light shrinkage, short-memory form, bonus loads onto goals, and the
 forward schedule with double/blank handling.
 """
-from __future__ import annotations
 import numpy as np, pandas as pd
 from scipy import stats
-import sys; sys.path.insert(0, "/home/claude/fpl")
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
 import betting_features as bf
 from schedule_2627 import schedule, PROMOTED
 from fpl_xp_model import (GOAL_POINTS, CLEAN_SHEET_PTS, ASSIST_POINTS,
@@ -159,33 +160,22 @@ class TeamModel:
 # =============================================================================
 # LAYER 2 & 3 — player rate (Gamma–Poisson) and availability (Beta–Binomial)
 # =============================================================================
-def player_posteriors(csv="/mnt/user-data/uploads/fpl-data-stats.csv",
-                      revert=0.70, min_minutes=450, agg=None):
-    """Gamma-Poisson rate posteriors + Beta availability posterior per player.
-
-    `agg` — optional pre-built season-total frame (see
-    `roster.season_aggregate_from_bootstrap`). Supplying it lets the whole prior
-    layer run off the live FPL bootstrap payload, with no dependency on the
-    legacy per-gameweek `fpl-data-stats.csv` panel.
-    """
-    if agg is None:
-        d = pd.read_csv(csv)
-        d["pos"] = d.element_type.map({1: "GK", 2: "DEF", 3: "MID", 4: "FWD"})
-        d["team"] = d.team_name.replace(BET_NAME)
-        agg = d.groupby(["id", "web_name", "pos", "team"]).agg(
-            minutes=("minutes", "sum"),
-            npxgi=("non_penalty_expected_goal_involvements", "sum"),
-            xa=("expected_assists", "sum"),
-            defcon=("defensive_contribution", "sum"),
-            starts=("minutes", lambda s: (s >= 60).sum()),
-            apps=("minutes", lambda s: (s > 0).sum()),
-            games=("minutes", "size"),
-            own=("selected_by_percent", "last"),
-            cost=("now_cost", "last"),
-        ).reset_index()
-    else:
-        agg = agg.copy()
-        agg["team"] = agg.team.replace(BET_NAME)
+def player_posteriors(csv=config.FPL_DATA_STATS,
+                      revert=0.70, min_minutes=450):
+    d = pd.read_csv(csv)
+    d["pos"] = d.element_type.map({1: "GK", 2: "DEF", 3: "MID", 4: "FWD"})
+    d["team"] = d.team_name.replace(BET_NAME)
+    agg = d.groupby(["id", "web_name", "pos", "team"]).agg(
+        minutes=("minutes", "sum"),
+        npxgi=("non_penalty_expected_goal_involvements", "sum"),
+        xa=("expected_assists", "sum"),
+        defcon=("defensive_contribution", "sum"),
+        starts=("minutes", lambda s: (s >= 60).sum()),
+        apps=("minutes", lambda s: (s > 0).sum()),
+        games=("minutes", "size"),
+        own=("selected_by_percent", "last"),
+        cost=("now_cost", "last"),
+    ).reset_index()
     agg = agg[agg.minutes >= min_minutes].copy()
     nnf = agg.minutes / 90.0
     # position prior means (per-90) for partial pooling
@@ -210,34 +200,14 @@ def player_posteriors(csv="/mnt/user-data/uploads/fpl-data-stats.csv",
 # =============================================================================
 # COMPOSITION — Monte-Carlo posterior predictive over a horizon
 # =============================================================================
-def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, market=None,
-            market_weight=0.5, return_fixtures=False):
-    """Monte-Carlo posterior predictive over gameweeks [gw_lo, gw_hi].
-
-    Calling this with gw_lo == gw_hi yields a TRUE single-gameweek posterior
-    (the window filter below is what makes that work), not a share of a
-    multi-week aggregate.
-
-    `market` — optional {(gameweek, team): (lambda_for, lambda_against)} from
-    `market_odds.fixture_odds_to_market_map`. Where a fixture is priced, the
-    model's own expected goals are blended with the market's in LOG space
-    (geometric blend, which keeps the result positive and is the natural scale
-    for a Poisson rate). `market_weight` is the weight on the market: 0 ignores
-    it entirely, 1 defers to it completely. The blend is applied to the whole
-    posterior draw vector, so model uncertainty is preserved rather than being
-    collapsed to a point estimate by the market.
-    """
+def project(players, tm, tsamp, gw_lo, gw_hi, S=1500):
     sched, long = schedule()
     win = long[(long.gameweek >= gw_lo) & (long.gameweek <= gw_hi)]
     # per-team, per-fixture expected goals for/against for all S draws
     idx2 = tsamp["idx"]; mu = tsamp["mu"]; home = tsamp["home"]
     A = tsamp["att"]; D = tsamp["dfn"]
-    market = market or {}
-    w = float(np.clip(market_weight, 0.0, 1.0))
-    n_priced = 0
     # build, per team, arrays of (n_fix, S) lambda_for and lambda_against
     fix_by_team = {}
-    fixture_rows = []
     for team, g in win.groupby("team"):
         if team not in idx2:
             continue
@@ -250,24 +220,8 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, market=None,
             lam_for = np.exp(mu + h + A[:, ti] - D[:, oi])
             hopp = 0.0 if r.is_home else home
             lam_against = np.exp(mu + hopp + A[:, oi] - D[:, ti])
-            mk = market.get((int(r.gameweek), team))
-            if mk is not None and w > 0:
-                m_for, m_against = mk
-                if np.isfinite(m_for) and m_for > 0:
-                    lam_for = np.exp((1 - w) * np.log(lam_for) + w * np.log(m_for))
-                if np.isfinite(m_against) and m_against > 0:
-                    lam_against = np.exp((1 - w) * np.log(lam_against) + w * np.log(m_against))
-                n_priced += 1
             lf.append(lam_for); la.append(lam_against)
-            if return_fixtures:
-                fixture_rows.append({
-                    "gameweek": int(r.gameweek), "team": team, "opp": r.opp,
-                    "is_home": int(r.is_home), "xg_for": float(lam_for.mean()),
-                    "xg_against": float(lam_against.mean()),
-                    "cs_prob": float(np.exp(-lam_against).mean()),
-                    "market_priced": int(mk is not None)})
         fix_by_team[team] = (np.array(lf), np.array(la))   # (nfix, S)
-    project.last_market_fixtures = n_priced
 
     out = []
     for _, p in players.iterrows():
@@ -293,6 +247,7 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, market=None,
         dc_rate  = _safe(rng.gamma(max(float(np.nan_to_num(p.defcon_alpha, nan=5.0)), 1e-6),
                                    1 / max(float(np.nan_to_num(p.defcon_beta, nan=1.5)), 1e-6), S), 40.0)
         pts = np.zeros(S)
+        dc_pts = np.zeros(S); cs_pts = np.zeros(S)
         for f in range(nfix):
             start = rng.random(S) < p_start
             sub   = (~start) & (rng.random(S) < p.sub_app_rate)
@@ -323,25 +278,14 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, market=None,
             dcp = np.where(dc_cnt >= thr, DEFCON_PTS, 0.0)
             appp = np.where(played60, 2.0, np.where(played, 1.0, 0.0))
             pts += appp + gp + ap + csp + concp + dcp
+            dc_pts += dcp; cs_pts += csp
         q = np.percentile(pts, [5, 25, 50, 75, 95])
         out.append({"id": p.id, "player": p.web_name, "pos": pos, "team": p.team,
                     "own": p.own, "cost": p.cost, "nfix": nfix,
                     "mean": pts.mean(), "sd": pts.std(),
-                    "p5": q[0], "p25": q[1], "median": q[2], "p75": q[3], "p95": q[4],
-                    # Decision-relevant tail summaries. Captaincy is a haul
-                    # problem and bench cover is a floor problem, so surface both
-                    # rather than making the user re-derive them from the CSV.
-                    # Thresholds scale with the window so they stay meaningful
-                    # whether this is one gameweek or twelve: "ceiling" = a 6+
-                    # points-per-fixture return rate, "floor" = 2 or fewer.
-                    "p_ceiling": float((pts >= 6.0 * nfix).mean()),
-                    "p_floor": float((pts <= 2.0 * nfix).mean()),
-                    "pts_per_fix": float(pts.mean() / nfix),
-                    "exp_starts": float(np.round(p.start_a / (p.start_a + p.start_b) * nfix, 2)),
-                    "cold_start": bool(getattr(p, "cold_start", False))})
+                    "defcon_ev": dc_pts.mean(), "cs_ev": cs_pts.mean(),
+                    "p5": q[0], "p25": q[1], "median": q[2], "p75": q[3], "p95": q[4]})
     res = pd.DataFrame(out).sort_values("mean", ascending=False).reset_index(drop=True)
-    if return_fixtures:
-        return res, pd.DataFrame(fixture_rows)
     return res
 
 
@@ -359,7 +303,7 @@ if __name__ == "__main__":
     tstab["net"] = tstab.attack + tstab.defence
     tstab["promoted"] = tstab.team.isin(PROMOTED)
     tstab = tstab.sort_values("net", ascending=False)
-    tstab.round(3).to_csv("/mnt/user-data/outputs/team_strength_posteriors_2627.csv", index=False)
+    tstab.round(3).to_csv(os.path.join(config.OUTPUTS, "team_strength_posteriors_2627.csv"), index=False)
     print("\nTeam strength posteriors (net = attack+defence):")
     print(tstab.round(3).to_string(index=False))
 
@@ -367,7 +311,7 @@ if __name__ == "__main__":
     players = player_posteriors()
     for lo, hi, tag in [(1, 6, "GW1-6"), (1, 38, "full-season")]:
         res = project(players, tm, tsamp, lo, hi, S=1500)
-        res.round(2).to_csv(f"/mnt/user-data/outputs/projection_2627_{tag}.csv", index=False)
+        res.round(2).to_csv(fos.path.join(config.OUTPUTS, "projection_2627_{tag}.csv"), index=False)
         print(f"\n=== 2026/27 {tag}: top 15 by posterior-mean points (90% CI) ===")
         show = res.head(15)[["player","pos","team","nfix","mean","p5","p95","own"]]
         print(show.round(1).to_string(index=False))

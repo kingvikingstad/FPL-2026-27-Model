@@ -1,0 +1,61 @@
+gw,home,away,xg_home,xg_away,total,goals_per_sd_style,home_style_status,away_style_status,n_blind,actionable
+4,Chelsea,Hull,2.797,0.812,3.609,0.185,new regime,promoted,2,no - style unmeasurable
+2,Man United,Ipswich,2.638,0.92,3.558,0.182,new regime,promoted,2,no - style unmeasurable
+3,Man City,Coventry,2.79,0.751,3.541,0.182,stable,promoted,1,no - style unmeasurable
+1,Hull,Man United,0.976,2.476,3.453,0.177,promoted,new regime,2,no - style unmeasurable
+5,Newcastle,Hull,2.583,0.836,3.419,0.175,stable,promoted,1,no - style unmeasurable
+1,Man City,Bournemouth,2.213,1.03,3.243,0.166,stable,stable,0,yes
+5,Bournemouth,Liverpool,1.717,1.476,3.193,0.164,stable,new regime,1,no - style unmeasurable
+1,Arsenal,Coventry,2.576,0.61,3.186,0.163,stable,promoted,1,no - style unmeasurable
+6,Man United,Tottenham,2.079,1.102,3.181,0.163,new regime,new regime,2,no - style unmeasurable
+6,Chelsea,Bournemouth,1.796,1.375,3.171,0.163,new regime,stable,1,no - style unmeasurable
+3,Ipswich,Liverpool,1.21,1.938,3.147,0.161,promoted,new regime,2,no - style unmeasurable
+4,Man United,Man City,1.468,1.621,3.089,0.158,new regime,stable,1,no - style unmeasurable
+3,Hull,Aston Villa,0.983,2.103,3.085,0.158,promoted,stable,1,no - style unmeasurable
+4,Bournemouth,Brentford,1.733,1.35,3.083,0.158,stable,stable,0,yes
+1,Newcastle,Liverpool,1.596,1.483,3.079,0.158,stable,new regime,1,no - style unmeasurable
+3,Newcastle,Bournemouth,1.658,1.417,3.076,0.158,stable,stable,0,yes
+2,Coventry,Hull,2.022,1.05,3.072,0.157,promoted,promoted,2,no - style unmeasurable
+6,Liverpool,Man City,1.366,1.684,3.049,0.156,new regime,stable,1,no - style unmeasurable
+5,Brentford,Chelsea,1.664,1.379,3.043,0.156,stable,new regime,1,no - style unmeasurable
+6,Coventry,Newcastle,1.308,1.652,2.96,0.152,promoted,stable,1,no - style unmeasurable
+2,Liverpool,Nott'm Forest,1.79,1.152,2.942,0.151,new regime,new regime,2,no - style unmeasurable
+1,Brentford,Tottenham,1.766,1.156,2.922,0.15,stable,new regime,1,no - style unmeasurable
+6,Aston Villa,Brentford,1.66,1.259,2.919,0.15,stable,stable,0,yes
+4,Liverpool,Fulham,1.778,1.138,2.915,0.149,new regime,stable,1,no - style unmeasurable
+4,Leeds,Newcastle,1.562,1.346,2.908,0.149,stable,stable,0,yes
+5,Everton,Ipswich,1.962,0.937,2.899,0.149,stable,promoted,1,no - style unmeasurable
+5,Fulham,Man United,1.385,1.511,2.896,0.148,stable,new regime,1,no - style unmeasurable
+2,Leeds,Brentford,1.51,1.385,2.894,0.148,stable,stable,0,yes
+5,Nott'm Forest,Coventry,1.908,0.985,2.893,0.148,new regime,promoted,2,no - style unmeasurable
+3,Everton,Man United,1.384,1.499,2.884,0.148,stable,new regime,1,no - style unmeasurable
+2,Tottenham,Newcastle,1.513,1.355,2.868,0.147,new regime,stable,1,no - style unmeasurable
+2,Bournemouth,Everton,1.684,1.181,2.865,0.147,stable,stable,0,yes
+3,Arsenal,Chelsea,1.991,0.843,2.834,0.145,stable,new regime,1,no - style unmeasurable
+2,Chelsea,Brighton,1.585,1.248,2.833,0.145,new regime,stable,1,no - style unmeasurable
+6,Hull,Everton,0.993,1.839,2.832,0.145,promoted,stable,1,no - style unmeasurable
+6,Arsenal,Leeds,2.096,0.729,2.825,0.145,stable,stable,0,yes
+1,Fulham,Chelsea,1.458,1.35,2.809,0.144,stable,new regime,1,no - style unmeasurable
+5,Man City,Sunderland,2.019,0.781,2.8,0.144,stable,stable,0,yes
+5,Tottenham,Aston Villa,1.402,1.396,2.798,0.143,new regime,stable,1,no - style unmeasurable
+4,Coventry,Brighton,1.148,1.614,2.762,0.142,promoted,stable,1,no - style unmeasurable
+4,Crystal Palace,Ipswich,1.816,0.941,2.757,0.141,new regime,promoted,2,no - style unmeasurable
+4,Aston Villa,Nott'm Forest,1.637,1.116,2.752,0.141,stable,new regime,1,no - style unmeasurable
+6,Ipswich,Fulham,1.195,1.552,2.747,0.141,promoted,stable,1,no - style unmeasurable
+3,Brighton,Leeds,1.662,1.084,2.746,0.141,stable,stable,0,yes
+1,Nott'm Forest,Leeds,1.555,1.178,2.733,0.14,new regime,stable,1,no - style unmeasurable
+3,Nott'm Forest,Tottenham,1.566,1.14,2.707,0.139,new regime,new regime,2,no - style unmeasurable
+1,Brighton,Aston Villa,1.512,1.192,2.703,0.139,stable,stable,0,yes
+2,Crystal Palace,Man City,1.009,1.656,2.665,0.137,new regime,stable,1,no - style unmeasurable
+4,Tottenham,Everton,1.42,1.222,2.642,0.135,new regime,stable,1,no - style unmeasurable
+3,Brentford,Sunderland,1.557,1.04,2.597,0.133,stable,stable,0,yes
+5,Leeds,Crystal Palace,1.472,1.122,2.594,0.133,stable,new regime,1,no - style unmeasurable
+1,Ipswich,Sunderland,1.145,1.403,2.549,0.131,promoted,stable,1,no - style unmeasurable
+2,Aston Villa,Arsenal,1.014,1.506,2.52,0.129,stable,stable,0,yes
+6,Crystal Palace,Nott'm Forest,1.324,1.134,2.458,0.126,new regime,new regime,2,no - style unmeasurable
+3,Fulham,Crystal Palace,1.417,1.039,2.456,0.126,stable,new regime,1,no - style unmeasurable
+1,Everton,Crystal Palace,1.415,1.03,2.445,0.125,stable,new regime,1,no - style unmeasurable
+5,Brighton,Arsenal,0.962,1.425,2.386,0.122,stable,stable,0,yes
+2,Sunderland,Fulham,1.286,1.079,2.365,0.121,stable,stable,0,yes
+6,Sunderland,Brighton,1.194,1.168,2.362,0.121,stable,stable,0,yes
+4,Sunderland,Arsenal,0.804,1.472,2.276,0.117,stable,stable,0,yes

@@ -1,3 +1,5 @@
+from __future__ import annotations
+import config
 """
 pms_priors.py — build 26/27 player priors from 25/26 PER-MATCH data
 ====================================================================
@@ -24,10 +26,9 @@ More saves means a worse defence in front of you: fewer clean sheets, more
 concessions. Save volume is a liability signal, not an asset signal. The model
 should pick keepers on team defensive quality, not shot-stopping workload.
 """
-from __future__ import annotations
 import numpy as np, pandas as pd
 
-PANEL = "/tmp/pms_panel.pkl"
+PANEL = config.PMS_PANEL
 PEN_XG = 0.79
 
 
@@ -107,5 +108,5 @@ if __name__ == "__main__":
     gk = r[r.pos == "GK"].nsmallest(6, "xgot_faced_90")
     print(gk[["web_name", "team", "mins", "xgot_faced_90", "saves_90", "gp_90"]].round(3).to_string(index=False))
     pri = to_model_priors(r)
-    pri.to_pickle("/tmp/pms_priors.pkl")
+    pri.to_pickle(config.PMS_PRIORS)
     print(f"\nwrote priors for {len(pri)} players -> /tmp/pms_priors.pkl")
