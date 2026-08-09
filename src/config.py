@@ -55,6 +55,16 @@ SOLIO_CACHE = os.path.join(DATA, "solio_cache.md")
 # --- optional legacy input (only used if present) ---
 FPL_DATA_STATS = os.environ.get("FPL_DATA_STATS") or os.path.join(DATA, "fpl-data-stats.csv")
 
+# --- soccerdata (Understat / WhoScored) ---
+# Scraped sources: cache aggressively, re-scrape rarely. Lives under SCRATCH so it is
+# gitignored, but it is NOT cheaply regenerable — a WhoScored pull takes hours.
+SD_CACHE = os.environ.get("FPL_SD_CACHE") or os.path.join(SCRATCH, "soccerdata")
+os.makedirs(SD_CACHE, exist_ok=True)
+
+# hand-verified and committed (see crosswalk.py); the review file is a working artefact
+CROSSWALK_UNDERSTAT = os.path.join(DATA, "crosswalk_understat.csv")
+CROSSWALK_REVIEW = os.path.join(DATA, "crosswalk_review.csv")
+
 
 def repo(season=None):
     """REPO, or REPO/<season> if given."""
@@ -67,6 +77,7 @@ def status():
     print(f"SCRATCH  {SCRATCH}")
     print(f"OUTPUTS  {OUTPUTS}")
     print(f"DATA     {DATA}")
+    print(f"SD_CACHE {SD_CACHE}")
 
 
 if __name__ == "__main__":

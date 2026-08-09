@@ -22,6 +22,10 @@ src/        all importable modules (flat, so cross-imports resolve)
   signal layers starter_prior (depth prior + minutes shrinkage + regime κ/δ),
                 regime_panel (appointment split), defcon_env (DefCon environment),
                 lineups (XI ingestion), solio_ensemble (benchmark + ensemble)
+  event data    sd_ingest (cached Understat/WhoScored readers), xg_calibrate
+                (put scraped xG on the model's scale), crosswalk (Understat id ->
+                player_code), setpiece (component reliability + persistence)
+                — foundation only, not yet wired into the board
 scripts/    runnable entry points (run_final_board is canonical)
 tests/      acceptance/validation tests (regime, panel, defcon, shrinkage)
 studies/    validation studies & the null-finding record (rotation, ownership, variance, ...)
@@ -149,5 +153,10 @@ variance statement, not a mean one.
 - `older_weight` (and Isak's projection) is parameter-dependent until 2023-24 data enables a
   walk-forward fit.
 - The CBIRT DefCon channel is left unconditioned pending a press index.
+- Event data (Understat/WhoScored) is scaffolded but **unpopulated** — no scrape has run,
+  so nothing in `sd_ingest`/`setpiece` feeds the board yet. See
+  [`docs/SOCCERDATA_FINDINGS.md`](docs/SOCCERDATA_FINDINGS.md) for what was built, what the
+  integration spec got wrong about this repo, and why ratio-disattenuation was replaced with
+  a simulation inversion.
 
 See `docs/PROJECT_KNOWLEDGE_2627.md` §6-§7 for the full open-items and not-built lists.
