@@ -429,6 +429,96 @@ All four acceptance tests pass unchanged, and every board output was regenerated
 
 ---
 
+## `[NULL]`/`[CHECK]` Transfer churn — the count says nothing, the disruption says a little
+
+`studies/transfer_churn.py`. Transaction counts per club-season from transfermarkt,
+2014/15–2025/26 (240 club-seasons), against league outcome month by month.
+
+**Two confounds would otherwise manufacture a result.** Promoted clubs churn hardest and
+are weakest — 48.7 transactions and 41.5 points against 37.3 and 55.6 for established
+clubs — so leaving them in produces a large "churn causes failure" effect that is really
+just "promoted clubs are worse". They are excluded. And churn is **not monotone in
+quality**: Chelsea made 42 transactions in 14/15, Man City 31 in 16/17. Big clubs trade
+heavily too, mostly loans and squad filler. Everything below conditions on prior-season
+strength.
+
+### 1. Transaction count vs the table — nothing
+
+| model | churn coefficient | t |
+|---|---|---|
+| raw correlation with points | +0.034 | — |
+| points ~ churn | +0.589 pts per SD | +0.46 |
+| **points ~ prior strength + churn** | **+0.980 pts per SD** | **+1.08** |
+
+No relationship, and the sign is *positive*. Prior-season strength dominates
+(+35.9 points per SD, t = 13.8). By month, every coefficient is small and most are
+positive; the interaction of churn with August–September is +0.013, 95% CI (−0.042,
++0.071), cluster-bootstrapped over club-seasons. **Not significant anywhere.**
+
+### 2. But the count is a poor measure — cross-checked against local data
+
+Scraped arrivals against squad turnover computed from the **local** vaastav data (players
+who actually appeared, keyed on permanent `player_code`), 85 club-seasons:
+
+```
+Pearson +0.525   Spearman +0.483
+mean scraped arrivals 18.4  vs  local new players who actually played 9.6
+```
+
+The levels *should* differ — transfermarkt counts every transaction including loans,
+youth and reserves. But r ≈ 0.5 means the transaction count is a loose proxy for squad
+disruption that reaches the pitch, and a null on a badly-measured regressor is a weak
+null. So the test was repeated on the local measure.
+
+### 3. Directly-measured disruption does cost — but not early
+
+Regressor: share of a club's minutes played by players who did not appear for it the
+previous season. Exact, local, 85 club-seasons over 5 seasons.
+
+| | value |
+|---|---|
+| season-long coefficient | **−0.0586** |
+| naive se (match rows treated as independent) | 0.0182, t = −3.23 — *overstates certainty* |
+| **clustered 95% CI** (bootstrap over club-seasons) | **(−0.113, −0.005)** |
+| interaction with Aug–Sep | −0.033 (t = −0.73), **not significant** |
+
+Two things follow, and they point in different directions:
+
+- Real squad disruption carries a **modest season-long penalty** — about 0.06 SD of goal
+  difference per SD of disruption. It survives clustering, but only just: the naive t of
+  −3.23 becomes an interval that barely clears zero once the 38 correlated matches inside
+  a club-season are accounted for.
+- It is **not front-loaded**. The Aug–Sep interaction is null. The only individually
+  significant months are November (−0.207) and April (−0.199), which have no mechanism
+  between them, and 2 of 10 months at p < 0.05 is about what chance delivers.
+
+**Causality warning on the season-long number.** `new_minute_share` counts January
+arrivals, and clubs sign in January *because* the first half went badly. That is reverse
+causation inflating any negative coefficient. The by-month interaction — the actual
+question — is far less exposed, because it compares months within the same clubs.
+
+### Answer to the question
+
+**No.** A higher number of transactions does not lead to worse outcomes by month. The
+transaction count itself predicts nothing once prior strength is controlled for, and while
+genuinely measured squad disruption carries a small season-long cost, that cost is flat
+across the calendar rather than concentrated in the opening weeks. **No gameweek-specific
+churn adjustment is warranted**, and in particular churn does *not* explain the
+prior-7-to-12 early fade documented earlier in this file.
+
+### Provenance and the validation gate
+
+`data/transfer_counts.csv` is LLM-transcribed from transfermarkt, one page per season.
+Transcription risk is real — one page returned a header labelled "2024/25" for the 2025/26
+season, caught only because the club list gave it away. So `validate()` checks every
+season's club set against Understat's for the same season and **refuses to run** on a
+mismatch; a wrong-season page cannot pass silently. All 12 seasons currently match
+exactly. That gate also surfaced a genuine gap in `sd_ingest.normalise_team`, which
+covered only current clubs and had no mapping for Queens Park Rangers or West Bromwich
+Albion — now fixed.
+
+---
+
 ## `[NULL]` Major-tournament summers — no detectable effect on GW1–6
 
 `studies/tournament_summers.py`. Directly relevant to 2026/27, which follows the June–July

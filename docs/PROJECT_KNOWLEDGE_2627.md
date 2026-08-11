@@ -119,6 +119,11 @@ drives goals 3x harder early. **Applied 2026-08-11:** a single-step GW1-3 home d
 0.152, split symmetrically home/away so the match total is preserved (−0.41%); one step
 not a schedule because md4-6 shows no discount and the segment profile is non-monotone.
 Board effect confined to GW1-3, home −0.084 / away +0.079, net ~0),
+`transfer_churn` (transaction counts 2014-2026 vs the table by month: **null** — +0.98 pts
+per SD of churn controlling for prior strength, t=1.08, and no month effect. Directly
+measured squad disruption does carry a small season-long cost, clustered CI (−0.113,
+−0.005), but it is NOT front-loaded (Aug-Sep interaction t=−0.73) and is confounded by
+January signings. **No gameweek-specific churn adjustment**),
 `tournament_summers` (WC/Euro summers vs GW1-6: **null on every metric**, exact permutation
 p 0.25-0.99, and the mechanism test points the wrong way — but n=5 vs 7 seasons so the
 minimum detectable effect is 0.34 goals/match; **no tournament adjustment for 26/27**,

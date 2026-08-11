@@ -81,6 +81,9 @@ UNDERSTAT_TO_FRAME = {
     "Leicester": "Leicester", "Leeds": "Leeds", "West Ham": "West Ham",
     "Brighton": "Brighton", "Sheffield United": "Sheffield United",
     "Ipswich": "Ipswich", "Luton": "Luton",
+    # Clubs no longer in the division. Needed once the studies reach back to 2014/15 —
+    # the map above only ever covered teams in the current season.
+    "Queens Park Rangers": "QPR", "West Bromwich Albion": "West Brom",
 }
 
 

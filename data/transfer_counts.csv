@@ -1,0 +1,241 @@
+season,club,arrivals,departures
+1415,Man United,25,26
+1415,Liverpool,25,21
+1415,Chelsea,42,48
+1415,Arsenal,18,22
+1415,Man City,14,16
+1415,Southampton,25,21
+1415,Tottenham,20,24
+1415,Hull,30,28
+1415,Newcastle,23,25
+1415,QPR,35,35
+1415,Swansea,24,27
+1415,Everton,18,15
+1415,West Ham,25,26
+1415,Crystal Palace,41,39
+1415,West Brom,16,20
+1415,Leicester,31,24
+1415,Sunderland,21,31
+1415,Aston Villa,29,32
+1415,Burnley,24,23
+1415,Stoke,18,19
+1516,Man City,22,25
+1516,Man United,21,20
+1516,Liverpool,24,24
+1516,Newcastle,26,23
+1516,Chelsea,39,37
+1516,Watford,33,30
+1516,Tottenham,11,21
+1516,Aston Villa,29,32
+1516,Sunderland,29,25
+1516,Southampton,16,17
+1516,Bournemouth,36,33
+1516,Stoke,13,14
+1516,West Ham,25,26
+1516,Norwich,33,30
+1516,Leicester,25,32
+1516,Everton,18,17
+1516,West Brom,12,13
+1516,Crystal Palace,19,23
+1516,Arsenal,15,12
+1516,Swansea,20,24
+1617,Man City,31,25
+1617,Man United,8,13
+1617,Chelsea,27,30
+1617,Arsenal,11,12
+1617,Crystal Palace,22,24
+1617,Leicester,17,18
+1617,Everton,18,18
+1617,Tottenham,8,8
+1617,West Ham,21,15
+1617,Liverpool,21,19
+1617,Watford,29,32
+1617,Southampton,12,9
+1617,Swansea,21,17
+1617,Middlesbrough,18,19
+1617,Burnley,27,26
+1617,Stoke,14,13
+1617,Sunderland,25,23
+1617,Bournemouth,19,31
+1617,Hull,26,17
+1617,West Brom,13,14
+1718,Man City,31,32
+1718,Chelsea,40,31
+1718,Everton,23,21
+1718,Man United,12,10
+1718,Liverpool,13,15
+1718,Arsenal,10,16
+1718,Tottenham,15,12
+1718,Leicester,14,13
+1718,Watford,32,30
+1718,Swansea,21,24
+1718,Brighton,23,22
+1718,Southampton,12,14
+1718,Stoke,18,17
+1718,West Ham,16,25
+1718,Huddersfield,22,16
+1718,Crystal Palace,15,18
+1718,West Brom,17,11
+1718,Newcastle,27,29
+1718,Burnley,20,22
+1718,Bournemouth,15,14
+1819,Chelsea,30,31
+1819,Liverpool,18,21
+1819,Wolves,35,45
+1819,Fulham,18,11
+1819,Leicester,17,18
+1819,West Ham,18,13
+1819,Everton,19,23
+1819,Bournemouth,14,16
+1819,Brighton,28,29
+1819,Man United,10,10
+1819,Arsenal,17,12
+1819,Man City,19,22
+1819,Southampton,16,18
+1819,Newcastle,22,23
+1819,Cardiff,18,18
+1819,Huddersfield,14,16
+1819,Burnley,10,13
+1819,Watford,26,27
+1819,Crystal Palace,11,16
+1819,Tottenham,4,4
+1920,Man United,13,12
+1920,Man City,25,26
+1920,Arsenal,16,19
+1920,Aston Villa,22,22
+1920,Tottenham,12,14
+1920,Everton,22,22
+1920,West Ham,10,17
+1920,Wolves,27,26
+1920,Leicester,13,13
+1920,Sheffield United,23,21
+1920,Newcastle,13,11
+1920,Brighton,25,30
+1920,Southampton,14,17
+1920,Watford,21,21
+1920,Bournemouth,13,12
+1920,Chelsea,22,29
+1920,Burnley,8,11
+1920,Liverpool,15,16
+1920,Norwich,22,27
+1920,Crystal Palace,13,15
+2021,Chelsea,31,26
+2021,Man City,27,27
+2021,Leeds,16,16
+2021,Tottenham,15,11
+2021,Aston Villa,12,15
+2021,Man United,17,17
+2021,Wolves,21,22
+2021,Arsenal,16,16
+2021,Liverpool,17,13
+2021,Everton,20,20
+2021,Sheffield United,16,19
+2021,Leicester,19,18
+2021,West Ham,16,17
+2021,Brighton,28,22
+2021,West Brom,23,22
+2021,Newcastle,10,15
+2021,Southampton,23,18
+2021,Fulham,23,19
+2021,Crystal Palace,12,8
+2021,Burnley,6,6
+2122,Arsenal,13,20
+2122,Man United,16,14
+2122,Man City,22,24
+2122,Newcastle,12,10
+2122,Aston Villa,22,18
+2122,Chelsea,21,23
+2122,Tottenham,14,19
+2122,Liverpool,14,12
+2122,Crystal Palace,13,15
+2122,Brighton,26,29
+2122,West Ham,10,8
+2122,Leicester,11,11
+2122,Norwich,32,30
+2122,Southampton,10,14
+2122,Leeds,13,15
+2122,Burnley,8,6
+2122,Watford,31,29
+2122,Everton,13,15
+2122,Brentford,19,15
+2122,Wolves,24,22
+2223,Chelsea,28,25
+2223,Man United,23,19
+2223,Nott'm Forest,42,26
+2223,West Ham,12,13
+2223,Newcastle,14,12
+2223,Arsenal,25,18
+2223,Tottenham,15,14
+2223,Wolves,31,27
+2223,Leeds,24,19
+2223,Man City,29,24
+2223,Southampton,21,14
+2223,Liverpool,10,13
+2223,Aston Villa,23,22
+2223,Bournemouth,17,13
+2223,Everton,19,21
+2223,Fulham,20,21
+2223,Brighton,21,23
+2223,Brentford,23,21
+2223,Leicester,10,9
+2223,Crystal Palace,15,13
+2324,Chelsea,29,32
+2324,Tottenham,27,22
+2324,Man City,19,21
+2324,Arsenal,15,16
+2324,Man United,15,23
+2324,Liverpool,12,16
+2324,Newcastle,15,14
+2324,West Ham,10,11
+2324,Nott'm Forest,35,41
+2324,Bournemouth,23,21
+2324,Aston Villa,14,14
+2324,Burnley,31,22
+2324,Brighton,28,22
+2324,Wolves,26,31
+2324,Fulham,15,16
+2324,Brentford,19,16
+2324,Crystal Palace,9,9
+2324,Sheffield United,18,15
+2324,Everton,16,16
+2324,Luton,28,26
+2425,Brighton,23,25
+2425,Chelsea,31,31
+2425,Man United,15,17
+2425,Man City,15,13
+2425,Aston Villa,20,25
+2425,Tottenham,17,17
+2425,Ipswich,17,19
+2425,Bournemouth,18,23
+2425,West Ham,17,14
+2425,Southampton,30,19
+2425,Wolves,22,16
+2425,Arsenal,10,13
+2425,Nott'm Forest,26,32
+2425,Brentford,14,18
+2425,Crystal Palace,16,17
+2425,Fulham,13,12
+2425,Leicester,14,13
+2425,Newcastle,9,14
+2425,Everton,11,12
+2425,Liverpool,11,13
+2526,Liverpool,17,12
+2526,Chelsea,30,31
+2526,Man City,20,20
+2526,Arsenal,16,16
+2526,Newcastle,15,15
+2526,Tottenham,20,20
+2526,Man United,13,14
+2526,Nott'm Forest,26,24
+2526,Sunderland,29,29
+2526,West Ham,22,25
+2526,Bournemouth,21,22
+2526,Wolves,19,25
+2526,Crystal Palace,24,20
+2526,Burnley,27,26
+2526,Everton,17,18
+2526,Leeds,15,14
+2526,Brentford,20,19
+2526,Brighton,33,31
+2526,Fulham,6,8
+2526,Aston Villa,23,22

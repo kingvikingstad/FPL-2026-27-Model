@@ -68,6 +68,9 @@ TEAM_HYPERPARAMS = os.path.join(DATA, "team_hyperparams.json")
 # Managerial changes, club + date, transcribed from transfermarkt (see
 # studies/late_form_carryover.py for the provenance caveat).
 MANAGER_CHANGES = os.path.join(DATA, "manager_changes.csv")
+# Per club-season transfer transaction counts, transcribed from transfermarkt
+# (see studies/transfer_churn.py for the provenance caveat and the validation gate).
+TRANSFER_COUNTS = os.path.join(DATA, "transfer_counts.csv")
 COLDSTART_HIST = os.path.join(DATA, "coldstart_hist.csv")
 SOLIO_CACHE = os.path.join(DATA, "solio_cache.md")
 
