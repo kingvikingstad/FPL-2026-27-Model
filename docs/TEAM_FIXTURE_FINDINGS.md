@@ -429,6 +429,90 @@ All four acceptance tests pass unchanged, and every board output was regenerated
 
 ---
 
+## `[NULL]` Major-tournament summers — no detectable effect on GW1–6
+
+`studies/tournament_summers.py`. Directly relevant to 2026/27, which follows the June–July
+2026 World Cup with a GW1 deadline of 21 Aug 2026.
+
+**This is underpowered by construction, and that is the finding as much as the null is.**
+Understat gives 12 PL seasons; five follow a World Cup or Euro. Match-level data does not
+rescue it — 380 matches in a season are not 380 independent observations of "what a
+tournament summer does", because the treatment is applied once per season. Unit of
+analysis is the season: **n = 5 vs 7**.
+
+### Design
+
+Difference-in-differences. Comparing tournament seasons to others directly would confound
+the tournament with era drift; comparing early to late within a season removes era but not
+the ordinary early-season pattern already documented above. So the estimand is
+
+```
+(GW1-6 minus rest)  in tournament years  -  (GW1-6 minus rest)  in other years
+```
+
+netting out both. p-values are **exact permutation** over all C(12,5) = 792 possible
+assignments — no asymptotics, which would be meaningless at this n.
+
+Treated (WC or Euro the preceding summer): 14/15, 16/17, 18/19, 21/22, 24/25.
+
+### Result — nothing, on any metric
+
+| metric | tournament gap | control gap | DiD | exact p |
+|---|---|---|---|---|
+| total goals/match | +0.042 | +0.014 | +0.028 | 0.866 |
+| home advantage | −0.089 | −0.110 | +0.021 | 0.891 |
+| clean-sheet rate | −0.023 | +0.012 | −0.034 | 0.314 |
+| goal spread (competitive balance) | +0.190 | +0.249 | −0.060 | 0.250 |
+
+Counting Copa/AFCON summers (15/16, 19/20) as treated as well: still null on everything
+(p = 0.25 to 0.99). Dropping the COVID season 20/21 from the controls — it had a ~6-week
+offseason for *every* club, a bigger disruption than a tournament, so it biases the
+estimate toward zero — moves total goals to +0.142 but p = 0.286.
+
+### The mechanism test points the other way
+
+Tournament load concentrates at strong clubs, so if the effect were real the prior-top-6
+advantage should *shrink* in the opening weeks of a tournament year. It does the opposite:
+top-6 goal edge (early minus rest) is **+0.378 in tournament years against +0.209 in
+others**, DiD **+0.169**, p = 0.479. Noise at this n, but it is not even directionally
+supportive of the hypothesis.
+
+### What this study could actually have detected
+
+| metric | permutation sd | minimum detectable effect |
+|---|---|---|
+| total goals/match | 0.174 | **0.340** |
+| home advantage | 0.138 | 0.271 |
+| clean-sheet rate | 0.032 | 0.063 |
+| goal spread | 0.050 | 0.098 |
+
+A 0.34 goals-per-match tournament effect would be enormous — larger than the entire
+home-advantage effect. **Anything realistic is invisible here.** Read this as "not
+detectable at n = 5 vs 7", *not* as "zero".
+
+The per-season detail makes the noise obvious: the early-minus-rest goals gap in the five
+tournament years runs +0.298, +0.158, +0.094, −0.220, −0.120 — no consistent sign. The
+largest gap in the whole dataset (+0.699) belongs to 20/21, a non-tournament year.
+
+### Practical guidance for 2026/27
+
+**Do not adjust the model for the 2026 World Cup.** There is no measured basis for a
+tournament term, the design could only have caught an implausibly large one, and inventing
+a correction would add a parameter with no evidence behind it.
+
+The honest caveat in the other direction: this does not establish that tournaments are
+harmless, only that any effect is below what 12 seasons can resolve.
+
+**The better-powered test is at player level, and needs data this project does not have.**
+Instead of 5 treated seasons, compare *players* within a tournament year — those who
+played deep into the tournament against those who did not — which gives hundreds of
+observations rather than five. That requires per-player tournament minutes (squad lists
+and match participation), which neither Understat nor the FPL data carries. Worth doing if
+that data is ever added; the 2025/26 Club World Cup (Man City and Chelsea went deep,
+Chelsea won it) is a natural club-level pilot for the same question.
+
+---
+
 ## `[NULL]` Late-season surges do not carry into the next season
 
 **Tested 2026-08-11 before committing the calibration.** `studies/late_form_carryover.py`,
