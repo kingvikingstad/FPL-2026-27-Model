@@ -41,6 +41,17 @@ def build(write=True):
         "promoted_def": list(kw["promoted_def"]),
         "revert": float(kw["revert"]),
         "season_sd": float(kw["season_sd"]),
+        # Home advantage is suppressed in the opening matchdays. Measured on 12
+        # Understat seasons (studies/early_season_goals.py): within-season log home
+        # advantage is ~0.15 lower over matchdays 1-3 than the rest of the season,
+        # 10/12 seasons down, robust to the baseline chosen (-0.152 vs md4+, -0.151 vs
+        # md7+, -0.163 vs md20+). A SINGLE step, deliberately: matchdays 4-6 show no
+        # significant discount (-0.071, CI -0.155..+0.023) and there is no monotone
+        # trend across the season (slope CI spans zero), so a multi-step schedule would
+        # be fitting noise. Not produced by calibrate_all — hardcoded here from the
+        # study so it travels with the other hyperparameters.
+        "home_early_discount": 0.152,
+        "home_early_last_gw": 3,
         "home_adv_trend_per_season": float(res["home_adv_trend_per_season"]),
         "revert_att": float(res["revert_att"]),
         "revert_def": float(res["revert_def"]),

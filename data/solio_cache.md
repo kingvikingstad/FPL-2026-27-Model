@@ -3,7 +3,7 @@
 Solio Analytics is a Fantasy Premier League projection and optimisation tool, pairing one of the sharpest public projection models with state-of-the-art solvers for transfer and chip planning. This page publishes our latest Gameweek 1 projections, best captain picks, highest-leverage differentials, team-level clean sheet odds, and transfer trends. Data refreshes every 4 hours. For squad-specific recommendations across the rest of your season — free for the next 5 gameweeks, full season for members — use the planner at https://fpl.solioanalytics.com.
 
 - Source: https://fpl.solioanalytics.com/api/data/latest.md
-- Generated: 2026-08-11T14:47:54.407Z
+- Generated: 2026-08-11T17:50:04.621Z
 - Gameweek 1 deadline: 2026-08-21T17:30:00.000Z
 - Refresh cadence: every 4 hours
 
@@ -16,20 +16,20 @@ Players ranked by Solio Analytics' projected points. Double gameweek players acc
 | 1 | B.Fernandes | MUN | MID | HUL (A) | £12.0m | 6.68 | 48.3% |
 | 2 | Haaland | MCI | FWD | BOU (H) | £15.5m | 6.57 | 73.8% |
 | 3 | Gabriel | ARS | DEF | COV (H) | £8.0m | 5.96 | 26.7% |
-| 4 | Mbeumo | MUN | MID | HUL (A) | £8.0m | 5.89 | 23.1% |
+| 4 | Mbeumo | MUN | MID | HUL (A) | £8.0m | 5.89 | 23.2% |
 | 5 | Mosquera | ARS | DEF | COV (H) | £5.5m | 5.53 | 14.8% |
-| 6 | Semenyo | MCI | MID | BOU (H) | £8.5m | 5.28 | 25.8% |
+| 6 | Semenyo | MCI | MID | BOU (H) | £8.5m | 5.28 | 25.9% |
 | 7 | Gibbs-White | NFO | MID | LEE (H) | £8.0m | 5.26 | 11.6% |
 | 8 | Palmer | CHE | MID | FUL (A) | £9.5m | 5.21 | 11.3% |
 | 9 | Ndiaye | EVE | MID | CRY (H) | £6.0m | 4.95 | 15.2% |
 | 10 | Bruno G. | ARS | MID | COV (H) | £7.0m | 4.91 | 10.2% |
-| 11 | Cunha | MUN | MID | HUL (A) | £8.0m | 4.90 | 12.9% |
+| 11 | Cunha | MUN | MID | HUL (A) | £8.0m | 4.90 | 12.8% |
 | 12 | Richarlison | TOT | FWD | BRE (A) | £6.0m | 4.84 | 2.0% |
-| 13 | Isak | LIV | FWD | NEW (A) | £9.0m | 4.79 | 12.9% |
-| 14 | Maguire | MUN | DEF | HUL (A) | £5.0m | 4.75 | 9.3% |
+| 13 | Isak | LIV | FWD | NEW (A) | £9.0m | 4.79 | 13.0% |
+| 14 | Maguire | MUN | DEF | HUL (A) | £5.0m | 4.75 | 9.4% |
 | 15 | Tarkowski | EVE | DEF | CRY (H) | £6.0m | 4.69 | 9.8% |
 | 16 | Thiago | BRE | FWD | TOT (H) | £8.0m | 4.61 | 16.1% |
-| 17 | Szoboszlai | LIV | MID | NEW (A) | £7.0m | 4.60 | 44.4% |
+| 17 | Szoboszlai | LIV | MID | NEW (A) | £7.0m | 4.60 | 44.3% |
 | 18 | Groß | BHA | MID | AVL (H) | £5.5m | 4.56 | 10.1% |
 | 19 | Calafiori | ARS | DEF | COV (H) | £5.5m | 4.55 | 17.3% |
 | 20 | Watkins | AVL | FWD | BHA (A) | £8.0m | 4.55 | 12.7% |
@@ -71,15 +71,15 @@ Ranked by **leverage = Proj. Points × (1 − ownership%)**. Higher leverage mea
 | 2 | Mosquera | ARS | DEF | £5.5m | 5.53 | 14.8% | 4.71 |
 | 3 | Gibbs-White | NFO | MID | £8.0m | 5.26 | 11.6% | 4.65 |
 | 4 | Palmer | CHE | MID | £9.5m | 5.21 | 11.3% | 4.62 |
-| 5 | Mbeumo | MUN | MID | £8.0m | 5.89 | 23.1% | 4.53 |
+| 5 | Mbeumo | MUN | MID | £8.0m | 5.89 | 23.2% | 4.52 |
 | 6 | Bruno G. | ARS | MID | £7.0m | 4.91 | 10.2% | 4.41 |
 | 7 | Gabriel | ARS | DEF | £8.0m | 5.96 | 26.7% | 4.37 |
 | 8 | Havertz | ARS | FWD | £7.5m | 4.47 | 3.6% | 4.31 |
-| 9 | Maguire | MUN | DEF | £5.0m | 4.75 | 9.3% | 4.30 |
-| 10 | Dewsbury-Hall | EVE | MID | £6.5m | 4.47 | 3.7% | 4.30 |
+| 9 | Dewsbury-Hall | EVE | MID | £6.5m | 4.47 | 3.7% | 4.30 |
+| 10 | Maguire | MUN | DEF | £5.0m | 4.75 | 9.4% | 4.30 |
 | 11 | Gakpo | LIV | MID | £7.0m | 4.44 | 3.4% | 4.29 |
 | 12 | Hinshelwood | BHA | MID | £6.0m | 4.28 | 0.3% | 4.27 |
-| 13 | Cunha | MUN | MID | £8.0m | 4.90 | 12.9% | 4.26 |
+| 13 | Cunha | MUN | MID | £8.0m | 4.90 | 12.8% | 4.27 |
 | 14 | White | ARS | DEF | £5.5m | 4.27 | 0.8% | 4.23 |
 | 15 | Tarkowski | EVE | DEF | £6.0m | 4.69 | 9.8% | 4.23 |
 
@@ -241,6 +241,6 @@ Import your FPL team at https://fpl.solioanalytics.com to get personalised trans
 
 ---
 
-Generated at 2026-08-11T14:47:54.407Z. Solio Analytics runs one of the sharpest public FPL projection models alongside state-of-the-art optimisation solvers. Data refreshes every 4 hours.
+Generated at 2026-08-11T17:50:04.621Z. Solio Analytics runs one of the sharpest public FPL projection models alongside state-of-the-art optimisation solvers. Data refreshes every 4 hours.
 
 For personalised squad recommendations, chip timing, and transfer planning — free for the next 5 gameweeks, full-season optimisation for members — visit https://fpl.solioanalytics.com.

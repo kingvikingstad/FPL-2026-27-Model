@@ -59,7 +59,8 @@ BONUS_PER_ASSIST = 0.6 * 1.045
 # absent, and as the A/B baseline: set FPL_TEAM_HYPER=guess to restore the old values
 # without editing code.
 GUESSES = {"home_prior": (0.26, 0.08), "promoted_att": (-0.20, 0.30),
-           "promoted_def": (-0.22, 0.30), "revert": 0.85, "season_sd": 0.15}
+           "promoted_def": (-0.22, 0.30), "revert": 0.85, "season_sd": 0.15,
+           "home_early_discount": 0.0, "home_early_last_gw": 3}
 
 
 def _load_hyperparams():
@@ -72,6 +73,8 @@ def _load_hyperparams():
         out = dict(GUESSES)
         for k in ("revert", "season_sd"):
             out[k] = float(d[k])
+        out["home_early_discount"] = float(d.get("home_early_discount", 0.0))
+        out["home_early_last_gw"] = int(d.get("home_early_last_gw", 3))
         for k in ("home_prior", "promoted_att", "promoted_def"):
             out[k] = tuple(d[k])
         n = d.get("_provenance", {}).get("n_seasons", "?")
@@ -242,6 +245,51 @@ def player_posteriors(csv=config.FPL_DATA_STATS,
 # =============================================================================
 # COMPOSITION — Monte-Carlo posterior predictive over a horizon
 # =============================================================================
+def _home_effect(home, gameweek, is_home):
+    """Home advantage for a given gameweek and side, in log space.
+
+    SPLIT SYMMETRICALLY, which matters. The measured early-season pattern is that home
+    goals FALL (-0.064 in logs over md1-3) and away goals RISE (+0.076), with total match
+    goals unchanged — that null is itself measured, and firmly (+0.011 to +0.020 across
+    the first 3/6/12, all CIs spanning zero). This model carries home advantage
+    asymmetrically (h added to the home side only), so shaving h alone would lower home
+    lambda while leaving away lambda untouched, quietly dropping total goals in GW1-3 and
+    contradicting the total-goals null. Applying half the discount to the home side and
+    half as a bonus to the away side reproduces both halves of the observed pattern and
+    leaves the match total where the data says it should be.
+
+    Home advantage is NOT constant across a season. [VERIFIED 2026-08-11,
+    studies/early_season_goals.py, 12 Understat seasons] within-season log home
+    advantage over matchdays 1-3 runs ~0.15 below the rest of the season — 10 of 12
+    seasons down, and robust to which baseline is used (-0.152 vs md4+, -0.151 vs md7+,
+    -0.163 vs md20+). Home goals fall AND away goals rise, so the two halves agree.
+
+    Deliberately a SINGLE step rather than a schedule. Matchdays 4-6 show no significant
+    discount (-0.071, CI -0.155..+0.023), and there is no monotone trend across the
+    season (per-season slope CI spans zero) — the raw segment profile is non-monotone
+    (peaking md7-12, dipping md13-19) and a multi-step schedule fitted to it would
+    encode noise. One step is what the data supports.
+
+    Applies to lam_for and lam_against alike, so it reaches both attacking returns and
+    clean sheets. Set FPL_TEAM_HYPER=guess to disable (discount 0).
+    """
+    disc = HYPER.get("home_early_discount", 0.0)
+    early = False
+    if disc and gameweek is not None:
+        try:
+            early = int(gameweek) <= int(HYPER.get("home_early_last_gw", 3))
+        except (TypeError, ValueError):
+            early = False
+    # always return something shaped like `home` (an array of S posterior draws), so
+    # callers never have to care which branch they got
+    if not early:
+        return home if is_home else np.zeros_like(home)
+    half = disc / 2.0
+    # a discount larger than the fitted advantage would flip home into a disadvantage,
+    # which nothing in the data supports; floor at zero
+    return np.maximum(home - half, 0.0) if is_home else np.zeros_like(home) + half
+
+
 def project(players, tm, tsamp, gw_lo, gw_hi, S=1500):
     sched, long = schedule()
     win = long[(long.gameweek >= gw_lo) & (long.gameweek <= gw_hi)]
@@ -258,9 +306,10 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500):
             if r.opp not in idx2:
                 continue
             ti, oi = idx2[team], idx2[r.opp]
-            h = home if r.is_home else 0.0
+            gw = getattr(r, "gameweek", None)
+            h = _home_effect(home, gw, bool(r.is_home))          # this team's side
+            hopp = _home_effect(home, gw, not bool(r.is_home))   # the opponent's
             lam_for = np.exp(mu + h + A[:, ti] - D[:, oi])
-            hopp = 0.0 if r.is_home else home
             lam_against = np.exp(mu + hopp + A[:, oi] - D[:, ti])
             lf.append(lam_for); la.append(lam_against)
         fix_by_team[team] = (np.array(lf), np.array(la))   # (nfix, S)

@@ -112,6 +112,13 @@ vs the existing baseline; see docs/DEEP_HISTORY_FINDINGS.md), `setpiece_study`
 `late_form_carryover` (late-season surge → next-season start: **tested null**, +0.0000 r²
 over full-season strength; new-manager interaction collapses with sample size; a
 close-season manager change does NOT reset carryover — see docs/TEAM_FIXTURE_FINDINGS.md),
+`early_season_goals` (opening-GW scoring: **no** global early effect — total goals within
+1% of the same season's later rate, finishing/CS/dispersion all flat — but home advantage
+is only 0.086 goals in GW1-3 vs 0.282 later, CI (−0.374,−0.011), and archetype mismatch
+drives goals 3x harder early. **Applied 2026-08-11:** a single-step GW1-3 home discount of
+0.152, split symmetrically home/away so the match total is preserved (−0.41%); one step
+not a schedule because md4-6 shows no discount and the segment profile is non-monotone.
+Board effect confined to GW1-3, home −0.084 / away +0.079, net ~0),
 `new_manager_debut` (offseason hires vs prior-season strength: +0.081/+0.075/+0.124 over
 first 3/6/12, only the 12-match window borderline and the sign test disagrees; **no early
 bump inside the GW1-6 horizon and no reset** — price them at prior strength).

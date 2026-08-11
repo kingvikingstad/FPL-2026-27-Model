@@ -22,6 +22,8 @@
   ],
   "revert": 0.9629326407648372,
   "season_sd": 0.1521334691254659,
+  "home_early_discount": 0.152,
+  "home_early_last_gw": 3,
   "home_adv_trend_per_season": -0.005917327984996541,
   "revert_att": 0.9592561156144139,
   "revert_def": 0.9666091659152605,

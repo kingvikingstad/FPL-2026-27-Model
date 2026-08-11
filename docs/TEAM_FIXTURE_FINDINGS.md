@@ -261,6 +261,174 @@ acceptance tests pass unchanged.
 
 ---
 
+## Goals in the opening gameweeks — what actually differs
+
+`studies/early_season_goals.py`. **Goals, not xG.** The team layer is xG-driven, so if
+actual goals diverge early the whole GW1–10 horizon is shifted. Every comparison is the
+early window against **the same season's** matchday 13+, and the unit of analysis is the
+SEASON (n=12 paired), not the match — 4,560 matches would be a fake sample, because
+matches inside a season are not independent draws of the thing being measured.
+
+### `[NULL]` There is no early-season scoring effect
+
+| metric | first 3 | first 6 | first 12 | verdict |
+|---|---|---|---|---|
+| total goals/match (vs md13+) | +0.011 | +0.020 | −0.005 | ratio ≈ 1.00, all CIs span 0 |
+| xG per team-match | −0.015 | −0.018 | −0.008 | flat |
+| finishing (goals − xG) | +0.017 | +0.027 | +0.008 | flat |
+| clean-sheet rate | +0.002 | −0.002 | +0.000 | flat |
+| sd of total goals | 1.690 | 1.707 | 1.686 | vs 1.644 later — flat |
+| P(4+ goals) | 0.311 | 0.326 | 0.309 | vs 0.315 later — flat |
+
+Total goals sit within 1% of the same season's later rate, and only 6 of 12 seasons even
+point up. **Do not apply a global early-season multiplier to λ** — the folk belief that
+the opening weeks are a goal fest is not in the data. Finishing being flat also matters:
+teams do not systematically out- or under-perform xG early, so the xG-based model is not
+biased at the start of a season.
+
+### `[VERIFIED]` Home advantage IS suppressed early — the one real level effect
+
+Home goals fall and away goals rise, both pointing the same way. Neither clears zero
+alone; their **difference** does, and is far better determined because differencing
+within a season removes that season's scoring level entirely.
+
+| window | home adv (goals) | md13+ | diff | 95% CI | seasons down | log h |
+|---|---|---|---|---|---|---|
+| **first 3** | **0.086** | 0.282 | **−0.196** | **(−0.374, −0.011)** | **9/12** | **0.066** |
+| first 6 | 0.200 | 0.282 | −0.082 | (−0.202, +0.059) | 8/12 | 0.146 |
+| first 12 | 0.292 | 0.282 | +0.011 | (−0.071, +0.113) | 8/12 | 0.212 |
+
+**Correction to an earlier reading of this table.** A first pass described this as home
+advantage "building over the season". That is wrong, and the per-segment breakdown is
+what shows it:
+
+| segment | log h | 95% CI |
+|---|---|---|
+| md 1–3 | 0.066 | (−0.060, +0.190) |
+| md 4–6 | 0.223 | (+0.113, +0.348) |
+| md 7–9 | 0.289 | (+0.194, +0.368) |
+| md 10–12 | 0.277 | (+0.159, +0.404) |
+| md 13–19 | **0.141** | (+0.060, +0.221) |
+| md 20–38 | 0.229 | (+0.163, +0.294) |
+
+Non-monotone: it peaks at md 7–12 and *dips* at md 13–19. There is no monotone trend —
+the per-season slope of log h on matchday is +0.0022 with a CI of (−0.0008, +0.0049),
+spanning zero. The real finding is narrower and specific: **a discount confined to
+matchdays 1–3**, not a ramp.
+
+That discount is robust to which baseline it is measured against:
+
+| comparison | diff | 95% CI | seasons down |
+|---|---|---|---|
+| md1–3 vs md4+ | −0.152 | (−0.275, −0.018) | 10/12 |
+| md1–3 vs md7+ | −0.151 | (−0.275, −0.011) | 10/12 |
+| md1–3 vs md13+ | −0.138 | (−0.266, +0.003) | 9/12 |
+| md1–3 vs md20+ | −0.163 | (−0.287, −0.020) | 9/12 |
+| md1–6 vs md7+ | −0.071 | (−0.155, +0.023) | 8/12 |
+
+Three of four baselines clear zero and the point estimate is stable at −0.14 to −0.16.
+The last row is why **matchdays 4–6 get no discount**: that window on its own does not
+support one.
+
+This lands directly on a model constant. `bayes_model` applies **one** `home_prior` to
+every gameweek — now 0.184 after calibration, against a settled value of 0.202 and an
+early value of **0.066**. So in GW1–3 the model over-credits the home side by roughly
+**3×**, and in GW1–6 by about 25%. That is inside the horizon the board publishes, and it
+biases both attacking returns (λ_for) and clean sheets (Poisson λ_against) for every home
+fixture in the opening weeks.
+
+### `[CHECK]` Mismatches blow out early
+
+Sixteen archetype cells × two windows invites a false positive, so this is tested as ONE
+hypothesis: rank the archetypes 1–4 and regress total match goals on the absolute gap,
+with the CI clustered by season.
+
+| window | goals per rank-gap | 95% CI | n |
+|---|---|---|---|
+| first 6 matchdays | **+0.185** | (+0.071, +0.297) | 1320 |
+| matchday 13+ | +0.062 | (+0.005, +0.121) | 5720 |
+
+Mismatch drives goals about **three times harder** in the opening six. Both slopes are
+solidly positive; the two intervals overlap slightly, so the *difference* between them is
+suggestive rather than formally established, but the early effect itself is not in doubt.
+
+Total match goals, first 6 vs matchday 13+:
+
+| ↓team \ opp→ | top-6 | 7–12 | 13–20 | promoted |
+|---|---|---|---|---|
+| prior top-6 | 2.90 / 3.05 | 3.10 / 2.99 | 2.99 / 2.92 | **3.69 / 2.98** |
+| prior 7–12 | 3.13 / 2.98 | **2.43 / 2.78** | 2.63 / 2.78 | 2.29 / 2.72 |
+| prior 13–20 | 2.99 / 2.92 | 2.67 / 2.78 | 2.62 / 2.35 | 2.25 / 2.53 |
+| promoted | 3.66 / 2.98 | 2.29 / 2.72 | 2.27 / 2.55 | 3.11 / 2.52 |
+
+The extremes move in opposite directions: top-6 against promoted is **3.68 early vs 2.98
+later** (+0.70, 95% CI +0.27 to +1.07, clustered by season), while mid-table against
+mid-table *falls* to 2.43 from 2.78. Note the standout cell was chosen after seeing the
+matrix — a hypothesis, not a finding, however the interval falls. The mismatch slope above
+is the pre-committed version of the same claim, and it holds.
+
+This is consistent with the xG result higher in this document: the archetype spread is at
+its widest in GW1–6.
+
+**Important nuance for clean sheets:** a high total-goal count does not rule out a clean
+sheet, because those goals are one-sided. Top-6 vs promoted is simultaneously the
+highest-scoring early fixture (3.68) *and* the best clean-sheet fixture (0.424 from the
+matrix above). Read the two matrices together, not separately.
+
+### How to integrate this
+
+1. **Do not scale λ globally early.** Tested and null.
+2. **Matchday-dependent home advantage — APPLIED 2026-08-11.** See below.
+3. **In GW1–6, prefer mismatch.** Premium top-6 attackers against promoted sides, and
+   top-6 defences in the same fixtures. Avoid mid-table-vs-mid-table for attacking
+   returns early (2.43 total goals, the lowest cell in the matrix).
+4. **Fade home-team bias in GW1–3 specifically** — captaincy and clean-sheet picks based
+   on a home fixture are the ones the model most over-rated before the change below.
+
+### Applied 2026-08-11 — the GW1–3 home discount
+
+`bayes_model._home_effect()`, driven by `home_early_discount = 0.152` and
+`home_early_last_gw = 3` in `data/team_hyperparams.json`. `FPL_TEAM_HYPER=guess` disables
+it along with the other calibrated constants.
+
+**One step, not a schedule.** The requested change was a matchday-dependent schedule; the
+data supports only a single step. Matchdays 4–6 show no significant discount, there is no
+monotone trend, and the raw segment profile is non-monotone — a multi-step schedule fitted
+to it would encode noise. Scope was narrowed deliberately.
+
+**Split symmetrically, and this matters.** The measured pattern is home goals *falling*
+(−0.064 in logs) **and** away goals *rising* (+0.076), with total match goals unchanged —
+itself a firmly measured null. This model carries home advantage asymmetrically (h added
+to the home side only), so shaving h alone would lower home λ while leaving away λ
+untouched, dropping total GW1–3 goals by ~7% and contradicting that null. Half the
+discount is applied to the home side and half as a bonus to the away side:
+
+| gameweek | home | away | implied advantage |
+|---|---|---|---|
+| 1–3 | 0.108 | 0.076 | **0.032** |
+| 4+ | 0.184 | 0.000 | 0.184 |
+
+Expected match total then moves by **−0.41%** in GW1–3 (versus ~−7% for the one-sided
+version), comfortably inside the measured null of +0.4% to +0.7%.
+
+**A/B on the board** (model-only `mean` column, same seed, 5,730 player-gameweeks):
+
+```
+effect by gameweek      GW1 -0.004   GW2 -0.003   GW3 +0.003
+                        GW4-10 exactly 0.000        <- cleanly confined
+mean |delta| in GW1-3   0.094
+home-side players       -0.084 mean   (n=845)
+away-side players       +0.079 mean   (n=874)
+```
+
+Near-zero net, as intended — this redistributes between sides rather than changing the
+level. Largest movers are exactly the expected ones: O'Reilly −0.59, Saka −0.52,
+Havertz −0.52, Haaland −0.46 in home fixtures; away defenders and keepers rise.
+
+All four acceptance tests pass unchanged, and every board output was regenerated.
+
+---
+
 ## `[NULL]` Late-season surges do not carry into the next season
 
 **Tested 2026-08-11 before committing the calibration.** `studies/late_form_carryover.py`,
