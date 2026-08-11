@@ -50,6 +50,8 @@ REQUIRED_TEAM_MATCH = ("match_id", "date", "team", "opp", "is_home", "ppda",
                        "npxg", "npxga", "goals")
 REQUIRED_PLAYER_MATCH = ("match_id", "date", "team", "understat_player_id",
                          "player_name", "position", "minutes", "shots", "xg", "xa")
+REQUIRED_PLAYER_SEASON = ("team", "understat_player_id", "player_name", "minutes",
+                          "np_xg", "xa", "shots")
 REQUIRED_EVENTS = ("match_id", "date", "team", "player_name", "minute", "type",
                    "x", "y")
 
@@ -337,6 +339,35 @@ def understat_player_match(seasons, league=LEAGUE, cache_root=None, force=False)
             cached = _write_season_cache(_stamp(_normalise_player_match(raw)),
                                          "understat_player", s, cache_root)
         cached = _validate(cached, REQUIRED_PLAYER_MATCH, f"understat_player_match[{s}]")
+        cached["season"] = s
+        frames.append(cached)
+    return pd.concat(frames, ignore_index=True)
+
+
+def understat_player_season(seasons, league=LEAGUE, cache_root=None, force=False):
+    """One row per (season, club, player): minutes, np_xg, xa, shots (+ scraped_at).
+
+    Prefer this over `understat_player_match` whenever season totals are enough. The
+    match-level reader fetches every match individually — ~380 requests per season, about
+    40 minutes for a full history — while this is ONE request per season for the same
+    aggregates. A player who moves mid-season appears under each club he played for, which
+    is what any "who left this club" question needs.
+    """
+    frames = []
+    for s in seasons:
+        cached = None if force else _read_season_cache("understat_pseason", s, cache_root)
+        if cached is None:
+            sd = _soccerdata()
+            reader = sd.Understat(leagues=league, seasons=s)
+            raw = _retry(lambda: reader.read_player_season_stats(),
+                         what=f"Understat player-season {s}")
+            d = raw.reset_index().rename(columns={"player_id": "understat_player_id",
+                                                  "player": "player_name"})
+            for c in ("minutes", "np_xg", "xg", "xa", "shots", "goals", "np_goals"):
+                if c in d.columns:
+                    d[c] = pd.to_numeric(d[c], errors="coerce")
+            cached = _write_season_cache(_stamp(d), "understat_pseason", s, cache_root)
+        cached = _validate(cached, REQUIRED_PLAYER_SEASON, f"understat_player_season[{s}]")
         cached["season"] = s
         frames.append(cached)
     return pd.concat(frames, ignore_index=True)

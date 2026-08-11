@@ -125,6 +125,11 @@ leave-one-season-out but **fails Bonferroni** across the 4 archetypes tested, p=
 residual gap is if anything larger. Churn ruled out separately. July-Aug European
 qualifying survives as a hypothesis on timing (prior 7-8 band: GW1-3 −0.156, GW4-6 −0.022)
 but the band difference overlaps zero. **Unexplained; no model change**),
+`sale_hypothesis` (does losing your best attacker cause it? **null at every step** — prior
+7-12 clubs are mid-pack on departed xG share (0.198 vs 0.161 top-6, 0.243 for 13-20), the
+orderings of departures and fade contradict each other, and controlling for departures
+moves the 7-12 coefficient by 0.1%. Three of four mechanisms now eliminated; only European
+qualifying survives),
 `transfer_churn` (transaction counts 2014-2026 vs the table by month: **null** — +0.98 pts
 per SD of churn controlling for prior strength, t=1.08, and no month effect. Directly
 measured squad disruption does carry a small season-long cost, clustered CI (−0.113,

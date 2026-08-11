@@ -507,23 +507,60 @@ too, and they show **no fade at all** (+0.061). So European football per se cann
 cause — it has to be the July–August timing of qualifying specifically, which is the only
 part top-6 clubs skip.
 
-### What would settle it, and the rival explanation
+### `[NULL]` Ruled out: selling the best attacker
 
-Two candidates remain, and neither can be resolved with the data in this project:
+`studies/sale_hypothesis.py`, run on player-season Understat xG for all 12 seasons
+(187 club-seasons). The story: mid-table clubs lose a leading attacker to a top-6 club each
+summer and replace him late, producing a temporary early deficit that recovers.
 
-1. **European qualifying.** Decisive test: actual European fixture lists — which clubs
-   played qualifying rounds, in which weeks. Then the fade is measured on *participation*
-   rather than on prior rank as a proxy, and against the correct control group (7th–8th
-   clubs that did *not* qualify, e.g. when cup results reshuffled the places).
-2. **Selling the best attacker.** Mid-table clubs are the ones who lose a star forward to
-   a top-6 club each summer and replace him late — bottom clubs have no one to sell, top-6
-   clubs retain. That predicts the same shape for a completely different reason. Test:
-   the share of a club's *prior-season npxG* that departed, by archetype. Needs
-   player-level Understat xG across all 12 seasons; the cache currently holds shots for
-   24/25–25/26 only, so this is a scrape away rather than a query away.
+It **fails at the first step — the mechanism is not even present.**
 
-Until one of those is run, the fade is real-ish and unexplained, and no model change is
-justified by it.
+| archetype | departed xG share | top scorer left | early fade |
+|---|---|---|---|
+| prior top-6 | 0.161 | 13.6% | **+0.061** |
+| prior 7–12 | 0.198 | 19.7% | **−0.069** |
+| prior 13–20 | **0.243** | 21.8% | −0.031 |
+
+Mid-table clubs sit in the *middle* on departures, not at the extreme: prior 7–12 minus
+everyone else is −0.001, 95% CI (−0.045, +0.046). Dead zero.
+
+**The orderings contradict each other**, which is the cleanest refutation available. If
+losing attacking output caused the fade, the club types losing most would fade most. They
+do not — prior 13–20 clubs lose the *most* xG (0.243) and fade *less* (−0.031) than prior
+7–12 clubs, who lose less (0.198) and fade more (−0.069). Top-6 lose least and get
+*better* early.
+
+The other two steps agree:
+
+- **Does it bite?** `gap ~ departed xG share` gives −0.185 (t = −1.12, r² = 0.007); "top
+  scorer left" gives −0.016 (t = −0.25). Neither is significant, and the quartile means
+  show no monotone gradient (Q1 +0.046, Q2 −0.032, Q3 −0.024, Q4 −0.038).
+- **Does it explain?** Adding departed xG share alongside the prior-7-12 indicator moves
+  that indicator's coefficient from −0.0878 to −0.0879 — **0.1%**. No explanatory power
+  whatsoever.
+
+### Where that leaves it
+
+Three of four candidate mechanisms are now eliminated on evidence — **schedule**, **squad
+churn**, and **player sales**. The only survivor is **July–August European qualifying**,
+which remains supported by its timing signature (prior 7–8: −0.156 in GW1–3, −0.022 in
+GW4–6) and by the fact that top-6 clubs, who are in Europe but skip the qualifying rounds,
+show no fade at all — but whose band difference still overlaps zero.
+
+Settling it needs actual European fixture lists: which clubs played qualifying rounds and
+in which weeks, so the fade is measured on *participation* rather than prior rank as a
+proxy, with 7th–8th clubs that did not qualify as controls. Until then the fade stays
+real-ish and unexplained, and **no model change is justified by it** — it is small,
+marginal after multiplicity correction, and now without a demonstrated mechanism.
+
+### Tooling note
+
+This test needed player-season xG across 12 seasons.
+`sd_ingest.understat_player_match` fetches every match individually — about 380 requests
+per season, ~40 minutes for the full history. `sd_ingest.understat_player_season` was added
+for this and returns the same aggregates in **one request per season**. Prefer it whenever
+season totals suffice; a player who moves mid-season appears under each club he played
+for, which is exactly what a "who left" question needs.
 
 ---
 
