@@ -27,10 +27,16 @@ The one early-season effect that *does* survive is the opposite and less obvious
 **prior-7th-to-12th teams attack ~7% worse in GW1–6 than their own season average**,
 −0.068 with CI (−0.126, −0.007), and they improve monotonically all year.
 
+> **Qualified later** — see "Digging into the prior-7-to-12 early fade" below. This was
+> one of four archetypes tested and does **not** survive a Bonferroni correction
+> (p = 0.039 against a required 0.0125), though it is stable to leave-one-season-out.
+> Schedule and squad churn are both ruled out as causes; July–August European qualifying
+> is the surviving hypothesis, and is not established.
+
 | archetype | early effect on attack | 95% CI | team-seasons | verdict |
 |---|---|---|---|---|
 | prior top-6 | +0.063 | (−0.027, +0.137) | 66 | not significant |
-| **prior 7–12** | **−0.068** | **(−0.126, −0.007)** | 66 | **real** |
+| **prior 7–12** | **−0.068** | **(−0.126, −0.007)** | 66 | **see qualification below** |
 | prior 13–20 | −0.029 | (−0.067, +0.027) | 55 | not significant |
 | promoted | −0.040 | (−0.110, +0.037) | 33 | not significant |
 
@@ -426,6 +432,98 @@ level. Largest movers are exactly the expected ones: O'Reilly −0.59, Saka −0
 Havertz −0.52, Haaland −0.46 in home fixtures; away defenders and keepers rise.
 
 All four acceptance tests pass unchanged, and every board output was regenerated.
+
+---
+
+## `[CHECK]` Digging into the prior-7-to-12 early fade
+
+`studies/midtable_fade.py`. The one significant early-season effect found earlier: clubs
+finishing 7th–12th create ~7% less xG in GW1–6 than their own season average.
+
+### It is stable, but it does not survive multiplicity
+
+| archetype | early effect | 95% CI | p | survives Bonferroni (p<0.0125)? |
+|---|---|---|---|---|
+| prior top-6 | +0.061 | (−0.015, +0.142) | 0.119 | no |
+| **prior 7–12** | **−0.062** | **(−0.118, −0.004)** | **0.039** | **no** |
+| prior 13–20 | −0.026 | (−0.081, +0.027) | 0.333 | no |
+| promoted | −0.038 | (−0.107, +0.037) | 0.306 | no |
+
+Four archetypes were tested and one came in at p = 0.039, which is not a discovery at a
+corrected threshold. Against that, it is **remarkably stable**: leave-one-season-out
+across all 11 transitions gives −0.052 to −0.071, always negative, no season carrying it.
+So: a consistent, small, not-formally-established effect. Worth understanding, not worth
+betting the model on.
+
+### Eliminated: it is not the fixture list
+
+`att_rel` is a club's raw xG against the league average — not adjusted for opponent or
+venue, so a harder opening run would produce a fake fade. It does not:
+
+| archetype | opp xGA faced, GW1–6 | GW7+ | home share, GW1–6 | GW7+ |
+|---|---|---|---|---|
+| prior top-6 | 1.370 | 1.350 | 0.503 | 0.500 |
+| prior 7–12 | 1.329 | 1.341 | 0.495 | 0.501 |
+| prior 13–20 | 1.329 | 1.336 | 0.497 | 0.501 |
+| promoted | 1.320 | 1.327 | 0.510 | 0.498 |
+
+Differences under 1%, and home share is flat. Rebuilding the measure as a **residual from
+season-long team ratings** (own attack × opponent defence × venue) leaves the 7–12 gap at
+**−0.069** against a raw −0.062 — slightly *larger*. Schedule is ruled out.
+
+**Squad churn is also ruled out**, from the separate transfer study above: no early-loaded
+effect on either the scraped transaction count or directly-measured squad disruption.
+
+### Surviving hypothesis: July–August European qualifying
+
+The one mechanism that would hit this bucket and no other. Conference and Europa League
+qualifying rounds are played in **July and August** — so a club finishing 7th–8th plays
+competitive football before the season starts and midweek games through the opening
+gameweeks, while top-6 clubs enter at the group stage in September and 13th–20th clubs
+have no European football at all.
+
+Split the bucket:
+
+| band | team-seasons | residual fade | 95% CI |
+|---|---|---|---|
+| prior 7–8 | 22 | −0.095 | (−0.235, +0.037) |
+| prior 9–12 | 44 | −0.055 | (−0.137, +0.029) |
+| **difference** | | **−0.039** | **(−0.202, +0.120)** — overlaps zero |
+
+**The band difference is not significant**, so this cannot be claimed. What *is* striking
+is the timing, which the hypothesis predicts sharply — qualifying finishes in late August,
+so the damage should sit in GW1–3 and be gone by GW4–6:
+
+| band | GW1–3 | GW4–6 | GW7+ |
+|---|---|---|---|
+| prior 7–8 | **−0.156** | −0.022 | +0.007 |
+| prior 9–12 | −0.033 | −0.071 | +0.003 |
+
+The 7–8 band shows exactly the predicted shape; the 9–12 band does not. But this is 22
+team-seasons sliced to three matches each, after several tests — suggestive, nothing more.
+
+**A logical cross-check that helps the hypothesis:** prior-top-6 clubs are *all* in Europe
+too, and they show **no fade at all** (+0.061). So European football per se cannot be the
+cause — it has to be the July–August timing of qualifying specifically, which is the only
+part top-6 clubs skip.
+
+### What would settle it, and the rival explanation
+
+Two candidates remain, and neither can be resolved with the data in this project:
+
+1. **European qualifying.** Decisive test: actual European fixture lists — which clubs
+   played qualifying rounds, in which weeks. Then the fade is measured on *participation*
+   rather than on prior rank as a proxy, and against the correct control group (7th–8th
+   clubs that did *not* qualify, e.g. when cup results reshuffled the places).
+2. **Selling the best attacker.** Mid-table clubs are the ones who lose a star forward to
+   a top-6 club each summer and replace him late — bottom clubs have no one to sell, top-6
+   clubs retain. That predicts the same shape for a completely different reason. Test:
+   the share of a club's *prior-season npxG* that departed, by archetype. Needs
+   player-level Understat xG across all 12 seasons; the cache currently holds shots for
+   24/25–25/26 only, so this is a scrape away rather than a query away.
+
+Until one of those is run, the fade is real-ish and unexplained, and no model change is
+justified by it.
 
 ---
 
