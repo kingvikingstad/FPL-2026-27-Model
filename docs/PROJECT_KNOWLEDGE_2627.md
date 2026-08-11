@@ -123,8 +123,13 @@ Board effect confined to GW1-3, home −0.084 / away +0.079, net ~0),
 leave-one-season-out but **fails Bonferroni** across the 4 archetypes tested, p=0.039 vs
 0.0125 required. Schedule **ruled out** — opponent quality and venue are flat, and the
 residual gap is if anything larger. Churn ruled out separately. July-Aug European
-qualifying survives as a hypothesis on timing (prior 7-8 band: GW1-3 −0.156, GW4-6 −0.022)
-but the band difference overlaps zero. **Unexplained; no model change**),
+qualifying eliminated too — see `euro_qualifying_fade`. **Closed as a probable false
+positive; no model change**),
+`euro_qualifying_fade` (real July/Aug European participation, not rank as a proxy: within
+prior-7-12, treated clubs fade −0.065 and untreated −0.069, difference +0.005 CI
+(−0.202,+0.198). Top-6 who played Aug CL play-offs started BETTER (+0.153 vs +0.055).
+Fourth and last mechanism eliminated. **NB: leave-one-season-out stability is not evidence
+against noise** — a pooled-sample fluke is also LOO-stable),
 `sale_hypothesis` (does losing your best attacker cause it? **null at every step** — prior
 7-12 clubs are mid-pack on departed xG share (0.198 vs 0.161 top-6, 0.243 for 13-20), the
 orderings of departures and fade contradict each other, and controlling for departures

@@ -71,6 +71,9 @@ MANAGER_CHANGES = os.path.join(DATA, "manager_changes.csv")
 # Per club-season transfer transaction counts, transcribed from transfermarkt
 # (see studies/transfer_churn.py for the provenance caveat and the validation gate).
 TRANSFER_COUNTS = os.path.join(DATA, "transfer_counts.csv")
+# English clubs that played July/August European qualifying ties, per PL season
+# (see studies/euro_qualifying_fade.py for provenance).
+EUROPEAN_QUALIFYING = os.path.join(DATA, "european_qualifying.csv")
 COLDSTART_HIST = os.path.join(DATA, "coldstart_hist.csv")
 SOLIO_CACHE = os.path.join(DATA, "solio_cache.md")
 

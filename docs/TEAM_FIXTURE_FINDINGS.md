@@ -27,16 +27,17 @@ The one early-season effect that *does* survive is the opposite and less obvious
 **prior-7th-to-12th teams attack ~7% worse in GW1–6 than their own season average**,
 −0.068 with CI (−0.126, −0.007), and they improve monotonically all year.
 
-> **Qualified later** — see "Digging into the prior-7-to-12 early fade" below. This was
-> one of four archetypes tested and does **not** survive a Bonferroni correction
-> (p = 0.039 against a required 0.0125), though it is stable to leave-one-season-out.
-> Schedule and squad churn are both ruled out as causes; July–August European qualifying
-> is the surviving hypothesis, and is not established.
+> **Superseded — treat this as a probable false positive.** See "Digging into the
+> prior-7-to-12 early fade" below. It was one of four archetypes tested and does **not**
+> survive a Bonferroni correction (p = 0.039 against a required 0.0125). All four
+> candidate mechanisms — schedule, squad churn, player sales and July–August European
+> qualifying — were subsequently tested and eliminated. Its leave-one-season-out
+> stability is not evidence against noise. **Do not act on it.**
 
 | archetype | early effect on attack | 95% CI | team-seasons | verdict |
 |---|---|---|---|---|
 | prior top-6 | +0.063 | (−0.027, +0.137) | 66 | not significant |
-| **prior 7–12** | **−0.068** | **(−0.126, −0.007)** | 66 | **see qualification below** |
+| **prior 7–12** | **−0.068** | **(−0.126, −0.007)** | 66 | **probable false positive — see below** |
 | prior 13–20 | −0.029 | (−0.067, +0.027) | 55 | not significant |
 | promoted | −0.040 | (−0.110, +0.037) | 33 | not significant |
 
@@ -539,19 +540,56 @@ The other two steps agree:
   that indicator's coefficient from −0.0878 to −0.0879 — **0.1%**. No explanatory power
   whatsoever.
 
-### Where that leaves it
+### `[NULL]` Ruled out: July–August European qualifying — and the investigation closes
 
-Three of four candidate mechanisms are now eliminated on evidence — **schedule**, **squad
-churn**, and **player sales**. The only survivor is **July–August European qualifying**,
-which remains supported by its timing signature (prior 7–8: −0.156 in GW1–3, −0.022 in
-GW4–6) and by the fact that top-6 clubs, who are in Europe but skip the qualifying rounds,
-show no fade at all — but whose band difference still overlaps zero.
+`studies/euro_qualifying_fade.py`. The proxy (prior rank) was replaced with the real
+thing: `data/european_qualifying.csv`, the English clubs that actually played July/August
+European ties, from UEFA's qualifying pages. 14 treated club-seasons — 10 in the prior-7-12
+bucket, 4 in top-6.
 
-Settling it needs actual European fixture lists: which clubs played qualifying rounds and
-in which weeks, so the fade is measured on *participation* rather than prior rank as a
-proxy, with 7th–8th clubs that did not qualify as controls. Until then the fade stays
-real-ish and unexplained, and **no model change is justified by it** — it is small,
-marginal after multiplicity correction, and now without a demonstrated mechanism.
+**The decisive comparison is within the prior-7-12 bucket**, which removes archetype as a
+confound entirely — same classification, differing only in whether they really played
+qualifying football:
+
+| group | n | early-minus-rest | 95% CI |
+|---|---|---|---|
+| played Jul/Aug European qualifying | 10 | **−0.065** | (−0.259, +0.110) |
+| no European football at all | 56 | **−0.069** | (−0.143, +0.006) |
+| **difference** | | **+0.005** | **(−0.202, +0.198)** |
+
+**Identical.** Mid-table clubs fade exactly as much whether or not they played European
+football in July and August. The mechanism does nothing.
+
+Everything else agrees:
+
+- **Top-6 who played August CL play-offs** (Man United 15/16, Man City 16/17, Liverpool
+  17/18, Chelsea 24/25) show **+0.153** against +0.055 for top-6 who did not — treated
+  clubs started *better*, the opposite of the mechanism.
+- **Pooled**, adding treatment moves the prior-7-12 coefficient from −0.0736 to −0.0800 —
+  it gets slightly *more* negative — and the treatment coefficient itself is **+0.051**.
+  It explains none of the fade.
+
+The earlier "timing signature" that looked supportive (prior 7–8: −0.156 in GW1–3) was the
+rank proxy doing the work, not the treatment. The 7–8 band is where qualifiers come from,
+but once treated and untreated clubs inside it are separated, participation is irrelevant.
+
+### Verdict: stop looking
+
+All four candidate mechanisms are eliminated on evidence — schedule, squad churn, player
+sales, European qualifying. Combined with the effect failing a Bonferroni correction
+(p = 0.039 against a required 0.0125), the most parsimonious reading is that **the fade is
+a false positive.**
+
+One statistical point is worth stating plainly, because it drove several turns of this
+investigation: **leave-one-season-out stability was never evidence against noise.** An
+effect that is a fluke of the pooled sample will also be stable to dropping one season at
+a time — LOO only shows that no single season drives it, which is equally true of noise
+spread thinly across all of them. It was treated as reassurance earlier in this document;
+it should not have been.
+
+**No model change, and no further mechanism hunting.** If it is real it is worth about
+0.07 xG per match for one bucket over six gameweeks, which is inside the noise of
+everything else in the projection.
 
 ### Tooling note
 
