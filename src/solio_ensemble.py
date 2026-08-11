@@ -40,21 +40,45 @@ TEAM_MAP = {"MCI": "Man City", "MUN": "Man United", "MUN.": "Man United",
 # ---------------------------------------------------------------- fetch
 def fetch_solio(url: str = SOLIO_MD_URL, cache: str = CACHE, timeout: int = 20,
                 write_cache: bool = True) -> str:
-    """Return the feed markdown. Tries the network; on any failure (e.g. the
-    sandbox has no egress) falls back to the local cache."""
+    """Return the feed markdown. Tries the network; on any failure (e.g. no egress)
+    falls back to the local cache.
+
+    The cache is written UTF-8 and ATOMICALLY. Both matter, and the previous version
+    had neither: `open(cache, "w")` truncates before writing, and on Windows it encodes
+    with cp1252, which cannot represent the U+2212 MINUS SIGN the feed uses. The write
+    raised after the file was already emptied, and a bare `except: pass` swallowed it —
+    destroying the committed offline snapshot on every run. Never visible on Linux,
+    where the default encoding is UTF-8. Write to a temp file and replace, so a failed
+    write leaves the good cache untouched.
+    """
     try:
         import urllib.request
         req = urllib.request.Request(url, headers={"User-Agent": "fpl-model/1.0"})
         text = urllib.request.urlopen(req, timeout=timeout).read().decode("utf-8")
-        if write_cache:
-            try: open(cache, "w").write(text)
-            except Exception: pass
+        if write_cache and _looks_like_feed(text):
+            _write_atomic(cache, text)
+        elif write_cache:
+            print(f"[solio] fetched {len(text)} chars that do not look like the feed; "
+                  f"keeping the existing cache")
         return text
     except Exception as e:
         if os.path.exists(cache):
             print(f"[solio] network unavailable ({type(e).__name__}); using cache {cache}")
-            return open(cache).read()
+            return open(cache, encoding="utf-8").read()
         raise
+
+
+def _looks_like_feed(text: str) -> bool:
+    """Cheap sanity gate so a redirect, error page, or empty body never replaces a
+    known-good cache."""
+    return len(text) > 500 and "|" in text and "Solio" in text
+
+
+def _write_atomic(path: str, text: str) -> None:
+    tmp = f"{path}.tmp"
+    with open(tmp, "w", encoding="utf-8", newline="") as fh:
+        fh.write(text)
+    os.replace(tmp, path)
 
 
 # ---------------------------------------------------------------- parse

@@ -30,11 +30,12 @@ TEAM_NORM = {
 }
 def norm_team(n): return TEAM_NORM.get(str(n).strip(), str(n).strip())
 
-UPLOADS = "/mnt/user-data/uploads"
+UPLOADS = config.repo("2026-2027")
 
 
-def load(base=UPLOADS):
+def load(base=None):
     """Return (players, teams, gameweeks) with everything joined and normalised."""
+    base = base or UPLOADS
     p = pd.read_csv(f"{base}/players.csv")
     s = pd.read_csv(f"{base}/playerstats.csv")
     t = pd.read_csv(f"{base}/teams.csv")

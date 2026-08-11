@@ -27,11 +27,11 @@ CAL_PATH = config.OWN_START_CAL
 
 
 def calibrate_ownership_start(panel_path=config.PMS_PANEL,
-                              stats_csv="/home/claude/repo/FPL-Core-Insights-main/"
-                                        "data/2025-2026/playerstats.csv",
+                              stats_csv=None,
                               team_games=38, min_rows=1):
     """Fit logit P(start per GW) ~ 1 + log(ownership) + price, per position,
     from 25/26. Start = played >=60 min in a match. Returns {pos: (b0,b1,b2)}."""
+    stats_csv = stats_csv or os.path.join(config.repo("2025-2026"), "playerstats.csv")
     panel = pd.read_pickle(panel_path)
     panel["is_start"] = (panel.mins >= 60).astype(float)
     gp = panel.groupby("player_id").agg(
