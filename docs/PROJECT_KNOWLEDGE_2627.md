@@ -105,7 +105,16 @@ gw_board_long.csv / gw_board_wide.csv. Horizon-aggregate runner: `scripts/run_fi
 **Tests:** `test_regime`, `test_regime_panel`, `test_defcon_env`, `validate_shrinkage`.
 
 **Studies (null/validation record):** `rotation`, `pit_ownership`, `variance`, `edge_study`,
-`multihorizon`, `retest`, `matchup_design` (style constructs — not built, see §7).
+`multihorizon`, `retest`, `matchup_design` (style constructs — not built, see §7),
+`deep_history_study` (8 extra seasons of player-GW minutes — **tested null**, 0.0017 MAE
+vs the existing baseline; see docs/DEEP_HISTORY_FINDINGS.md), `setpiece_study`
+(component reliability measured; persistence **inconclusive** — see docs/SOCCERDATA_FINDINGS.md),
+`late_form_carryover` (late-season surge → next-season start: **tested null**, +0.0000 r²
+over full-season strength; new-manager interaction collapses with sample size; a
+close-season manager change does NOT reset carryover — see docs/TEAM_FIXTURE_FINDINGS.md),
+`new_manager_debut` (offseason hires vs prior-season strength: +0.081/+0.075/+0.124 over
+first 3/6/12, only the 12-match window borderline and the sign test disagrees; **no early
+bump inside the GW1-6 horizon and no reset** — price them at prior strength).
 
 ---
 
@@ -126,6 +135,12 @@ gw_board_long.csv / gw_board_wide.csv. Horizon-aggregate runner: `scripts/run_fi
   player_code keying matched 41 incumbents (was 2 under a player_id bug); **market agreement** —
   boosted incumbents avg 6.9% own vs cut 1.7% (moves in the direction the market confirms).
 - **Team CS engine:** GA r=0.89, CS% r=0.93 vs Solio, bias ≈ 0.
+- **Calibrated team hyperparameters (2026-08-11):** `revert` 0.85→0.963, `home_prior`
+  0.26→0.184, promoted sds 0.30→~0.20, from 31 seasons (`data/team_hyperparams.json`,
+  `FPL_TEAM_HYPER=guess` reverts). Team-strength spread widened 1.11× (attack); board
+  Spearman 0.9993, mean |Δ| 0.224 over GW1-10, Man City +0.51 / Crystal Palace −0.17.
+  Solio agreement improved on all four metrics (Pearson 0.741→0.753, MAE 0.840→0.808),
+  n=29 so directional only. See docs/TEAM_FIXTURE_FINDINGS.md.
 - **Solio ensemble (live GW1):** two independent sharp models agree Pearson 0.72, MAE 0.72.
   Within-team check flagged Arsenal internal ranking (rho 0.0) that pooled 0.61 hid.
 - **DefCon environment conditioning:** Anderson (Forest→City natural experiment) correctly

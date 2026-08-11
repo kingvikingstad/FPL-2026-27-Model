@@ -1,0 +1,185 @@
+club,date,kind,note
+Crystal Palace,2014-08-14,in_season,Pulis out
+Crystal Palace,2014-08-27,in_season,Warnock in
+West Brom,2014-12-29,in_season,Irvine out
+Crystal Palace,2014-12-27,in_season,Warnock out
+West Brom,2015-01-01,in_season,Pulis in
+Newcastle,2015-01-02,in_season,Pardew out
+Crystal Palace,2015-01-02,in_season,Pardew in
+QPR,2015-02-03,in_season,Redknapp out
+Aston Villa,2015-02-11,in_season,Lambert out
+Aston Villa,2015-02-15,in_season,Sherwood in
+Sunderland,2015-03-16,in_season,Poyet out
+Newcastle,2015-06-09,close_season,McClaren in
+West Ham,2015-06-30,close_season,Bilic in
+Leicester,2015-06-30,close_season,Ranieri in
+Sunderland,2015-10-04,in_season,Allardyce in
+Liverpool,2015-10-04,in_season,Klopp in
+Aston Villa,2015-10-25,in_season,Sherwood out
+Aston Villa,2015-11-02,in_season,Garde in
+Swansea,2015-12-09,in_season,Monk out
+Chelsea,2015-12-17,in_season,Mourinho out Hiddink in
+Swansea,2016-01-18,in_season,Guidolin in
+Newcastle,2016-03-11,in_season,Benitez in
+Aston Villa,2016-03-29,in_season,Garde out
+Everton,2016-05-12,in_season,Martinez out
+Man United,2016-05-23,close_season,Mourinho in
+Aston Villa,2016-06-03,close_season,Di Matteo in
+Everton,2016-06-13,close_season,Koeman in
+Watford,2016-06-30,close_season,Mazzarri in
+Southampton,2016-06-30,close_season,Puel in
+Man City,2016-06-30,close_season,Guardiola in
+Chelsea,2016-06-30,close_season,Conte in
+Sunderland,2016-07-21,close_season,Moyes in
+Hull,2016-07-22,close_season,Phelan in
+Swansea,2016-10-03,in_season,Bradley in
+Crystal Palace,2016-12-22,in_season,Allardyce in
+Swansea,2016-12-27,in_season,Bradley out
+Hull,2017-01-03,in_season,Silva in
+Swansea,2017-01-03,in_season,Clement in
+Leicester,2017-02-23,in_season,Ranieri out
+Middlesbrough,2017-03-16,in_season,Karanka out
+Watford,2017-05-22,close_season,Silva in
+Sunderland,2017-05-22,close_season,Grayson in
+Crystal Palace,2017-05-23,close_season,de Boer in
+Middlesbrough,2017-06-08,close_season,Monk in
+Southampton,2017-06-14,close_season,Pellegrino in
+Hull,2017-06-30,close_season,Slutskiy in
+Crystal Palace,2017-09-11,in_season,Hodgson in
+Leicester,2017-10-17,in_season,Shakespeare out
+Everton,2017-10-23,in_season,Koeman out
+Leicester,2017-10-25,in_season,Puel in
+West Ham,2017-11-06,in_season,Moyes in
+West Brom,2017-11-20,in_season,Pulis out
+West Brom,2017-11-29,in_season,Pardew in
+Everton,2017-11-30,in_season,Allardyce in
+Swansea,2017-12-20,in_season,Clement out
+Swansea,2017-12-28,in_season,Carvalhal in
+Stoke,2018-01-06,in_season,Hughes out
+Stoke,2018-01-15,in_season,Lambert in
+Watford,2018-01-21,in_season,Gracia in
+Southampton,2018-03-12,in_season,Pellegrino out
+West Brom,2018-04-02,in_season,Pardew out
+Arsenal,2018-06-30,close_season,Emery in
+Swansea,2018-06-30,close_season,Potter in
+Stoke,2018-06-30,close_season,Rowett in
+Everton,2018-06-30,close_season,Silva in
+West Ham,2018-06-30,close_season,Pellegrini in
+Chelsea,2018-07-13,close_season,Sarri in
+Fulham,2018-11-14,in_season,Ranieri in
+Southampton,2018-12-03,in_season,Hughes out
+Southampton,2018-12-05,in_season,Hasenhuttl in
+Man United,2018-12-18,in_season,Mourinho out Solskjaer in
+Huddersfield,2019-01-14,in_season,Wagner out
+Huddersfield,2019-01-21,in_season,Siewert in
+Leicester,2019-02-24,in_season,Puel out
+Fulham,2019-02-28,in_season,Ranieri out
+Brighton,2019-05-13,close_season,Potter in
+Newcastle,2019-06-30,close_season,Bruce in
+Chelsea,2019-06-30,close_season,Lampard in
+Watford,2019-09-07,in_season,Gracia out
+Tottenham,2019-11-19,in_season,Mourinho in
+Arsenal,2019-11-29,in_season,Emery out
+Watford,2019-12-01,in_season,Flores out
+Everton,2019-12-05,in_season,Silva out
+Watford,2019-12-08,in_season,Pearson in
+Arsenal,2019-12-21,in_season,Arteta in
+Everton,2019-12-21,in_season,Ancelotti in
+West Ham,2019-12-28,in_season,Moyes in
+Watford,2020-07-19,in_season,Pearson out
+West Brom,2020-12-16,in_season,Allardyce in
+Chelsea,2021-01-25,in_season,Tuchel in
+Sheffield United,2021-03-12,in_season,Wilder out
+Tottenham,2021-04-19,in_season,Mourinho out
+Everton,2021-06-30,close_season,Benitez in
+Tottenham,2021-06-30,close_season,Nuno in
+Sheffield United,2021-06-30,close_season,Jokanovic in
+Wolves,2021-06-30,close_season,Lage in
+Crystal Palace,2021-06-30,close_season,Vieira in
+Fulham,2021-06-30,close_season,Silva in
+West Brom,2021-06-30,close_season,Ismael in
+Watford,2021-10-03,in_season,Ranieri in
+Newcastle,2021-10-20,in_season,Bruce out
+Tottenham,2021-11-01,in_season,Conte in
+Norwich,2021-11-06,in_season,Smith in
+Newcastle,2021-11-07,in_season,Howe in
+Aston Villa,2021-11-07,in_season,Gerrard in
+Man United,2021-11-21,in_season,Solskjaer out
+Man United,2021-12-03,in_season,Rangnick in
+Everton,2022-01-16,in_season,Benitez out
+Watford,2022-01-24,in_season,Hodgson in
+Everton,2022-01-30,in_season,Lampard in
+Leeds,2022-02-27,in_season,Marsch in
+Burnley,2022-04-15,in_season,Dyche out
+Man United,2022-05-31,close_season,ten Hag in
+Burnley,2022-06-30,close_season,Kompany in
+Bournemouth,2022-08-30,in_season,Parker out
+Brighton,2022-09-07,in_season,Potter out
+Chelsea,2022-09-07,in_season,Tuchel out Potter in
+Brighton,2022-09-17,in_season,De Zerbi in
+Wolves,2022-10-02,in_season,Lage out
+Aston Villa,2022-10-20,in_season,Gerrard out
+Aston Villa,2022-10-31,in_season,Emery in
+Southampton,2022-11-07,in_season,Hasenhuttl out
+Wolves,2022-11-13,in_season,Lopetegui in
+Bournemouth,2022-11-27,in_season,O Neil permanent
+Everton,2023-01-23,in_season,Lampard out
+Everton,2023-01-29,in_season,Dyche in
+Leeds,2023-02-06,in_season,Marsch out
+Southampton,2023-02-12,in_season,Jones in
+Southampton,2023-02-23,in_season,Selles in
+Leeds,2023-02-23,in_season,Gracia in
+Tottenham,2023-03-26,in_season,Conte out
+Crystal Palace,2023-03-17,in_season,Vieira out
+Crystal Palace,2023-03-20,in_season,Hodgson in
+Chelsea,2023-04-02,in_season,Potter out
+Chelsea,2023-04-05,in_season,Lampard in
+Leicester,2023-04-02,in_season,Rodgers out
+Leicester,2023-04-10,in_season,Smith in
+Tottenham,2023-04-24,in_season,Mason in
+Leeds,2023-05-02,in_season,Allardyce in
+Bournemouth,2023-06-19,close_season,Iraola in
+Leicester,2023-06-30,close_season,Maresca in
+Chelsea,2023-06-30,close_season,Pochettino in
+Leeds,2023-06-30,close_season,Farke in
+Tottenham,2023-06-30,close_season,Postecoglou in
+Southampton,2023-06-30,close_season,Martin in
+Wolves,2023-08-08,close_season,O Neil in
+Sheffield United,2023-12-05,in_season,Wilder in
+Nott'm Forest,2023-12-19,in_season,Nuno in
+Crystal Palace,2024-02-19,in_season,Hodgson out
+Crystal Palace,2024-02-20,in_season,Glasner in
+Liverpool,2024-06-30,close_season,Slot in
+West Ham,2024-06-30,close_season,Lopetegui in
+Chelsea,2024-06-30,close_season,Maresca in
+Burnley,2024-06-30,close_season,Parker in
+Brighton,2024-06-30,close_season,Hurzeler in
+Man United,2024-10-28,in_season,ten Hag out
+Man United,2024-11-11,in_season,Amorim in
+Leicester,2024-11-24,in_season,Cooper out
+Leicester,2024-11-30,in_season,van Nistelrooy in
+Wolves,2024-12-15,in_season,Pereira in
+Southampton,2024-12-15,in_season,Martin out
+Southampton,2024-12-22,in_season,Juric in
+West Ham,2025-01-08,in_season,Potter in
+Everton,2025-01-09,in_season,Dyche out
+Everton,2025-01-10,in_season,Moyes in
+Southampton,2025-04-07,in_season,Juric out
+Tottenham,2025-06-06,close_season,Frank in
+Leicester,2025-06-27,close_season,Cifuentes in
+Brentford,2025-06-30,close_season,Andrews in
+Nott'm Forest,2025-09-09,in_season,Postecoglou in
+West Ham,2025-09-27,in_season,Nuno in
+Nott'm Forest,2025-10-18,in_season,Dyche in
+Wolves,2025-11-02,in_season,Pereira out
+Wolves,2025-11-11,in_season,Edwards in
+Chelsea,2026-01-01,in_season,Maresca out
+Man United,2026-01-05,in_season,Amorim out
+Chelsea,2026-01-07,in_season,Rosenior in
+Man United,2026-01-13,in_season,Carrick in
+Tottenham,2026-02-11,in_season,Tudor in
+Nott'm Forest,2026-02-12,in_season,Pereira in
+Tottenham,2026-03-30,in_season,De Zerbi in
+Chelsea,2026-04-22,in_season,McFarlane in
+Burnley,2026-04-30,in_season,Parker out
+Liverpool,2026-05-30,close_season,Iraola in

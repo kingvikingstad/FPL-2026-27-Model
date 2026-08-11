@@ -52,19 +52,53 @@ BONUS_PER_ASSIST = 0.6 * 1.045
 # =============================================================================
 # LAYER 1 — hierarchical Bayesian team model (MAP + Laplace posterior)
 # =============================================================================
+# --- team hyperparameters -----------------------------------------------------
+# These were hard-coded guesses. They are now read from data/team_hyperparams.json,
+# estimated from 31 seasons of results (see scripts/calibrate_team_history.py and
+# docs/TEAM_FIXTURE_FINDINGS.md). GUESSES is kept as the fallback when the file is
+# absent, and as the A/B baseline: set FPL_TEAM_HYPER=guess to restore the old values
+# without editing code.
+GUESSES = {"home_prior": (0.26, 0.08), "promoted_att": (-0.20, 0.30),
+           "promoted_def": (-0.22, 0.30), "revert": 0.85, "season_sd": 0.15}
+
+
+def _load_hyperparams():
+    import json
+    if _os.environ.get("FPL_TEAM_HYPER", "").lower() in ("guess", "0", "off"):
+        return dict(GUESSES), "hard-coded guesses (FPL_TEAM_HYPER=guess)"
+    try:
+        with open(config.TEAM_HYPERPARAMS, encoding="utf-8") as fh:
+            d = json.load(fh)
+        out = dict(GUESSES)
+        for k in ("revert", "season_sd"):
+            out[k] = float(d[k])
+        for k in ("home_prior", "promoted_att", "promoted_def"):
+            out[k] = tuple(d[k])
+        n = d.get("_provenance", {}).get("n_seasons", "?")
+        return out, f"calibrated on {n} seasons ({_os.path.basename(config.TEAM_HYPERPARAMS)})"
+    except Exception:
+        return dict(GUESSES), "hard-coded guesses (no calibration file)"
+
+
+HYPER, HYPER_SOURCE = _load_hyperparams()
+
+
 class TeamModel:
-    def __init__(self, prior_sd=0.35, home_prior=(0.26, 0.08),
-                 promoted_att=(-0.20, 0.30), promoted_def=(-0.22, 0.30),
+    def __init__(self, prior_sd=0.35, home_prior=None,
+                 promoted_att=None, promoted_def=None,
                  promoted_per_club=None):
-        # promoted_* default to educated guesses; history.calibrate_all()
-        # estimates them from 30 seasons of results -> pass them in.
-        self.prior_sd = prior_sd; self.home_prior = home_prior
-        self.promoted_att = promoted_att; self.promoted_def = promoted_def
+        # Defaults come from HYPER (calibrated); pass explicitly to override.
+        self.prior_sd = prior_sd
+        self.home_prior = home_prior if home_prior is not None else HYPER["home_prior"]
+        self.promoted_att = (promoted_att if promoted_att is not None
+                             else HYPER["promoted_att"])
+        self.promoted_def = (promoted_def if promoted_def is not None
+                             else HYPER["promoted_def"])
         # optional {club: centred_log_strength} from Elo -> club-specific priors
         self.promoted_per_club = promoted_per_club or {}
 
-    def fit(self, e0_path="/mnt/user-data/uploads/E0.csv", clubelo=None, clubelo_weight=0.35):
-        bet = bf.build(e0_path)
+    def fit(self, e0_path=None, clubelo=None, clubelo_weight=0.35):
+        bet = bf.build(e0_path or config.E0_RECON)
         rat = bf.team_ratings(bet)                       # betting-odds team ratings
         self.ratings = rat
         teams = sorted(set(bet.HomeTeam) | set(bet.AwayTeam))
@@ -127,10 +161,18 @@ class TeamModel:
         dfn = rng.normal(self.promoted_def[0], self.promoted_def[1], S)
         return att, dfn
 
-    def sample_2627(self, S=1500, revert=0.85, season_sd=0.15):
+    def sample_2627(self, S=1500, revert=None, season_sd=None):
         """Draw S joint samples of (mu, home, att, def) for the 20 teams of
         2026/27. Returning teams: Laplace posterior, reverted to mean and with
-        added between-season variance. Promoted teams: promoted prior."""
+        added between-season variance. Promoted teams: promoted prior.
+
+        `revert`/`season_sd` default to the calibrated HYPER values. The previous
+        default of 0.85 reverted teams toward the mean roughly four times harder than
+        31 seasons support (measured 0.963, IV-corrected for errors-in-variables —
+        the naive OLS slope of 0.680 is the attenuated one that made 0.85 look
+        plausible)."""
+        revert = HYPER["revert"] if revert is None else revert
+        season_sd = HYPER["season_sd"] if season_sd is None else season_sd
         draw = rng.multivariate_normal(self.theta, self.cov, size=S)  # (S, n)
         mu, home = draw[:, 0], draw[:, 1]
         att = draw[:, 2:2 + self.T]; dfn = draw[:, 2 + self.T:]

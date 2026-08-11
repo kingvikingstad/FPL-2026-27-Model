@@ -1,0 +1,29 @@
+{
+  "_provenance": {
+    "generated": "2026-08-11",
+    "source": "football-data.co.uk E0, seasons 1993/94-2025/26",
+    "n_seasons": 31,
+    "n_reversion_pairs": 495,
+    "n_promoted_team_seasons": 88,
+    "estimator": "IV-corrected reversion (errors-in-variables); see history.py",
+    "validated_by": "studies/test_history.py"
+  },
+  "home_prior": [
+    0.18432916176813322,
+    0.08593028316255513
+  ],
+  "promoted_att": [
+    -0.2093587664939396,
+    0.21335049192803504
+  ],
+  "promoted_def": [
+    -0.1926110340298065,
+    0.1821661511496255
+  ],
+  "revert": 0.9629326407648372,
+  "season_sd": 0.1521334691254659,
+  "home_adv_trend_per_season": -0.005917327984996541,
+  "revert_att": 0.9592561156144139,
+  "revert_def": 0.9666091659152605,
+  "revert_ols_attenuated": 0.6797713180989469
+}

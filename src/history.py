@@ -51,10 +51,36 @@ def season_codes(start=1993, end=2025):
     return out
 
 
-def download_seasons(start=1993, end=2025, verbose=True, cache_dir="/tmp/fd_hist"):
+def season_start_year(code):
+    """'9394' -> 1993, '0001' -> 2000, '2526' -> 2025.
+
+    These codes DO NOT SORT LEXICOGRAPHICALLY: plain `sorted()` puts '0001'..'2526'
+    before '9394'..'9900', i.e. the 1990s land after the 2020s. Every place that
+    pairs consecutive seasons must sort on this instead.
+
+    [VERIFIED 2026-08-09] the bug this replaces was live and severe.
+    `estimate_promoted_prior` zips consecutive pairs, so under lexicographic order it
+    compared 1993/94 against 2025/26 and labelled almost the whole 93/94 division
+    'promoted'; `estimate_reversion` built its t-1/t/t+1 triples the same way. Both
+    feed the constants that are supposed to replace TeamModel's educated guesses.
+    studies/test_history.py did not catch it because its simulated seasons are labelled
+    with sortable integers, so lexicographic and chronological order coincide there.
+    """
+    yy = int(str(code)[:2])
+    return (1900 + yy) if yy >= 90 else (2000 + yy)
+
+
+def sort_seasons(codes):
+    """Season codes in true chronological order."""
+    return sorted(set(codes), key=season_start_year)
+
+
+def download_seasons(start=1993, end=2025, verbose=True, cache_dir=None):
     """Fetch every available season from football-data.co.uk. FREE, no key.
     Cached to disk; missing/failed seasons are skipped with a note."""
     import os
+    import config
+    cache_dir = cache_dir or os.path.join(config.SCRATCH, "fd_hist")
     os.makedirs(cache_dir, exist_ok=True)
     frames = []
     for code in season_codes(start, end):
@@ -139,7 +165,7 @@ def estimate_reversion(rat, use_iv=True):
     are persistent. `revert_ols` is retained for comparison.
     """
     out = {}
-    order = sorted(rat.season.unique())
+    order = sort_seasons(rat.season.unique())      # NOT sorted() — see season_start_year
     pairs = []
     for i in range(1, len(order) - 1):
         sm1, s0, s1 = order[i - 1], order[i], order[i + 1]
@@ -189,7 +215,7 @@ def estimate_reversion(rat, use_iv=True):
 def estimate_promoted_prior(rat):
     """Teams appearing in season t+1 but NOT t are promoted. Their FIRST-season
     attack/defence ratings give the promoted prior mean and sd directly."""
-    order = sorted(rat.season.unique())
+    order = sort_seasons(rat.season.unique())      # NOT sorted() — see season_start_year
     rows = []
     for s0, s1 in zip(order[:-1], order[1:]):
         prev = set(rat[rat.season == s0].team)
@@ -210,7 +236,8 @@ def estimate_home_advantage(ha, recent=5):
     """Home advantage and its trend. It has declined substantially since the
     1990s (and stepped down around the crowdless 2020/21 season), so the RECENT
     mean is the right prior, not the 30-year average."""
-    ha = ha.sort_values("season")
+    # chronological, not lexicographic — `recent` must mean the LAST n seasons
+    ha = ha.assign(_y=ha["season"].map(season_start_year)).sort_values("_y").drop(columns="_y")
     x = np.arange(len(ha))
     slope, intercept = np.polyfit(x, ha.home_adv.values, 1)
     return {"home_adv_all": float(ha.home_adv.mean()),
