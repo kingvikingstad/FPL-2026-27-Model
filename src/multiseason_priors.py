@@ -42,6 +42,9 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
         defcon=("defcon_raw", "sum"),
         starts=("mins", lambda s: (s >= 60).sum()), games=("mins", "size"),
         apps=("mins", lambda s: (s > 0).sum()),
+        # minutes accumulated in appearances of 60+, so `cond_min / starts` is the
+        # player's own E[minutes | started] — see to_priors
+        cond_min=("mins", lambda s: s[s >= 60].sum()),
         pens=("pens_scored", "sum"), pens_miss=("pens_missed", "sum"),
     ).reset_index()
 
@@ -52,8 +55,9 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
         defcon=("defcon_raw", "sum"),
         starts=("mins", lambda s: (s >= 60).sum()), games=("mins", "size"),
         apps=("mins", lambda s: (s > 0).sum()),
+        cond_min=("mins", lambda s: s[s >= 60].sum()),
     ).reset_index()
-    for c in ["mins", "npxg", "xa", "defcon", "starts", "games", "apps"]:
+    for c in ["mins", "npxg", "xa", "defcon", "starts", "games", "apps", "cond_min"]:
         a24[c] = a24[c] * older_weight
     a24["pens"] = 0.0; a24["pens_miss"] = 0.0     # 24/25 lacks the penalty split
 
@@ -63,6 +67,7 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
         mins=("mins", "sum"), npxg=("npxg", "sum"), xa=("xa", "sum"),
         defcon=("defcon", "sum"), starts=("starts", "sum"),
         games=("games", "sum"), apps=("apps", "sum"),
+        cond_min=("cond_min", "sum"),
         pens=("pens", "sum"), pens_miss=("pens_miss", "sum"),
     ).reset_index()
     ev = ev[ev.mins >= min_minutes_total].copy()
@@ -147,6 +152,24 @@ def deep_start_evidence(half_life=DEEP_HALF_LIFE, exclude=COVERED_BY_REPO,
     return out
 
 
+def _shrunk_minutes(r, pos, pos_minutes, k):
+    """E[minutes | started] for one player, shrunk toward his position's mean.
+
+    Falls back to the positional constant when the player has no 60+ appearances, which
+    is the correct default — it is exactly what bayes_model used before this existed.
+    Clipped to [60, 90]: below 60 is not a start by this model's definition, and nobody
+    plays more than 90 of regulation.
+    """
+    n = float(getattr(r, "starts", 0.0) or 0.0)
+    tot = float(getattr(r, "cond_min", 0.0) or 0.0)
+    base = pos_minutes.get(pos, 85.3)
+    if n <= 0 or not np.isfinite(tot) or tot <= 0:
+        return base
+    own = tot / n
+    w = n / (n + k)
+    return float(np.clip(w * own + (1 - w) * base, 60.0, 90.0))
+
+
 def to_priors(ev, revert=0.70, k0=3.0, pen_xg=0.79, deep_starts=None):
     """Gamma/Beta priors from pooled two-season evidence.
 
@@ -159,6 +182,18 @@ def to_priors(ev, revert=0.70, k0=3.0, pen_xg=0.79, deep_starts=None):
     if deep_starts is not None and len(deep_starts):
         hs = dict(zip(deep_starts["player_code"], deep_starts["hist_starts"]))
         hg = dict(zip(deep_starts["player_code"], deep_starts["hist_games"]))
+    # E[minutes | started], shrunk toward the positional mean. bayes_model previously
+    # applied 90 to everyone, then a positional constant; both ignore that a 90-minute
+    # centre-half and a forward hooked on 65 differ by ~15 minutes of exposure every week.
+    # [VERIFIED 2026-08-11, studies/minutes_persistence.py, 1,755 consecutive
+    # player-season pairs] this quantity has split-half reliability 0.82 and persists at
+    # r=0.65 (0.80 disattenuated). Out of sample it beats the positional constant on MAE
+    # 1.968 vs 2.649 — a 25.7% gain, clustered CI (+0.579, +0.784) — and removes the
+    # constant's +1.2 minute bias, landing at +0.02.
+    # k comes from the measured reliability, not from taste: k = (1-rel)/rel * median n.
+    POS_MINUTES = {"GK": 89.9, "DEF": 87.5, "MID": 83.1, "FWD": 81.5}
+    MIN_K = 5.7
+
     PRIOR_INV = {"GK": 0.02, "DEF": 0.11, "MID": 0.27, "FWD": 0.42}
     PRIOR_XA = {"GK": 0.01, "DEF": 0.05, "MID": 0.13, "FWD": 0.10}
     PRIOR_DC = {"GK": 0.0, "DEF": 7.6, "MID": 8.4, "FWD": 4.7}
@@ -182,6 +217,7 @@ def to_priors(ev, revert=0.70, k0=3.0, pen_xg=0.79, deep_starts=None):
             "start_b": 2.0 + revert * (max(r.games - r.starts, 0)
                                        + max(d_gm - d_st, 0.0)),
             "sub_app_rate": float(np.clip((r.apps - r.starts) / max(r.games, 1), 0, 1)),
+            "exp_minutes": _shrunk_minutes(r, pos, POS_MINUTES, MIN_K),
             "pen_xg90_measured": (r.pens + r.pens_miss) * pen_xg / max(n90, 1e-6),
         })
     return pd.DataFrame(out)

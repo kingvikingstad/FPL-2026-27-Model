@@ -265,10 +265,29 @@ MINUTES_IF_START = {"GK": 89.9, "DEF": 87.5, "MID": 83.1, "FWD": 81.5}
 MINUTES_IF_SUB = 22.0          # measured; the previous constant was 20.0
 
 
-def _minutes_if_start(pos):
-    if _os.environ.get("FPL_MINUTES_MODEL", "").lower() in ("flat", "90", "off"):
+def _minutes_if_start(pos, player=None):
+    """Expected minutes given the player started.
+
+    Prefers the player's own shrunk history (`exp_minutes`, built in
+    multiseason_priors.to_priors) over the positional constant. That refinement beats the
+    constant on out-of-sample MAE 1.968 vs 2.649 and removes its +1.2 minute bias — see
+    studies/minutes_persistence.py. The positional constant remains the fallback for
+    players with no 60+ appearances, which is the right default and matches the previous
+    behaviour exactly.
+
+    FPL_MINUTES_MODEL: `flat` restores the original 90/20; `positional` pins to the
+    constant and ignores player history, which is the A/B baseline for the refinement.
+    """
+    mode = _os.environ.get("FPL_MINUTES_MODEL", "").lower()
+    if mode in ("flat", "90", "off"):
         return 90.0
-    return MINUTES_IF_START.get(pos, 85.3)
+    base = MINUTES_IF_START.get(pos, 85.3)
+    if mode == "positional" or player is None:
+        return base
+    v = getattr(player, "exp_minutes", None)
+    if v is None or not np.isfinite(v) or v <= 0:
+        return base
+    return float(v)
 
 
 def _minutes_if_sub():
@@ -374,7 +393,7 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500):
         for f in range(nfix):
             start = rng.random(S) < p_start
             sub   = (~start) & (rng.random(S) < p.sub_app_rate)
-            mins  = np.where(start, _minutes_if_start(pos),
+            mins  = np.where(start, _minutes_if_start(pos, p),
                              np.where(sub, _minutes_if_sub(), 0.0))
             played = mins > 0; played60 = mins >= 60
             m90 = mins / 90.0

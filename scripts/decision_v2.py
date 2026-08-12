@@ -61,7 +61,7 @@ def build_frame(depth: bool):
         if pd.notna(c) and c in pmap.index:
             s = pmap.loc[c]
             row = {k: s[k] for k in ["npxgi_alpha","npxgi_beta","xa_alpha","xa_beta",
-                                     "defcon_alpha","defcon_beta","start_a","start_b","sub_app_rate"]}
+                                     "defcon_alpha","defcon_beta","start_a","start_b","sub_app_rate","exp_minutes"]}
             row.update({"id": r.player_id, "web_name": r.web_name, "pos": r.pos, "team": r.team,
                         "own": r.selected_by_percent, "cost": r.now_cost, "minutes": s["minutes"],
                         "cold_start": False, "player_code": c, "pen_xg90": float(s.get("pen_xg90_measured", 0) or 0)})
