@@ -234,6 +234,15 @@ is plumbing plus an A/B, not new measurement. Untouched — it changes the live 
 Supporting data now available: 175 penalties across the two seasons, Understat xG a constant
 0.7612, realised conversion 0.834.
 
+> **Tested 2026-08-11 — the declared order is the RIGHT choice, not a gap.** The wording
+> above implies the runners are wrong to discard `pen_xg90_measured`. They are not.
+> `studies/penalty_assignment.py` raced the two signals on 25/26: declared
+> `penalties_order == 1` gives 85.7% precision covering 39.1% of penalties actually taken,
+> against 45.0% and 34.8% for "took ≥2 penalties last season". The declared order wins on
+> both. The real gap is **coverage** — only ~39% of penalty EV is captured, because roughly
+> six clubs have no declared first-choice taker — and that is a data problem, not a
+> modelling one. See docs/PLAYER_LAYER_FINDINGS.md §3.
+
 ---
 
 ## 7. `[CHECK]` §3 — measured PPDA vs the hardcoded estimates

@@ -119,6 +119,12 @@ drives goals 3x harder early. **Applied 2026-08-11:** a single-step GW1-3 home d
 0.152, split symmetrically home/away so the match total is preserved (−0.41%); one step
 not a schedule because md4-6 shows no discount and the segment profile is non-monotone.
 Board effect confined to GW1-3, home −0.084 / away +0.079, net ~0),
+`minutes_distribution` (starters average 85.3 min not 90 — **bias found and FIXED**),
+`rest_congestion` (fixture congestion: **null**, +0.00000 xG per day of rest advantage,
+clustered CI (−0.0043,+0.0040); short-turnaround cut −0.070 xG CI (−0.170,+0.033) n=208),
+`penalty_assignment` (declared `penalties_order` BEATS measured history — 85.7% precision
+covering 39.1% vs 45.0%/34.8%; the runners are right to use it, correcting an implication in
+SOCCERDATA_FINDINGS §6.4. Real gap is coverage: ~6 clubs have no declared taker),
 `midtable_fade` (why prior-7-12 clubs attack worse in GW1-6: effect is stable to
 leave-one-season-out but **fails Bonferroni** across the 4 archetypes tested, p=0.039 vs
 0.0125 required. Schedule **ruled out** — opponent quality and venue are flat, and the
@@ -167,6 +173,16 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
   player_code keying matched 41 incumbents (was 2 under a player_id bug); **market agreement** —
   boosted incumbents avg 6.9% own vs cut 1.7% (moves in the direction the market confirms).
 - **Team CS engine:** GA r=0.89, CS% r=0.93 vs Solio, bias ≈ 0.
+- **Minutes exposure fix (2026-08-11) — largest correctness gain in the deep-history pass:**
+  `project()` assumed every starter plays exactly 90 minutes. Measured over 23,059
+  appearances, mean minutes GIVEN 60+ is 85.3, and positional: GK 89.9 / DEF 87.5 /
+  MID 83.1 / FWD 81.5, with only 52% of MID and 43% of FWD finishing the match. `m90`
+  scales attacking involvement, penalty xG and DefCon, so every starter was inflated.
+  Fixed via `MINUTES_IF_START` (`FPL_MINUTES_MODEL=flat` reverts). Board: GK −0.06%,
+  DEF −1.36%, MID −3.42%, FWD −4.17%; clean sheets untouched (−0.06%, MC noise);
+  **DefCon −13.1%** through threshold convexity. Solio rank agreement improves
+  (Spearman 0.540→0.567); level agreement worsens but that comparison is already
+  season-mismatched. See docs/PLAYER_LAYER_FINDINGS.md.
 - **Calibrated team hyperparameters (2026-08-11):** `revert` 0.85→0.963, `home_prior`
   0.26→0.184, promoted sds 0.30→~0.20, from 31 seasons (`data/team_hyperparams.json`,
   `FPL_TEAM_HYPER=guess` reverts). Team-strength spread widened 1.11× (attack); board

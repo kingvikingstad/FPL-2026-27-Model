@@ -245,6 +245,38 @@ def player_posteriors(csv=config.FPL_DATA_STATS,
 # =============================================================================
 # COMPOSITION — Monte-Carlo posterior predictive over a horizon
 # =============================================================================
+# --- minutes given an appearance ------------------------------------------------
+# `start` is drawn from Beta(start_a, start_b), whose counts were fitted on
+# `minutes >= 60` — so the "start" branch means "played 60+", and played60 (hence
+# clean-sheet eligibility and the 2-point appearance) is right by construction.
+# The EXPOSURE was not: m90 = mins/90 multiplies attacking involvement, penalty xG and
+# DefCon counts, and assuming 90 minutes for everyone who clears 60 inflates all three.
+#
+# [VERIFIED 2026-08-11, studies/minutes_distribution.py, 23,059 appearances over 24/25
+# and 25/26] mean minutes GIVEN 60+ is 85.3, not 90, and the shortfall is strongly
+# positional — only 52% of midfielders and 43% of forwards who clear the hour finish the
+# match, against 82% of defenders and 99.5% of keepers. So the inflation lands hardest on
+# exactly the players whose attacking return drives the projection.
+#
+# The conditional MEAN is the correct substitution rather than a sampled distribution:
+# exposure enters linearly (E[Poisson(lam*m90)] = lam*E[m90]) and the 60-minute threshold
+# has already been passed by construction on this branch.
+MINUTES_IF_START = {"GK": 89.9, "DEF": 87.5, "MID": 83.1, "FWD": 81.5}
+MINUTES_IF_SUB = 22.0          # measured; the previous constant was 20.0
+
+
+def _minutes_if_start(pos):
+    if _os.environ.get("FPL_MINUTES_MODEL", "").lower() in ("flat", "90", "off"):
+        return 90.0
+    return MINUTES_IF_START.get(pos, 85.3)
+
+
+def _minutes_if_sub():
+    if _os.environ.get("FPL_MINUTES_MODEL", "").lower() in ("flat", "90", "off"):
+        return 20.0
+    return MINUTES_IF_SUB
+
+
 def _home_effect(home, gameweek, is_home):
     """Home advantage for a given gameweek and side, in log space.
 
@@ -342,7 +374,8 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500):
         for f in range(nfix):
             start = rng.random(S) < p_start
             sub   = (~start) & (rng.random(S) < p.sub_app_rate)
-            mins  = np.where(start, 90.0, np.where(sub, 20.0, 0.0))
+            mins  = np.where(start, _minutes_if_start(pos),
+                             np.where(sub, _minutes_if_sub(), 0.0))
             played = mins > 0; played60 = mins >= 60
             m90 = mins / 90.0
             # attacking: split xGI into goals vs assists via xa share
