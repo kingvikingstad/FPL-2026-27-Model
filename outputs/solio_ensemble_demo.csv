@@ -1,30 +1,30 @@
 key,player,pos,team,cost,own,our_proj,solio_proj,prG,prA,defcon_pct,solio_own,ensemble,disagreement
-haaland,Haaland,FWD,Man City,15.5,74.4,6.944,6.57,0.79,0.22,,73.8,6.757,0.374
-bfernandes,B.Fernandes,MID,Man United,12.0,48.6,6.561,6.79,0.34,0.55,,48.2,6.675,-0.229
-mbeumo,Mbeumo,MID,Man United,8.0,20.2,6.499,5.99,0.45,,,23.5,6.245,0.509
-gabriel,Gabriel,DEF,Arsenal,8.0,26.5,5.375,5.96,,,,26.7,5.667,-0.585
-cunha,Cunha,MID,Man United,8.0,13.6,5.175,4.97,,,,12.8,5.073,0.205
-semenyo,Semenyo,MID,Man City,8.5,23.2,4.639,5.28,0.37,,,26.1,4.959,-0.641
-palmer,Palmer,MID,Chelsea,9.5,11.7,4.475,5.21,0.36,,,11.3,4.842,-0.735
-oreilly,O'Reilly,DEF,Man City,6.5,22.5,4.59,4.54,,,,22.3,4.565,0.05
-gibbswhite,Gibbs-White,MID,Nott'm Forest,8.0,11.6,3.821,5.26,,0.26,,11.6,4.541,-1.439
-thiago,Thiago,FWD,Brentford,8.0,16.1,4.431,4.61,0.45,,,16.0,4.521,-0.179
-ndiaye,Ndiaye,MID,Everton,6.0,15.9,3.795,4.95,,,,15.2,4.372,-1.155
-tarkowski,Tarkowski,DEF,Everton,6.0,9.9,4.052,4.69,,,55.0,9.8,4.371,-0.638
-raya,Raya,GK,Arsenal,6.0,31.0,4.19,4.55,,,,31.0,4.37,-0.36
-isak,Isak,FWD,Liverpool,9.0,11.4,3.873,4.79,0.47,,,13.1,4.332,-0.917
-havertz,Havertz,FWD,Arsenal,7.5,3.8,4.018,4.47,0.4,0.21,,3.6,4.244,-0.452
-maguire,Maguire,DEF,Man United,5.0,8.7,3.63,4.82,,,,9.4,4.225,-1.19
-calafiori,Calafiori,DEF,Arsenal,5.5,16.8,3.82,4.55,,,,17.4,4.185,-0.73
-szoboszlai,Szoboszlai,MID,Liverpool,7.0,46.5,3.649,4.6,,0.22,,44.2,4.124,-0.951
-gakpo,Gakpo,MID,Liverpool,7.0,3.4,3.793,4.44,,,,3.4,4.117,-0.647
-joao pedro,João Pedro,FWD,Chelsea,7.5,54.9,3.68,4.54,0.38,,,55.6,4.11,-0.86
-wirtz,Wirtz,MID,Liverpool,7.5,12.6,3.705,4.39,,,,14.2,4.048,-0.685
-watkins,Watkins,FWD,Aston Villa,8.0,12.7,3.535,4.55,0.39,,,12.7,4.043,-1.015
-gro,Groß,MID,Brighton,5.5,9.3,3.502,4.56,,0.25,,10.2,4.031,-1.058
-mosquera,Mosquera,DEF,Arsenal,5.5,15.7,2.487,5.53,,,,14.7,4.008,-3.043
-ele fee,E.Le Fée,MID,Sunderland,6.0,12.8,3.441,4.43,,0.24,,12.9,3.936,-0.989
-nwilliams,N.Williams,DEF,Nott'm Forest,5.0,12.5,3.191,4.38,,,,12.1,3.785,-1.189
-dewsburyhall,Dewsbury-Hall,MID,Everton,6.5,3.8,2.975,4.47,,0.27,,3.7,3.722,-1.495
-hinshelwood,Hinshelwood,MID,Brighton,6.0,0.3,2.974,4.28,,,,0.2,3.627,-1.306
-richarlison,Richarlison,FWD,Tottenham,6.0,2.0,2.313,4.84,0.42,,,2.0,3.577,-2.527
+haaland,Haaland,FWD,Man City,15.5,74.4,7.158,6.62,0.79,,,73.7,6.889,0.538
+bfernandes,B.Fernandes,MID,Man United,12.0,48.6,6.831,6.83,0.34,0.55,,48.3,6.831,0.001
+mbeumo,Mbeumo,MID,Man United,8.0,20.2,6.599,6.0,0.46,,,23.8,6.299,0.599
+gabriel,Gabriel,DEF,Arsenal,8.0,26.5,5.214,6.02,,,,26.8,5.617,-0.806
+semenyo,Semenyo,MID,Man City,8.5,23.2,4.945,5.29,0.38,,,26.2,5.117,-0.345
+cunha,Cunha,MID,Man United,8.0,13.6,5.119,5.02,,,,12.7,5.07,0.099
+palmer,Palmer,MID,Chelsea,9.5,11.7,4.437,5.19,0.36,,,11.3,4.814,-0.753
+thiago,Thiago,FWD,Brentford,8.0,16.1,4.707,4.72,0.45,,,16.0,4.713,-0.013
+gibbswhite,Gibbs-White,MID,Nott'm Forest,8.0,11.6,3.856,5.28,,0.26,,11.6,4.568,-1.424
+isak,Isak,FWD,Liverpool,9.0,11.4,3.955,4.88,0.48,,,13.2,4.418,-0.925
+raya,Raya,GK,Arsenal,6.0,31.0,4.231,4.56,,,,31.0,4.395,-0.329
+ndiaye,Ndiaye,MID,Everton,6.0,15.9,3.827,4.94,,,,15.1,4.384,-1.113
+tarkowski,Tarkowski,DEF,Everton,6.0,9.9,4.004,4.64,,,55.0,9.7,4.322,-0.636
+havertz,Havertz,FWD,Arsenal,7.5,3.8,4.189,4.41,0.4,,,3.5,4.299,-0.221
+joao pedro,João Pedro,FWD,Chelsea,7.5,54.9,3.742,4.82,0.4,0.22,,55.7,4.281,-1.078
+maguire,Maguire,DEF,Man United,5.0,8.7,3.71,4.81,,,,9.5,4.26,-1.1
+szoboszlai,Szoboszlai,MID,Liverpool,7.0,46.5,3.818,4.66,,0.23,,44.0,4.239,-0.842
+tzolis,Tzolis,MID,Arsenal,6.5,2.3,3.808,4.65,,0.27,,3.6,4.229,-0.842
+calafiori,Calafiori,DEF,Arsenal,5.5,16.8,3.771,4.51,,,,17.5,4.141,-0.739
+gro,Groß,MID,Brighton,5.5,9.3,3.666,4.52,,0.25,,10.3,4.093,-0.854
+wirtz,Wirtz,MID,Liverpool,7.5,12.6,3.713,4.47,,,,14.3,4.092,-0.757
+gakpo,Gakpo,MID,Liverpool,7.0,3.4,3.717,4.46,,,,3.4,4.089,-0.743
+watkins,Watkins,FWD,Aston Villa,8.0,12.7,3.501,4.58,0.39,,,12.7,4.04,-1.079
+mosquera,Mosquera,DEF,Arsenal,5.5,15.7,2.489,5.5,,,,14.6,3.994,-3.011
+ele fee,E.Le Fée,MID,Sunderland,6.0,12.8,3.479,4.42,,0.23,,12.8,3.95,-0.941
+nwilliams,N.Williams,DEF,Nott'm Forest,5.0,12.5,3.233,4.39,,,,12.1,3.811,-1.157
+dewsburyhall,Dewsbury-Hall,MID,Everton,6.5,3.8,2.981,4.47,,0.27,,3.7,3.726,-1.489
+white,White,DEF,Arsenal,5.5,0.4,3.058,4.27,,,,0.8,3.664,-1.212
+richarlison,Richarlison,FWD,Tottenham,6.0,2.0,2.382,4.81,0.42,,,2.0,3.596,-2.428

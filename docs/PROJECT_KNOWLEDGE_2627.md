@@ -120,6 +120,13 @@ drives goals 3x harder early. **Applied 2026-08-11:** a single-step GW1-3 home d
 not a schedule because md4-6 shows no discount and the segment profile is non-monotone.
 Board effect confined to GW1-3, home −0.084 / away +0.079, net ~0),
 `minutes_distribution` (starters average 85.3 min not 90 — **bias found and FIXED**),
+`minutes_persistence` (conditional minutes are a PLAYER trait: reliability 0.82, persistence
+r=0.65; shrunk player history beats the positional constant on out-of-sample MAE 1.968 vs
+2.649, CI (+0.579,+0.784), and removes its +1.2 min bias — **shipped as `exp_minutes`**;
+all four Solio metrics improve),
+`age_minutes` (does age add anything beyond minutes history? **null** — incremental r2
++0.0027, age coef CI (−0.068,+0.203); a 34- and 26-year-old with identical records differ
+by 0.5 min. **Do not scrape historical ages**),
 `rest_congestion` (fixture congestion: **null**, +0.00000 xG per day of rest advantage,
 clustered CI (−0.0043,+0.0040); short-turnaround cut −0.070 xG CI (−0.170,+0.033) n=208),
 `penalty_assignment` (declared `penalties_order` BEATS measured history — 85.7% precision

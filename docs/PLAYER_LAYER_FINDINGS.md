@@ -76,6 +76,98 @@ on correctness, not on Solio.
 
 All four acceptance tests pass unchanged.
 
+### 1b. `[FIXED]` Refined again — per PLAYER, not per position
+
+`studies/minutes_persistence.py`. The positional constant still says a 90-minute
+centre-half and a forward always hooked on 65 have identical exposure once they start.
+They do not, and the difference persists:
+
+- split-half reliability of a season's conditional minutes: **0.819**
+- season-to-season persistence: r = 0.652, **0.796 disattenuated**, n = 1,755 pairs
+- spread within position is real: MID sd 4.16 min, FWD sd 4.38
+
+Out-of-sample horse race predicting next season's conditional minutes:
+
+| predictor | MAE | RMSE | bias |
+|---|---|---|---|
+| flat 90 (original) | 3.614 | 5.271 | −3.614 |
+| positional constant | 2.649 | 3.406 | +1.202 |
+| **shrunk player history** | **1.968** | **2.876** | **+0.019** |
+
+A **25.7% MAE gain** over the positional constant, clustered CI (+0.579, +0.784), and it
+removes the constant's +1.2 minute bias almost exactly. Shrinkage weight is empirical —
+`k = (1−rel)/rel × median n = 5.7` appearances — not chosen by taste.
+
+Implemented as `exp_minutes` in `multiseason_priors.to_priors`, consumed by
+`_minutes_if_start`, with the positional constant as the fallback for players with no
+60+ appearances. `FPL_MINUTES_MODEL=positional` pins to the constant for A/B;
+`flat` restores the original 90/20.
+
+**A wiring trap worth recording:** the runners copy priors into the player frame through
+an explicit column whitelist. The first A/B returned *exactly zero difference* on every
+row, because `exp_minutes` was computed, stored, and then silently dropped at that
+boundary. A change that appears to do nothing is more likely unplumbed than ineffective —
+the whitelist appears in six runners and four tests, all now updated.
+
+**Board A/B** (same seed, both arms on the same Solio cache):
+
+```
+overall mean +0.0024   mean |d| 0.053   max |d| 0.684
+GK +0.05%   DEF +0.15%   MID +0.03%   FWD +0.40%
+```
+
+Small in aggregate, meaningful per player, and directionally sensible: Haaland **+4.16**
+over GW1–10 (he finishes matches, so the FWD constant of 81.5 under-rated him), Thiago
++2.05, B.Fernandes +2.02; rotation-prone squad players fall — Okafor −1.49, Estêvão −1.20,
+Brooks −1.18.
+
+Against Solio, **all four metrics improve** — unlike the positional step, which improved
+rank but not level:
+
+| | Pearson | Spearman | MAE | bias |
+|---|---|---|---|---|
+| positional | 0.7936 | 0.6055 | 0.9465 | −0.882 |
+| **player history** | **0.7951** | **0.6166** | **0.9139** | **−0.828** |
+
+(The Solio baseline differs from the section above because the cached feed refreshed
+between runs; both arms here share one cache, so the comparison is internally valid.)
+
+---
+
+## 1c. `[NULL]` Age adds nothing beyond a player's own minutes history
+
+`studies/age_minutes.py`. Asked because minutes is the dominant lever and the Beta prior
+has no age term — a 35-year-old with a strong record gets a strong prior.
+
+The right question is the **incremental** one: does age predict next season's minutes
+*after* conditioning on this season's? A declining 34-year-old already shows up as
+declining minutes, so age is an indirect proxy for something now measured directly.
+
+209 players with ≥8 appearances of 60+ in both 24/25 and 25/26 and a known date of birth:
+
+```
+y ~ minutes_t         r2 = 0.4719
+y ~ minutes_t + age   age +0.0669 (se 0.0651, t +1.03)   r2 = 0.4746
+incremental r2 from age: +0.0027      95% CI (-0.068, +0.203)
+```
+
+A 34-year-old and a 26-year-old with identical records differ by **0.5 minutes** next
+season. The raw age bands show no gradient either — season-on-season change in conditional
+minutes runs −0.27, +0.35, +0.43, −0.43, −0.27 across <23 / 23-26 / 26-29 / 29-32 / 32+.
+A quadratic adds +0.012 r², with age² at −0.026 (se 0.014); not enough to change anything.
+
+**Why this ran on one transition rather than twelve.** `birth_date` exists in vaastav only
+from 2024/25. The alternatives were back-filling via the permanent `code` — which covers
+only survivors, and survivorship correlates directly with the decline being measured — or
+an external source. FBref's soccerdata reader was tried and **abandoned**: it installs a
+full browser-automation stack (`selenium`, `seleniumbase`, `PyAutoGUI`, `PyGetWindow`) and
+managed one season per ~25 minutes with connection errors.
+
+The cheap test costs minutes and answers the actual decision — *is there signal here worth
+paying for?* There is not. **Do not scrape historical ages.** The lesson is to run the
+cheap version of an expensive question first; the expensive path was started before its
+cost was checked.
+
 ---
 
 ## 2. `[NULL]` Fixture congestion does nothing measurable
@@ -158,12 +250,4 @@ problem, not a modelling one.
 
 ---
 
-## Not pursued: age curves for minutes
-
-The strongest remaining hunch — minutes is the documented dominant lever, and the Beta
-prior has no age term, so a 35-year-old with a strong history gets a strong minutes prior.
-`birth_date` only exists in vaastav from 2024/25. Back-filling via the permanent `code`
-would cover only players still registered in 2024/25+, i.e. **survivors** — and survivorship
-correlates directly with the outcome being measured, which would mask exactly the decline
-the study is looking for. Deliberately dropped rather than run on biased data. Doing it
-properly needs dates of birth for historical squads from an external source.
+## Age curves — since tested and null, see §1c above
