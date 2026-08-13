@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os as _os, sys as _sys
 _sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "src"))
 _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
@@ -115,7 +116,6 @@ BUILD ORDER
 
 Run: python matchup_design.py --selftest
 """
-from __future__ import annotations
 import argparse
 import numpy as np
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os as _os, sys as _sys
 _sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "src"))
 _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
@@ -19,7 +20,6 @@ This module:
 Team references in the tournament files use teams.csv **code** (Liverpool=14,
 Arsenal=3, Man City=43); non-PL opponents are NaN.
 """
-from __future__ import annotations
 import glob, os
 import numpy as np, pandas as pd
 
