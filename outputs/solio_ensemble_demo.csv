@@ -1,30 +1,30 @@
 key,player,pos,team,cost,own,our_proj,solio_proj,prG,prA,defcon_pct,solio_own,ensemble,disagreement
-haaland,Haaland,FWD,Man City,15.5,74.4,7.158,6.62,0.79,,,73.7,6.889,0.538
-bfernandes,B.Fernandes,MID,Man United,12.0,48.6,6.831,6.83,0.34,0.55,,48.3,6.831,0.001
-mbeumo,Mbeumo,MID,Man United,8.0,20.2,6.599,6.0,0.46,,,23.8,6.299,0.599
-gabriel,Gabriel,DEF,Arsenal,8.0,26.5,5.214,6.02,,,,26.8,5.617,-0.806
-semenyo,Semenyo,MID,Man City,8.5,23.2,4.945,5.29,0.38,,,26.2,5.117,-0.345
-cunha,Cunha,MID,Man United,8.0,13.6,5.119,5.02,,,,12.7,5.07,0.099
-palmer,Palmer,MID,Chelsea,9.5,11.7,4.437,5.19,0.36,,,11.3,4.814,-0.753
-thiago,Thiago,FWD,Brentford,8.0,16.1,4.707,4.72,0.45,,,16.0,4.713,-0.013
-gibbswhite,Gibbs-White,MID,Nott'm Forest,8.0,11.6,3.856,5.28,,0.26,,11.6,4.568,-1.424
-isak,Isak,FWD,Liverpool,9.0,11.4,3.955,4.88,0.48,,,13.2,4.418,-0.925
+haaland,Haaland,FWD,Man City,15.5,74.4,7.158,6.6,0.79,0.22,,73.6,6.879,0.558
+bfernandes,B.Fernandes,MID,Man United,12.0,48.6,6.831,6.84,0.34,0.55,,48.2,6.836,-0.009
+mbeumo,Mbeumo,MID,Man United,8.0,20.2,6.599,6.64,0.57,,,25.2,6.619,-0.041
+gabriel,Gabriel,DEF,Arsenal,8.0,26.5,5.214,6.04,,,,26.9,5.627,-0.826
+semenyo,Semenyo,MID,Man City,8.5,23.2,4.945,5.35,0.38,,,26.8,5.147,-0.405
+palmer,Palmer,MID,Chelsea,9.5,11.7,4.437,5.04,0.35,,,11.2,4.739,-0.603
+thiago,Thiago,FWD,Brentford,8.0,16.1,4.707,4.69,0.45,,,16.1,4.698,0.017
+gibbswhite,Gibbs-White,MID,Nott'm Forest,8.0,11.6,3.856,5.33,0.34,0.27,,11.6,4.593,-1.474
+isak,Isak,FWD,Liverpool,9.0,11.4,3.955,4.95,0.49,,,13.5,4.453,-0.995
 raya,Raya,GK,Arsenal,6.0,31.0,4.231,4.56,,,,31.0,4.395,-0.329
-ndiaye,Ndiaye,MID,Everton,6.0,15.9,3.827,4.94,,,,15.1,4.384,-1.113
+dalot,Dalot,DEF,Man United,5.0,3.0,4.219,4.54,,,,3.1,4.379,-0.321
 tarkowski,Tarkowski,DEF,Everton,6.0,9.9,4.004,4.64,,,55.0,9.7,4.322,-0.636
-havertz,Havertz,FWD,Arsenal,7.5,3.8,4.189,4.41,0.4,,,3.5,4.299,-0.221
-joao pedro,João Pedro,FWD,Chelsea,7.5,54.9,3.742,4.82,0.4,0.22,,55.7,4.281,-1.078
-maguire,Maguire,DEF,Man United,5.0,8.7,3.71,4.81,,,,9.5,4.26,-1.1
-szoboszlai,Szoboszlai,MID,Liverpool,7.0,46.5,3.818,4.66,,0.23,,44.0,4.239,-0.842
-tzolis,Tzolis,MID,Arsenal,6.5,2.3,3.808,4.65,,0.27,,3.6,4.229,-0.842
-calafiori,Calafiori,DEF,Arsenal,5.5,16.8,3.771,4.51,,,,17.5,4.141,-0.739
-gro,Groß,MID,Brighton,5.5,9.3,3.666,4.52,,0.25,,10.3,4.093,-0.854
-wirtz,Wirtz,MID,Liverpool,7.5,12.6,3.713,4.47,,,,14.3,4.092,-0.757
-gakpo,Gakpo,MID,Liverpool,7.0,3.4,3.717,4.46,,,,3.4,4.089,-0.743
-watkins,Watkins,FWD,Aston Villa,8.0,12.7,3.501,4.58,0.39,,,12.7,4.04,-1.079
-mosquera,Mosquera,DEF,Arsenal,5.5,15.7,2.489,5.5,,,,14.6,3.994,-3.011
-ele fee,E.Le Fée,MID,Sunderland,6.0,12.8,3.479,4.42,,0.23,,12.8,3.95,-0.941
-nwilliams,N.Williams,DEF,Nott'm Forest,5.0,12.5,3.233,4.39,,,,12.1,3.811,-1.157
-dewsburyhall,Dewsbury-Hall,MID,Everton,6.5,3.8,2.981,4.47,,0.27,,3.7,3.726,-1.489
-white,White,DEF,Arsenal,5.5,0.4,3.058,4.27,,,,0.8,3.664,-1.212
-richarlison,Richarlison,FWD,Tottenham,6.0,2.0,2.382,4.81,0.42,,,2.0,3.596,-2.428
+havertz,Havertz,FWD,Arsenal,7.5,3.8,4.189,4.43,0.4,,,3.5,4.309,-0.241
+ndiaye,Ndiaye,MID,Everton,6.0,15.9,3.827,4.79,,,,15.3,4.309,-0.963
+joao pedro,João Pedro,FWD,Chelsea,7.5,54.9,3.742,4.79,0.39,,,55.9,4.266,-1.048
+szoboszlai,Szoboszlai,MID,Liverpool,7.0,46.5,3.818,4.67,,0.24,,43.5,4.244,-0.852
+tzolis,Tzolis,MID,Arsenal,6.5,2.3,3.808,4.62,,0.27,,3.8,4.214,-0.812
+calafiori,Calafiori,DEF,Arsenal,5.5,16.8,3.771,4.52,,,,17.7,4.146,-0.749
+gro,Groß,MID,Brighton,5.5,9.3,3.666,4.52,,0.25,,10.6,4.093,-0.854
+wirtz,Wirtz,MID,Liverpool,7.5,12.6,3.713,4.46,,,,14.4,4.087,-0.747
+watkins,Watkins,FWD,Aston Villa,8.0,12.7,3.501,4.6,0.39,,,12.7,4.05,-1.099
+mosquera,Mosquera,DEF,Arsenal,5.5,15.7,2.489,5.58,,,,14.3,4.034,-3.091
+gakpo,Gakpo,MID,Liverpool,7.0,3.4,3.717,4.28,,,,3.4,3.999,-0.563
+ele fee,E.Le Fée,MID,Sunderland,6.0,12.8,3.479,4.44,,0.23,,12.8,3.96,-0.961
+nwilliams,N.Williams,DEF,Nott'm Forest,5.0,12.5,3.233,4.51,,,,12.0,3.871,-1.277
+dewsburyhall,Dewsbury-Hall,MID,Everton,6.5,3.8,2.981,4.45,,0.26,,3.7,3.716,-1.469
+white,White,DEF,Arsenal,5.5,0.4,3.058,4.28,,,,0.9,3.669,-1.222
+hinshelwood,Hinshelwood,MID,Brighton,6.0,0.3,2.862,4.31,,,,0.2,3.586,-1.448
+richarlison,Richarlison,FWD,Tottenham,6.0,2.0,2.382,4.76,0.42,,,2.0,3.571,-2.378
