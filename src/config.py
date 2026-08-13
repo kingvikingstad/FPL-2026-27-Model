@@ -74,6 +74,9 @@ TRANSFER_COUNTS = os.path.join(DATA, "transfer_counts.csv")
 # English clubs that played July/August European qualifying ties, per PL season
 # (see studies/euro_qualifying_fade.py for provenance).
 EUROPEAN_QUALIFYING = os.path.join(DATA, "european_qualifying.csv")
+# Projected set-piece duty (Fantasy Football Scout), used to fill clubs where FPL
+# declares no taker — see src/set_piece_takers.py.
+SET_PIECE_TAKERS = os.path.join(DATA, "set_piece_takers.csv")
 COLDSTART_HIST = os.path.join(DATA, "coldstart_hist.csv")
 SOLIO_CACHE = os.path.join(DATA, "solio_cache.md")
 

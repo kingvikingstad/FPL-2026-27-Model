@@ -1,0 +1,131 @@
+club,role,order,name
+Arsenal,PEN,1,Saka
+Arsenal,PEN,2,Gyokeres
+Arsenal,PEN,3,Odegaard
+Arsenal,FK,1,Rice
+Arsenal,FK,2,Saka
+Arsenal,CORNER,1,Rice
+Arsenal,CORNER,2,Saka
+Arsenal,CORNER,3,Madueke
+Aston Villa,PEN,1,Buendia
+Aston Villa,PEN,2,Watkins
+Aston Villa,FK,1,Buendia
+Aston Villa,CORNER,1,Cash
+Aston Villa,CORNER,2,Bailey
+Bournemouth,PEN,1,Kluivert
+Bournemouth,PEN,2,Kroupi
+Bournemouth,PEN,3,Tavernier
+Bournemouth,FK,1,Tavernier
+Bournemouth,FK,2,Kluivert
+Bournemouth,CORNER,1,Tavernier
+Bournemouth,CORNER,2,Scott
+Brentford,PEN,1,Thiago
+Brentford,PEN,2,Schade
+Brentford,PEN,3,Carvalho
+Brentford,FK,1,Lewis-Potter
+Brentford,FK,2,Jensen
+Brentford,CORNER,1,Jensen
+Brentford,CORNER,2,Janelt
+Brighton,PEN,1,Gross
+Brighton,PEN,2,O'Riley
+Brighton,FK,1,De Cuyper
+Brighton,FK,2,Dunk
+Brighton,CORNER,1,Gross
+Brighton,CORNER,2,Boscagli
+Brighton,CORNER,3,Minteh
+Chelsea,PEN,1,Palmer
+Chelsea,PEN,2,Enzo
+Chelsea,PEN,3,Estevao
+Chelsea,FK,1,James
+Chelsea,FK,2,Enzo
+Chelsea,CORNER,1,James
+Chelsea,CORNER,2,Neto
+Chelsea,CORNER,3,Enzo
+Coventry,PEN,1,Wright
+Coventry,PEN,2,Torp
+Coventry,PEN,3,Thomas-Asante
+Coventry,FK,1,Torp
+Coventry,CORNER,1,Grimes
+Coventry,CORNER,2,Torp
+Crystal Palace,PEN,1,Mateta
+Crystal Palace,PEN,2,Sarr
+Crystal Palace,PEN,3,Devenny
+Crystal Palace,FK,1,Pino
+Crystal Palace,CORNER,1,Wharton
+Crystal Palace,CORNER,2,Hughes
+Crystal Palace,CORNER,3,Kamada
+Everton,PEN,1,Ndiaye
+Everton,PEN,2,Garner
+Everton,PEN,3,Barry
+Everton,FK,1,Garner
+Everton,CORNER,1,Garner
+Everton,CORNER,2,Dewsbury-Hall
+Fulham,PEN,1,Muniz
+Fulham,PEN,2,Iwobi
+Fulham,PEN,3,Robinson
+Fulham,CORNER,1,Iwobi
+Fulham,CORNER,2,Lukic
+Hull,PEN,1,McBurnie
+Hull,CORNER,1,Slater
+Hull,CORNER,2,Giles
+Ipswich,PEN,1,Clarke
+Ipswich,PEN,2,Philogene
+Ipswich,PEN,3,Hirst
+Ipswich,FK,1,Nunez
+Ipswich,CORNER,1,Davis
+Ipswich,CORNER,2,Nunez
+Leeds,PEN,1,Calvert-Lewin
+Leeds,PEN,2,Nmecha
+Leeds,PEN,3,Piroe
+Leeds,FK,1,Stach
+Leeds,CORNER,1,Stach
+Leeds,CORNER,2,Justin
+Liverpool,PEN,1,Szoboszlai
+Liverpool,PEN,2,Gakpo
+Liverpool,PEN,3,Mac Allister
+Liverpool,FK,1,Szoboszlai
+Liverpool,FK,2,Wirtz
+Liverpool,CORNER,1,Szoboszlai
+Liverpool,CORNER,2,Gakpo
+Liverpool,CORNER,3,Wirtz
+Man City,PEN,1,Haaland
+Man City,PEN,2,Marmoush
+Man City,PEN,3,Doku
+Man City,FK,1,Marmoush
+Man City,FK,2,Cherki
+Man City,CORNER,1,Cherki
+Man City,CORNER,2,Reijnders
+Man City,CORNER,3,Foden
+Man United,PEN,1,B.Fernandes
+Man United,FK,1,B.Fernandes
+Man United,FK,2,Mbeumo
+Man United,CORNER,1,B.Fernandes
+Man United,CORNER,2,Mbeumo
+Man United,CORNER,3,Amad Diallo
+Newcastle,PEN,1,Woltemade
+Newcastle,FK,1,Hall
+Newcastle,FK,2,Schar
+Newcastle,CORNER,1,Hall
+Newcastle,CORNER,2,Elanga
+Nott'm Forest,PEN,1,Wood
+Nott'm Forest,PEN,2,Igor Jesus
+Nott'm Forest,PEN,3,Mcatee
+Nott'm Forest,FK,1,Gibbs-White
+Nott'm Forest,FK,2,Murillo
+Nott'm Forest,CORNER,1,Hutchinson
+Nott'm Forest,CORNER,2,Williams
+Nott'm Forest,CORNER,3,Ndoye
+Sunderland,PEN,1,Diarra
+Sunderland,PEN,2,Le Fee
+Sunderland,FK,1,Xhaka
+Sunderland,FK,2,Le Fee
+Sunderland,CORNER,1,Xhaka
+Sunderland,CORNER,2,Hume
+Tottenham,PEN,1,Solanke
+Tottenham,PEN,2,Kudus
+Tottenham,PEN,3,Simons
+Tottenham,FK,1,Porro
+Tottenham,FK,2,Simons
+Tottenham,CORNER,1,Tel
+Tottenham,CORNER,2,Simons
+Tottenham,CORNER,3,Porro

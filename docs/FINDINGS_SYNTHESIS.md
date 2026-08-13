@@ -7,8 +7,17 @@ mechanism work. The four detailed documents remain authoritative for method and 
 [TEAM_FIXTURE_FINDINGS](TEAM_FIXTURE_FINDINGS.md) ·
 [PLAYER_LAYER_FINDINGS](PLAYER_LAYER_FINDINGS.md)
 
-**Score:** 5 changes applied to the model, 9 tested nulls, 5 bugs fixed. Every applied
+**Score:** 6 changes applied to the model, 9 tested nulls, 6 bugs fixed. Every applied
 change was A/B'd against the board; every null is recorded with the evidence that killed it.
+
+> **Update 2026-08-11 (later):** projected set-piece duty applied (20/20 clubs, +4.91 to
+> Szoboszlai / −4.51 to Robinson), DefCon matchup and CB-vs-FB analysis added, early-season
+> dispersion measured but withheld. Detail in
+> [SETPIECE_DEFCON_FINDINGS](SETPIECE_DEFCON_FINDINGS.md). Headlines:
+> **centre-backs hit DefCon 2.3× as often as full-backs** (0.480 vs 0.207) with identical
+> clean-sheet value, and **hard fixtures pay defenders nothing back** — DefCon volume is flat
+> in opponent strength while clean sheets collapse, so total defender EV falls monotonically
+> 2.05 → 1.17 from the easiest fixtures to the hardest.
 
 ---
 

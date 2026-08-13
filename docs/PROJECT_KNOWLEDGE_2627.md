@@ -119,6 +119,12 @@ drives goals 3x harder early. **Applied 2026-08-11:** a single-step GW1-3 home d
 0.152, split symmetrically home/away so the match total is preserved (−0.41%); one step
 not a schedule because md4-6 shows no discount and the segment profile is non-monotone.
 Board effect confined to GW1-3, home −0.084 / away +0.079, net ~0),
+`defcon_matchups` (DefCon flat in opponent strength; CB vs FB 2.3x — see §5),
+`early_dispersion` (does the model under-disperse strength in GW1-6? residual slope +0.101
+CI (+0.002,+0.206) early vs −0.023 CI (−0.056,+0.009) later, difference +0.127
+CI (+0.018,+0.235). **Measured, NOT applied** — barely clears zero, third test of the same
+question, and worth only ~4% of a team-match. Settle it with an out-of-sample board
+backtest, not a fourth in-sample slope),
 `minutes_distribution` (starters average 85.3 min not 90 — **bias found and FIXED**),
 `minutes_persistence` (conditional minutes are a PLAYER trait: reliability 0.82, persistence
 r=0.65; shrunk player history beats the positional constant on out-of-sample MAE 1.968 vs
@@ -180,6 +186,18 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
   player_code keying matched 41 incumbents (was 2 under a player_id bug); **market agreement** —
   boosted incumbents avg 6.9% own vs cut 1.7% (moves in the direction the market confirms).
 - **Team CS engine:** GA r=0.89, CS% r=0.93 vs Solio, bias ≈ 0.
+- **Projected set-piece duty (2026-08-11):** FFS 26/27 takers for all 20 clubs, resolved
+  within-club (126/130; the 4 misses are players absent from the FPL squad). Overrides FPL's
+  `penalties_order` by default since that is a carryover at pre-season —
+  `FPL_SETPIECE=fill|off` reverts. Sources agree on 14/20 clubs, disagree on 5. Board:
+  Szoboszlai +4.91, Kluivert +3.06 / Robinson −4.51, Hirst −2.04; mean ≈ 0.
+- **DefCon matchups (2026-08-11):** the supply hypothesis is WRONG — DefCon rate is flat in
+  opponent strength (0.339/0.328/0.416/0.329) while clean sheets collapse 0.344→0.127, so
+  total defender EV falls monotonically 2.05→1.17 and hard fixtures pay nothing back. Pick
+  defenders on fixture ease. **CBs hit DefCon 2.3× as often as FBs** (0.480 vs 0.207, CI
+  +0.239/+0.308) with identical CS value — `PRIOR_DC` is a single 7.6 for all defenders,
+  wrong for cold-start CBs and FBs alike, but the fix is circular without a positional
+  source. NB `defensive_contributions` is 100% null in 24/25 — never fillna(0).
 - **Minutes exposure fix (2026-08-11) — largest correctness gain in the deep-history pass:**
   `project()` assumed every starter plays exactly 90 minutes. Measured over 23,059
   appearances, mean minutes GIVEN 60+ is 85.3, and positional: GK 89.9 / DEF 87.5 /

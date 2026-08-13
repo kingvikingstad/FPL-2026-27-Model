@@ -63,6 +63,13 @@ if os.environ.get("REGIME_PANEL") == "on":
 _regime = sp.REGIME_2627_PROPOSED if os.environ.get("REGIME") == "proposed" else {}
 pl = sp.apply_regime_uncertainty(pl, regime=_regime, cal=cal_own, k_min=900)
 pl = sg.apply_availability(pl, sig, lineups=None)
+# Fill set-piece duty where FPL declares none. FPL's flag is the more precise signal and
+# always wins; this only covers the clubs it leaves blank (studies/penalty_assignment.py).
+_spt = os.environ.get("FPL_SETPIECE", "override").lower()
+if _spt not in ("off", "0"):
+    import set_piece_takers as spt
+    sig = spt.apply_to_signals(sig, d26[["web_name", "team", "player_code"]],
+                               mode="fill" if _spt == "fill" else "override")
 pen1 = set(sig.loc[sig.pen_order == 1, "name"].str.lower().str.strip())
 pl["pen_xg90"] = np.where(pl.web_name.str.lower().str.strip().isin(pen1),
                           pl.pen_xg90.fillna(0).clip(lower=0.10), 0.0)
