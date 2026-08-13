@@ -19,8 +19,25 @@ fifth who cover the weeks the top three are away are worth real points.
 CONSTRAINTS
   * total cost of the five <= budget (10 budgets from 22.0 to 35.0)
   * at most 3 from any one club (FPL's squad rule, binding here)
-  * only genuine starters are eligible — a squad that looks good on a backup's projection
-    is a fiction, so anyone below a 50% start probability is dropped
+  * every defender is eligible; the projection already prices availability in
+
+ELIGIBILITY — A FILTER THAT HAD TO BE REMOVED
+----------------------------------------------
+The first version dropped anyone below a 50% start probability, reasoning that a squad
+resting on a backup is a fiction. That filter was WRONG and badly so. `p_start` is derived
+from `ms_priors`, which only covers players with prior-season minutes, so every COLD-START
+player — new signings and the entire promoted-club contingent — came through as missing and
+was filled with zero. At £4.0m it removed 46 of 47 defenders and left exactly one legal
+pick, which is why Ben Davies appeared in squad after squad while starting 0 of 10
+gameweeks: he was not chosen, he was the only body the filter permitted.
+
+It also excluded precisely the players the cheap-defender strategy exists to find —
+van Ewijk (Coventry, £4.0m) projects 33.8 over GW1-10, ahead of most £5.5m defenders.
+
+The filter is gone. The board's `mean` already embeds start probability through the
+cold-start depth model, so a player who will not play carries a low projection and the
+optimiser declines him on its own. `p_start` is now REPORTED where known, never used to
+exclude.
 
 WHY PRUNE, AND HOW IT IS CHECKED
 ---------------------------------
@@ -44,8 +61,7 @@ HORIZONS = (2, 3, 6, 10)
 BUDGETS = (22, 23, 24, 25, 26, 27, 28, 29, 30, 35)
 SQUAD, PLAY = 5, 3
 MAX_PER_CLUB = 3
-MIN_START = 0.50
-TOP_PER_PRICE = 8
+TOP_PER_PRICE = 10
 OUT = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "def_rotation.csv")
 
 
@@ -67,7 +83,8 @@ def load():
     before = len(wide)
     wide = wide.merge(m[["player", "team", "p_start"]], on=["player", "team"], how="left")
     assert len(wide) == before, "p_start merge fanned out"
-    wide["p_start"] = wide["p_start"].fillna(0.0)
+    # NOT filled with 0 — missing means "cold start, no prior-season minutes", which is
+    # not the same as "will not play". Filling it was what broke the first version.
     return wide
 
 
@@ -138,9 +155,10 @@ def hill_climb(full, P_full, gws, budget, start_idx, rounds=40):
 
 def main():
     w = load()
-    print(f"[study] {len(w)} defenders on the board")
-    elig = w[w["p_start"] >= MIN_START].reset_index(drop=True)
-    print(f"        {len(elig)} with start probability >= {MIN_START:.0%}")
+    elig = w.reset_index(drop=True)
+    known = elig["p_start"].notna().sum()
+    print(f"[study] {len(elig)} defenders, all eligible "
+          f"({known} with a known start probability, {len(elig)-known} cold-start)")
     print(f"        squad of {SQUAD}, play best {PLAY} each week, "
           f"max {MAX_PER_CLUB} per club")
     gw_cols = [c for c in elig.columns if isinstance(c, (int, np.integer))]
