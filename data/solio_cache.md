@@ -3,7 +3,7 @@
 Solio Analytics is a Fantasy Premier League projection and optimisation tool, pairing one of the sharpest public projection models with state-of-the-art solvers for transfer and chip planning. This page publishes our latest Gameweek 1 projections, best captain picks, highest-leverage differentials, team-level clean sheet odds, and transfer trends. Data refreshes every 4 hours. For squad-specific recommendations across the rest of your season — free for the next 5 gameweeks, full season for members — use the planner at https://fpl.solioanalytics.com.
 
 - Source: https://fpl.solioanalytics.com/api/data/latest.md
-- Generated: 2026-08-13T21:44:14.174Z
+- Generated: 2026-08-14T13:46:43.943Z
 - Gameweek 1 deadline: 2026-08-21T17:30:00.000Z
 - Refresh cadence: every 4 hours
 
@@ -13,30 +13,30 @@ Players ranked by Solio Analytics' projected points. Double gameweek players acc
 
 | # | Player | Team | Pos | Opp | Price | Proj. Points | Own% |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | B.Fernandes | MUN | MID | HUL (A) | £12.0m | 6.80 | 48.1% |
-| 2 | Mbeumo | MUN | MID | HUL (A) | £8.0m | 6.64 | 25.7% |
-| 3 | Haaland | MCI | FWD | BOU (H) | £15.5m | 6.61 | 73.5% |
-| 4 | Gabriel | ARS | DEF | COV (H) | £8.0m | 6.00 | 27.0% |
-| 5 | Mosquera | ARS | DEF | COV (H) | £5.5m | 5.54 | 14.1% |
+| 1 | B.Fernandes | MUN | MID | HUL (A) | £12.0m | 6.77 | 48.1% |
+| 2 | Haaland | MCI | FWD | BOU (H) | £15.5m | 6.61 | 73.5% |
+| 3 | Mbeumo | MUN | MID | HUL (A) | £8.0m | 6.61 | 26.3% |
+| 4 | Gabriel | ARS | DEF | COV (H) | £8.0m | 6.00 | 27.1% |
+| 5 | Mosquera | ARS | DEF | COV (H) | £5.5m | 5.54 | 13.9% |
 | 6 | Gibbs-White | NFO | MID | LEE (H) | £8.0m | 5.36 | 11.6% |
-| 7 | Semenyo | MCI | MID | BOU (H) | £8.5m | 5.30 | 27.0% |
+| 7 | Semenyo | MCI | MID | BOU (H) | £8.5m | 5.30 | 27.3% |
 | 8 | Palmer | CHE | MID | FUL (A) | £9.5m | 5.18 | 11.2% |
-| 9 | Isak | LIV | FWD | NEW (A) | £9.0m | 5.07 | 13.6% |
+| 9 | Isak | LIV | FWD | NEW (A) | £9.0m | 5.07 | 13.7% |
 | 10 | Bruno G. | ARS | MID | COV (H) | £7.0m | 4.91 | 10.3% |
 | 11 | Richarlison | TOT | FWD | BRE (A) | £6.0m | 4.80 | 2.0% |
 | 12 | João Pedro | CHE | FWD | FUL (A) | £7.5m | 4.80 | 55.9% |
 | 13 | Ndiaye | EVE | MID | CRY (H) | £6.0m | 4.80 | 15.4% |
-| 14 | Szoboszlai | LIV | MID | NEW (A) | £7.0m | 4.73 | 43.3% |
+| 14 | Szoboszlai | LIV | MID | NEW (A) | £7.0m | 4.73 | 43.0% |
 | 15 | Thiago | BRE | FWD | TOT (H) | £8.0m | 4.69 | 16.0% |
 | 16 | Tarkowski | EVE | DEF | CRY (H) | £6.0m | 4.69 | 9.7% |
-| 17 | Tzolis | ARS | MID | COV (H) | £6.5m | 4.65 | 3.9% |
-| 18 | Wirtz | LIV | MID | NEW (A) | £7.5m | 4.58 | 14.5% |
+| 17 | Tzolis | ARS | MID | COV (H) | £6.5m | 4.65 | 4.0% |
+| 18 | Wirtz | LIV | MID | NEW (A) | £7.5m | 4.58 | 14.6% |
 | 19 | Raya | ARS | GKP | COV (H) | £6.0m | 4.56 | 31.1% |
-| 20 | Groß | BHA | MID | AVL (H) | £5.5m | 4.53 | 10.8% |
-| 21 | Havertz | ARS | FWD | COV (H) | £7.5m | 4.52 | 3.4% |
-| 22 | Calafiori | ARS | DEF | COV (H) | £5.5m | 4.52 | 17.8% |
-| 23 | Dalot | MUN | DEF | HUL (A) | £5.0m | 4.50 | 3.1% |
-| 24 | N.Williams | NFO | DEF | LEE (H) | £5.0m | 4.50 | 11.9% |
+| 20 | Groß | BHA | MID | AVL (H) | £5.5m | 4.53 | 11.0% |
+| 21 | Havertz | ARS | FWD | COV (H) | £7.5m | 4.52 | 3.3% |
+| 22 | Calafiori | ARS | DEF | COV (H) | £5.5m | 4.52 | 17.9% |
+| 23 | N.Williams | NFO | DEF | LEE (H) | £5.0m | 4.50 | 11.9% |
+| 24 | Dalot | MUN | DEF | HUL (A) | £5.0m | 4.48 | 3.1% |
 | 25 | Dewsbury-Hall | EVE | MID | CRY (H) | £6.5m | 4.45 | 3.7% |
 | 26 | E.Le Fée | SUN | MID | IPS (A) | £6.0m | 4.42 | 12.8% |
 | 27 | Watkins | AVL | FWD | BHA (A) | £8.0m | 4.39 | 12.6% |
@@ -50,9 +50,9 @@ Top captaincy candidates ranked by projected points. The captain scores double, 
 
 | # | Player | Team | Pos | Opp | Proj. Points | Captain Proj. |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | B.Fernandes | MUN | MID | HUL (A) | 6.80 | 13.60 |
-| 2 | Mbeumo | MUN | MID | HUL (A) | 6.64 | 13.29 |
-| 3 | Haaland | MCI | FWD | BOU (H) | 6.61 | 13.22 |
+| 1 | B.Fernandes | MUN | MID | HUL (A) | 6.77 | 13.53 |
+| 2 | Haaland | MCI | FWD | BOU (H) | 6.61 | 13.22 |
+| 3 | Mbeumo | MUN | MID | HUL (A) | 6.61 | 13.21 |
 | 4 | Gabriel | ARS | DEF | COV (H) | 6.00 | 12.00 |
 | 5 | Mosquera | ARS | DEF | COV (H) | 5.54 | 11.07 |
 | 6 | Gibbs-White | NFO | MID | LEE (H) | 5.36 | 10.71 |
@@ -67,17 +67,17 @@ Ranked by **leverage = Proj. Points × (1 − ownership%)**. Higher leverage mea
 
 | # | Player | Team | Pos | Price | Proj. Points | Own% | Leverage |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Mbeumo | MUN | MID | £8.0m | 6.64 | 25.7% | 4.94 |
-| 2 | Mosquera | ARS | DEF | £5.5m | 5.54 | 14.1% | 4.75 |
+| 1 | Mbeumo | MUN | MID | £8.0m | 6.61 | 26.3% | 4.87 |
+| 2 | Mosquera | ARS | DEF | £5.5m | 5.54 | 13.9% | 4.77 |
 | 3 | Gibbs-White | NFO | MID | £8.0m | 5.36 | 11.6% | 4.74 |
 | 4 | Richarlison | TOT | FWD | £6.0m | 4.80 | 2.0% | 4.71 |
 | 5 | Palmer | CHE | MID | £9.5m | 5.18 | 11.2% | 4.60 |
-| 6 | Tzolis | ARS | MID | £6.5m | 4.65 | 3.9% | 4.47 |
+| 6 | Tzolis | ARS | MID | £6.5m | 4.65 | 4.0% | 4.46 |
 | 7 | Bruno G. | ARS | MID | £7.0m | 4.91 | 10.3% | 4.40 |
-| 8 | Isak | LIV | FWD | £9.0m | 5.07 | 13.6% | 4.38 |
-| 9 | Gabriel | ARS | DEF | £8.0m | 6.00 | 27.0% | 4.38 |
-| 10 | Havertz | ARS | FWD | £7.5m | 4.52 | 3.4% | 4.37 |
-| 11 | Dalot | MUN | DEF | £5.0m | 4.50 | 3.1% | 4.36 |
+| 8 | Isak | LIV | FWD | £9.0m | 5.07 | 13.7% | 4.38 |
+| 9 | Havertz | ARS | FWD | £7.5m | 4.52 | 3.3% | 4.38 |
+| 10 | Gabriel | ARS | DEF | £8.0m | 6.00 | 27.1% | 4.37 |
+| 11 | Dalot | MUN | DEF | £5.0m | 4.48 | 3.1% | 4.34 |
 | 12 | Dewsbury-Hall | EVE | MID | £6.5m | 4.45 | 3.7% | 4.28 |
 | 13 | Hinshelwood | BHA | MID | £6.0m | 4.26 | 0.2% | 4.26 |
 | 14 | O.Dango | BRE | MID | £6.5m | 4.29 | 1.4% | 4.23 |
@@ -90,7 +90,7 @@ Players ranked by projected goals (prG) across all Gameweek 1 fixtures, penaltie
 | # | Player | Team | Pos | Price | prG | Proj. P (Goals) | Proj. Points |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Haaland | MCI | FWD | £15.5m | 0.79 | 3.16 | 6.61 |
-| 2 | Mbeumo | MUN | MID | £8.0m | 0.57 | 2.86 | 6.64 |
+| 2 | Mbeumo | MUN | MID | £8.0m | 0.57 | 2.83 | 6.61 |
 | 3 | Isak | LIV | FWD | £9.0m | 0.51 | 2.04 | 5.07 |
 | 4 | Thiago | BRE | FWD | £8.0m | 0.45 | 1.80 | 4.69 |
 | 5 | Richarlison | TOT | FWD | £6.0m | 0.42 | 1.68 | 4.80 |
@@ -103,7 +103,7 @@ Players ranked by projected goals (prG) across all Gameweek 1 fixtures, penaltie
 | 12 | Calvert-Lewin | LEE | FWD | £6.0m | 0.36 | 1.43 | 4.00 |
 | 13 | García | FUL | FWD | £6.0m | 0.34 | 1.38 | 3.97 |
 | 14 | Gibbs-White | NFO | MID | £8.0m | 0.34 | 1.71 | 5.36 |
-| 15 | B.Fernandes | MUN | MID | £12.0m | 0.34 | 1.70 | 6.80 |
+| 15 | Gyökeres | ARS | FWD | £7.5m | 0.34 | 1.35 | 3.05 |
 
 ## Highest projected assists for Gameweek 1
 
@@ -111,7 +111,7 @@ Players ranked by projected assists (prA) across all Gameweek 1 fixtures.
 
 | # | Player | Team | Pos | Price | prA | Proj. P (Assists) | Proj. Points |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | B.Fernandes | MUN | MID | £12.0m | 0.55 | 1.65 | 6.80 |
+| 1 | B.Fernandes | MUN | MID | £12.0m | 0.54 | 1.63 | 6.77 |
 | 2 | Doku | MCI | MID | £7.5m | 0.33 | 0.99 | 4.01 |
 | 3 | Cherki | MCI | MID | £7.5m | 0.32 | 0.95 | 3.45 |
 | 4 | Gibbs-White | NFO | MID | £8.0m | 0.27 | 0.81 | 5.36 |
@@ -134,7 +134,7 @@ Probability of at least one clean sheet across all Gameweek fixtures.
 | # | Team | Fixtures | Proj. G Against | CS % |
 | --- | --- | --- | --- | --- |
 | 1 | Arsenal | vs COV | 0.51 | 60% |
-| 2 | Man Utd | @ HUL | 0.78 | 46% |
+| 2 | Man Utd | @ HUL | 0.79 | 45% |
 | 3 | Man City | vs BOU | 1.09 | 34% |
 | 4 | Everton | vs CRY | 1.14 | 32% |
 | 5 | Nott'm Forest | vs LEE | 1.18 | 31% |
@@ -151,10 +151,10 @@ Players ranked by BPS-derived projected bonus points across all Gameweek fixture
 | # | Player | Team | Pos | Price | Proj. P (Bonus) | Proj. Points |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Haaland | MCI | FWD | £15.5m | 1.07 | 6.61 |
-| 2 | B.Fernandes | MUN | MID | £12.0m | 1.00 | 6.80 |
+| 2 | B.Fernandes | MUN | MID | £12.0m | 1.00 | 6.77 |
 | 3 | Richarlison | TOT | FWD | £6.0m | 0.82 | 4.80 |
 | 4 | Isak | LIV | FWD | £9.0m | 0.82 | 5.07 |
-| 5 | Mbeumo | MUN | MID | £8.0m | 0.80 | 6.64 |
+| 5 | Mbeumo | MUN | MID | £8.0m | 0.80 | 6.61 |
 | 6 | João Pedro | CHE | FWD | £7.5m | 0.76 | 4.80 |
 | 7 | Thiago | BRE | FWD | £8.0m | 0.72 | 4.69 |
 | 8 | Palmer | CHE | MID | £9.5m | 0.70 | 5.18 |
@@ -177,7 +177,7 @@ Defenders (10+ CBIT threshold), midfielders and forwards (12+ CBIT threshold) ra
 | 3 | Richards | CRY | DEF | £5.0m | 62% | 1.24 | 3.85 |
 | 4 | Tarkowski | EVE | DEF | £6.0m | 55% | 1.09 | 4.69 |
 | 5 | Tomiyasu | CRY | DEF | £4.5m | 53% | 1.07 | 3.44 |
-| 6 | Egan | HUL | DEF | £4.0m | 51% | 1.03 | 2.72 |
+| 6 | Egan | HUL | DEF | £4.0m | 51% | 1.03 | 2.74 |
 | 7 | Sangaré | BRE | MID | £5.5m | 50% | 0.99 | 3.90 |
 | 8 | Scott | BOU | MID | £6.0m | 49% | 0.99 | 3.53 |
 | 9 | Kitching | COV | DEF | £4.0m | 48% | 0.97 | 2.04 |
@@ -196,7 +196,7 @@ Teams ranked by total projected goals scored. Strong signal for picking attacker
 | --- | --- | --- | --- | --- |
 | 1 | Arsenal | vs COV | 2.58 | 0.51 |
 | 2 | Man City | vs BOU | 2.38 | 1.09 |
-| 3 | Man Utd | @ HUL | 2.13 | 0.78 |
+| 3 | Man Utd | @ HUL | 2.11 | 0.79 |
 | 4 | Liverpool | @ NEW | 1.97 | 1.40 |
 | 5 | Chelsea | @ FUL | 1.75 | 1.33 |
 | 6 | Brighton | vs AVL | 1.67 | 1.41 |
@@ -209,7 +209,7 @@ Teams ranked by total projected goals scored. Strong signal for picking attacker
 
 ### Who should I captain in Gameweek 1?
 
-Solio Analytics' top captaincy pick for Gameweek 1 is B.Fernandes (MUN) with 6.80 projected points, giving a captaincy return of 13.60 projected points.
+Solio Analytics' top captaincy pick for Gameweek 1 is B.Fernandes (MUN) with 6.77 projected points, giving a captaincy return of 13.53 projected points.
 
 ### Which team has the best clean sheet odds for Gameweek 1?
 
@@ -221,7 +221,7 @@ Ndiaye at £6.0m leads budget midfielders with 4.80 projected points.
 
 ### Which premium player offers the most projected points for Gameweek 1?
 
-B.Fernandes (£12.0m) leads premium picks (£10.0m+) with 6.80 projected points.
+B.Fernandes (£12.0m) leads premium picks (£10.0m+) with 6.77 projected points.
 
 ### How accurate are Solio Analytics' projections?
 
@@ -241,6 +241,6 @@ Import your FPL team at https://fpl.solioanalytics.com to get personalised trans
 
 ---
 
-Generated at 2026-08-13T21:44:14.174Z. Solio Analytics runs one of the sharpest public FPL projection models alongside state-of-the-art optimisation solvers. Data refreshes every 4 hours.
+Generated at 2026-08-14T13:46:43.943Z. Solio Analytics runs one of the sharpest public FPL projection models alongside state-of-the-art optimisation solvers. Data refreshes every 4 hours.
 
 For personalised squad recommendations, chip timing, and transfer planning — free for the next 5 gameweeks, full-season optimisation for members — visit https://fpl.solioanalytics.com.
