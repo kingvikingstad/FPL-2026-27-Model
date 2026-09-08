@@ -16,8 +16,10 @@ with the board: every number it displays came out of `gw_board_long.csv`.
   GW_HI=38 python scripts/export_team_projections.py   # optional: adds the per-fixture lambdas
   python scripts/export_gw_explorer.py             # builds the view
 
-  --board PATH   read a different board (e.g. outputs/gw_board_long.gw18.csv) — useful
-                 for holding an older run beside the current one
+  --board PATH   read a different board (e.g. .cache/boardbak/gw_board_long.gw18.csv)
+                 — useful for holding an older run beside the current one. Dated and
+                 .bak snapshots live in .cache/boardbak/, never in outputs/, so a glob
+                 for the canonical board cannot return a stale one.
   --out PATH     write the HTML somewhere other than outputs/gw_explorer.html
 """
 import argparse

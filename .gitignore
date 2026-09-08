@@ -22,7 +22,11 @@ data/coldstart_hist.csv
 
 # More of the same rule: each has a producer, so none is worth a blob.
 
-# Hand-kept backups and dated snapshots of regenerable boards.
+# Hand-kept backups and dated snapshots of regenerable boards. These belong in
+# .cache/boardbak/, NOT in outputs/ — eight of them were sitting beside the
+# canonical board on 2026-09-08, so a glob for `gw_board*` returned ten files of
+# which two were current. Ignoring them hides them from review but not from a
+# reader, and a stale board is a plausible wrong answer, not a visible error.
 *.bak
 data/*.gw3fetch
 
