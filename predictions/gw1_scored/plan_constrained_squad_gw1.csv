@@ -1,0 +1,16 @@
+player_code,display_name,unique_label,player,team,pos,price,ep,in_xi,is_captain,bench_order
+106760,Shaw,Shaw (MUN),Shaw,Man United,DEF,4.5,4.838,False,False,1.0
+141746,B.Fernandes,B.Fernandes (MUN),B.Fernandes,Man United,MID,12.0,7.936,True,True,
+154561,Raya,Raya (ARS),Raya,Arsenal,GK,6.0,4.222,True,False,
+177815,Calvert-Lewin,Calvert-Lewin (LEE),Calvert-Lewin,Leeds,FWD,6.0,4.089,False,False,3.0
+191866,Ajer,Ajer (BRE),Ajer,Brentford,DEF,4.5,4.129,False,False,2.0
+209244,Foden,Foden (MCI),Foden,Man City,MID,7.0,5.578,True,False,
+215379,Anderson,Anderson (MCI),Anderson,Man City,MID,6.5,4.771,True,False,
+226597,Gabriel,Gabriel (ARS),Gabriel,Arsenal,DEF,8.0,6.465,True,False,
+446008,Mbeumo,Mbeumo (MUN),Mbeumo,Man United,MID,8.0,7.747,True,False,
+466075,Calafiori,Calafiori (ARS),Calafiori,Arsenal,DEF,5.5,5.451,True,False,
+475168,João Pedro,João Pedro (CHE),João Pedro,Chelsea,FWD,7.5,4.449,True,False,
+477424,Gvardiol,Gvardiol (MCI),Gvardiol,Man City,DEF,5.5,5.264,True,False,
+498016,Roefs,Roefs (SUN),Roefs,Sunderland,GK,5.0,3.248,False,False,
+502500,Thiago,Thiago (BRE),Thiago,Brentford,FWD,8.0,5.142,True,False,
+513418,Schade,Schade (BRE),Schade,Brentford,MID,6.0,4.89,True,False,

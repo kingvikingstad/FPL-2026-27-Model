@@ -1,0 +1,2128 @@
+{
+ "generatedAt": "2026-09-01T18:00:08.308Z",
+ "gameweek": 3,
+ "deadlineIso": "2026-09-04T17:30:00.000Z",
+ "source": "https://fpl.solioanalytics.com/api/data/latest",
+ "topProjected": [
+  {
+   "name": "Haaland",
+   "team": "MCI",
+   "position": "FWD",
+   "price": 155,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "ownership": 70.3,
+   "prPoints": 8.44660660833057
+  },
+  {
+   "name": "Cherki",
+   "team": "MCI",
+   "position": "MID",
+   "price": 77,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "ownership": 23.3,
+   "prPoints": 5.989545344984281
+  },
+  {
+   "name": "Foden",
+   "team": "MCI",
+   "position": "MID",
+   "price": 70,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "ownership": 4.8,
+   "prPoints": 5.7887067589419114
+  },
+  {
+   "name": "Isak",
+   "team": "LIV",
+   "position": "FWD",
+   "price": 90,
+   "opponents": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "ownership": 16.3,
+   "prPoints": 5.7809769636766895
+  },
+  {
+   "name": "B.Fernandes",
+   "team": "MUN",
+   "position": "MID",
+   "price": 120,
+   "opponents": [
+    {
+     "opponent": "EVE",
+     "isHome": false
+    }
+   ],
+   "ownership": 48.4,
+   "prPoints": 5.706992120668719
+  },
+  {
+   "name": "Wissa",
+   "team": "NEW",
+   "position": "FWD",
+   "price": 61,
+   "opponents": [
+    {
+     "opponent": "BOU",
+     "isHome": true
+    }
+   ],
+   "ownership": 9.8,
+   "prPoints": 5.698578261128081
+  },
+  {
+   "name": "Semenyo",
+   "team": "MCI",
+   "position": "MID",
+   "price": 85,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "ownership": 21.2,
+   "prPoints": 5.627521813958204
+  },
+  {
+   "name": "Saka",
+   "team": "ARS",
+   "position": "MID",
+   "price": 95,
+   "opponents": [
+    {
+     "opponent": "CHE",
+     "isHome": true
+    }
+   ],
+   "ownership": 10.4,
+   "prPoints": 5.609314712825982
+  },
+  {
+   "name": "Thiago",
+   "team": "BRE",
+   "position": "FWD",
+   "price": 80,
+   "opponents": [
+    {
+     "opponent": "SUN",
+     "isHome": true
+    }
+   ],
+   "ownership": 14.7,
+   "prPoints": 5.2922348188686
+  },
+  {
+   "name": "Szoboszlai",
+   "team": "LIV",
+   "position": "MID",
+   "price": 70,
+   "opponents": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "ownership": 41.8,
+   "prPoints": 5.278255755071405
+  },
+  {
+   "name": "O'Reilly",
+   "team": "MCI",
+   "position": "DEF",
+   "price": 65,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "ownership": 19.4,
+   "prPoints": 5.171163749620725
+  },
+  {
+   "name": "De Cuyper",
+   "team": "BHA",
+   "position": "DEF",
+   "price": 47,
+   "opponents": [
+    {
+     "opponent": "LEE",
+     "isHome": true
+    }
+   ],
+   "ownership": 13.7,
+   "prPoints": 5.117651657529364
+  },
+  {
+   "name": "Anderson",
+   "team": "MCI",
+   "position": "MID",
+   "price": 64,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "ownership": 5.4,
+   "prPoints": 5.075699210099508
+  },
+  {
+   "name": "Collins",
+   "team": "BRE",
+   "position": "DEF",
+   "price": 55,
+   "opponents": [
+    {
+     "opponent": "SUN",
+     "isHome": true
+    }
+   ],
+   "ownership": 2.2,
+   "prPoints": 5.0657482326975565
+  },
+  {
+   "name": "Wirtz",
+   "team": "LIV",
+   "position": "MID",
+   "price": 75,
+   "opponents": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "ownership": 10.3,
+   "prPoints": 5.024096486048849
+  },
+  {
+   "name": "Gibbs-White",
+   "team": "NFO",
+   "position": "MID",
+   "price": 79,
+   "opponents": [
+    {
+     "opponent": "TOT",
+     "isHome": true
+    }
+   ],
+   "ownership": 9,
+   "prPoints": 4.947783001959251
+  },
+  {
+   "name": "Ajer",
+   "team": "BRE",
+   "position": "DEF",
+   "price": 45,
+   "opponents": [
+    {
+     "opponent": "SUN",
+     "isHome": true
+    }
+   ],
+   "ownership": 4.6,
+   "prPoints": 4.9347517573808135
+  },
+  {
+   "name": "Buendía",
+   "team": "AVL",
+   "position": "MID",
+   "price": 60,
+   "opponents": [
+    {
+     "opponent": "HUL",
+     "isHome": false
+    }
+   ],
+   "ownership": 1.1,
+   "prPoints": 4.8495627168028
+  },
+  {
+   "name": "N.Jackson",
+   "team": "AVL",
+   "position": "FWD",
+   "price": 65,
+   "opponents": [
+    {
+     "opponent": "HUL",
+     "isHome": false
+    }
+   ],
+   "ownership": 0.7,
+   "prPoints": 4.82415515967149
+  },
+  {
+   "name": "Gvardiol",
+   "team": "MCI",
+   "position": "DEF",
+   "price": 56,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "ownership": 17.3,
+   "prPoints": 4.8061157745367264
+  },
+  {
+   "name": "Gonzalo",
+   "team": "FUL",
+   "position": "FWD",
+   "price": 60,
+   "opponents": [
+    {
+     "opponent": "CRY",
+     "isHome": true
+    }
+   ],
+   "ownership": 4.5,
+   "prPoints": 4.761774833776104
+  },
+  {
+   "name": "Cunha",
+   "team": "MUN",
+   "position": "MID",
+   "price": 80,
+   "opponents": [
+    {
+     "opponent": "EVE",
+     "isHome": false
+    }
+   ],
+   "ownership": 8.4,
+   "prPoints": 4.759955009159673
+  },
+  {
+   "name": "Schade",
+   "team": "BRE",
+   "position": "MID",
+   "price": 60,
+   "opponents": [
+    {
+     "opponent": "SUN",
+     "isHome": true
+    }
+   ],
+   "ownership": 3.8,
+   "prPoints": 4.66766042065443
+  },
+  {
+   "name": "M.Sangaré",
+   "team": "BRE",
+   "position": "MID",
+   "price": 56,
+   "opponents": [
+    {
+     "opponent": "SUN",
+     "isHome": true
+    }
+   ],
+   "ownership": 12.2,
+   "prPoints": 4.624259443107714
+  },
+  {
+   "name": "Gakpo",
+   "team": "LIV",
+   "position": "MID",
+   "price": 70,
+   "opponents": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "ownership": 7.7,
+   "prPoints": 4.57011568421645
+  },
+  {
+   "name": "Mbeumo",
+   "team": "MUN",
+   "position": "MID",
+   "price": 80,
+   "opponents": [
+    {
+     "opponent": "EVE",
+     "isHome": false
+    }
+   ],
+   "ownership": 30.8,
+   "prPoints": 4.55233590973914
+  },
+  {
+   "name": "Groß",
+   "team": "BHA",
+   "position": "MID",
+   "price": 55,
+   "opponents": [
+    {
+     "opponent": "LEE",
+     "isHome": true
+    }
+   ],
+   "ownership": 14.1,
+   "prPoints": 4.540474917681046
+  },
+  {
+   "name": "Gabriel",
+   "team": "ARS",
+   "position": "DEF",
+   "price": 80,
+   "opponents": [
+    {
+     "opponent": "CHE",
+     "isHome": true
+    }
+   ],
+   "ownership": 27,
+   "prPoints": 4.462540611132349
+  },
+  {
+   "name": "Virgil",
+   "team": "LIV",
+   "position": "DEF",
+   "price": 65,
+   "opponents": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "ownership": 18.2,
+   "prPoints": 4.3411896723178165
+  },
+  {
+   "name": "Kayode",
+   "team": "BRE",
+   "position": "DEF",
+   "price": 46,
+   "opponents": [
+    {
+     "opponent": "SUN",
+     "isHome": true
+    }
+   ],
+   "ownership": 9.1,
+   "prPoints": 4.2888159184627535
+  }
+ ],
+ "topCaptains": [
+  {
+   "name": "Haaland",
+   "team": "MCI",
+   "position": "FWD",
+   "price": 155,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "ownership": 70.3,
+   "prPoints": 8.44660660833057,
+   "captainProjPoints": 16.89321321666114
+  },
+  {
+   "name": "Cherki",
+   "team": "MCI",
+   "position": "MID",
+   "price": 77,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "ownership": 23.3,
+   "prPoints": 5.989545344984281,
+   "captainProjPoints": 11.979090689968562
+  },
+  {
+   "name": "Foden",
+   "team": "MCI",
+   "position": "MID",
+   "price": 70,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "ownership": 4.8,
+   "prPoints": 5.7887067589419114,
+   "captainProjPoints": 11.577413517883823
+  },
+  {
+   "name": "Isak",
+   "team": "LIV",
+   "position": "FWD",
+   "price": 90,
+   "opponents": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "ownership": 16.3,
+   "prPoints": 5.7809769636766895,
+   "captainProjPoints": 11.561953927353379
+  },
+  {
+   "name": "B.Fernandes",
+   "team": "MUN",
+   "position": "MID",
+   "price": 120,
+   "opponents": [
+    {
+     "opponent": "EVE",
+     "isHome": false
+    }
+   ],
+   "ownership": 48.4,
+   "prPoints": 5.706992120668719,
+   "captainProjPoints": 11.413984241337438
+  },
+  {
+   "name": "Wissa",
+   "team": "NEW",
+   "position": "FWD",
+   "price": 61,
+   "opponents": [
+    {
+     "opponent": "BOU",
+     "isHome": true
+    }
+   ],
+   "ownership": 9.8,
+   "prPoints": 5.698578261128081,
+   "captainProjPoints": 11.397156522256163
+  },
+  {
+   "name": "Semenyo",
+   "team": "MCI",
+   "position": "MID",
+   "price": 85,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "ownership": 21.2,
+   "prPoints": 5.627521813958204,
+   "captainProjPoints": 11.255043627916407
+  },
+  {
+   "name": "Saka",
+   "team": "ARS",
+   "position": "MID",
+   "price": 95,
+   "opponents": [
+    {
+     "opponent": "CHE",
+     "isHome": true
+    }
+   ],
+   "ownership": 10.4,
+   "prPoints": 5.609314712825982,
+   "captainProjPoints": 11.218629425651963
+  },
+  {
+   "name": "Thiago",
+   "team": "BRE",
+   "position": "FWD",
+   "price": 80,
+   "opponents": [
+    {
+     "opponent": "SUN",
+     "isHome": true
+    }
+   ],
+   "ownership": 14.7,
+   "prPoints": 5.2922348188686,
+   "captainProjPoints": 10.5844696377372
+  },
+  {
+   "name": "Szoboszlai",
+   "team": "LIV",
+   "position": "MID",
+   "price": 70,
+   "opponents": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "ownership": 41.8,
+   "prPoints": 5.278255755071405,
+   "captainProjPoints": 10.55651151014281
+  }
+ ],
+ "topDifferentials": [
+  {
+   "name": "Foden",
+   "team": "MCI",
+   "position": "MID",
+   "price": 70,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "ownership": 4.8,
+   "prPoints": 5.7887067589419114,
+   "leverage": 5.510848834512699
+  },
+  {
+   "name": "Wissa",
+   "team": "NEW",
+   "position": "FWD",
+   "price": 61,
+   "opponents": [
+    {
+     "opponent": "BOU",
+     "isHome": true
+    }
+   ],
+   "ownership": 9.8,
+   "prPoints": 5.698578261128081,
+   "leverage": 5.140117591537529
+  },
+  {
+   "name": "Saka",
+   "team": "ARS",
+   "position": "MID",
+   "price": 95,
+   "opponents": [
+    {
+     "opponent": "CHE",
+     "isHome": true
+    }
+   ],
+   "ownership": 10.4,
+   "prPoints": 5.609314712825982,
+   "leverage": 5.02594598269208
+  },
+  {
+   "name": "Collins",
+   "team": "BRE",
+   "position": "DEF",
+   "price": 55,
+   "opponents": [
+    {
+     "opponent": "SUN",
+     "isHome": true
+    }
+   ],
+   "ownership": 2.2,
+   "prPoints": 5.0657482326975565,
+   "leverage": 4.95430177157821
+  },
+  {
+   "name": "Isak",
+   "team": "LIV",
+   "position": "FWD",
+   "price": 90,
+   "opponents": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "ownership": 16.3,
+   "prPoints": 5.7809769636766895,
+   "leverage": 4.838677718597389
+  },
+  {
+   "name": "Anderson",
+   "team": "MCI",
+   "position": "MID",
+   "price": 64,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "ownership": 5.4,
+   "prPoints": 5.075699210099508,
+   "leverage": 4.801611452754134
+  },
+  {
+   "name": "Buendía",
+   "team": "AVL",
+   "position": "MID",
+   "price": 60,
+   "opponents": [
+    {
+     "opponent": "HUL",
+     "isHome": false
+    }
+   ],
+   "ownership": 1.1,
+   "prPoints": 4.8495627168028,
+   "leverage": 4.796217526917969
+  },
+  {
+   "name": "N.Jackson",
+   "team": "AVL",
+   "position": "FWD",
+   "price": 65,
+   "opponents": [
+    {
+     "opponent": "HUL",
+     "isHome": false
+    }
+   ],
+   "ownership": 0.7,
+   "prPoints": 4.82415515967149,
+   "leverage": 4.7903860735537895
+  },
+  {
+   "name": "Ajer",
+   "team": "BRE",
+   "position": "DEF",
+   "price": 45,
+   "opponents": [
+    {
+     "opponent": "SUN",
+     "isHome": true
+    }
+   ],
+   "ownership": 4.6,
+   "prPoints": 4.9347517573808135,
+   "leverage": 4.707753176541296
+  },
+  {
+   "name": "Cherki",
+   "team": "MCI",
+   "position": "MID",
+   "price": 77,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "ownership": 23.3,
+   "prPoints": 5.989545344984281,
+   "leverage": 4.593981279602944
+  },
+  {
+   "name": "Gonzalo",
+   "team": "FUL",
+   "position": "FWD",
+   "price": 60,
+   "opponents": [
+    {
+     "opponent": "CRY",
+     "isHome": true
+    }
+   ],
+   "ownership": 4.5,
+   "prPoints": 4.761774833776104,
+   "leverage": 4.547494966256179
+  },
+  {
+   "name": "Thiago",
+   "team": "BRE",
+   "position": "FWD",
+   "price": 80,
+   "opponents": [
+    {
+     "opponent": "SUN",
+     "isHome": true
+    }
+   ],
+   "ownership": 14.7,
+   "prPoints": 5.2922348188686,
+   "leverage": 4.514276300494916
+  },
+  {
+   "name": "Wirtz",
+   "team": "LIV",
+   "position": "MID",
+   "price": 75,
+   "opponents": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "ownership": 10.3,
+   "prPoints": 5.024096486048849,
+   "leverage": 4.5066145479858175
+  },
+  {
+   "name": "Gibbs-White",
+   "team": "NFO",
+   "position": "MID",
+   "price": 79,
+   "opponents": [
+    {
+     "opponent": "TOT",
+     "isHome": true
+    }
+   ],
+   "ownership": 9,
+   "prPoints": 4.947783001959251,
+   "leverage": 4.502482531782919
+  },
+  {
+   "name": "Schade",
+   "team": "BRE",
+   "position": "MID",
+   "price": 60,
+   "opponents": [
+    {
+     "opponent": "SUN",
+     "isHome": true
+    }
+   ],
+   "ownership": 3.8,
+   "prPoints": 4.66766042065443,
+   "leverage": 4.490289324669561
+  }
+ ],
+ "topGoals": [
+  {
+   "name": "Haaland",
+   "team": "MCI",
+   "position": "FWD",
+   "price": 155,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "prPoints": 8.44660660833057,
+   "prGoals": 1.0529159282406426,
+   "prPointsFromGoals": 4.2116637129625705
+  },
+  {
+   "name": "Wissa",
+   "team": "NEW",
+   "position": "FWD",
+   "price": 61,
+   "opponents": [
+    {
+     "opponent": "BOU",
+     "isHome": true
+    }
+   ],
+   "prPoints": 5.698578261128081,
+   "prGoals": 0.6096631392065144,
+   "prPointsFromGoals": 2.4386525568260575
+  },
+  {
+   "name": "Isak",
+   "team": "LIV",
+   "position": "FWD",
+   "price": 90,
+   "opponents": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "prPoints": 5.7809769636766895,
+   "prGoals": 0.5814459650586827,
+   "prPointsFromGoals": 2.325783860234731
+  },
+  {
+   "name": "Thiago",
+   "team": "BRE",
+   "position": "FWD",
+   "price": 80,
+   "opponents": [
+    {
+     "opponent": "SUN",
+     "isHome": true
+    }
+   ],
+   "prPoints": 5.2922348188686,
+   "prGoals": 0.5502494261604687,
+   "prPointsFromGoals": 2.2009977046418747
+  },
+  {
+   "name": "Gonzalo",
+   "team": "FUL",
+   "position": "FWD",
+   "price": 60,
+   "opponents": [
+    {
+     "opponent": "CRY",
+     "isHome": true
+    }
+   ],
+   "prPoints": 4.761774833776104,
+   "prGoals": 0.4467428204326238,
+   "prPointsFromGoals": 1.7869712817304952
+  },
+  {
+   "name": "N.Jackson",
+   "team": "AVL",
+   "position": "FWD",
+   "price": 65,
+   "opponents": [
+    {
+     "opponent": "HUL",
+     "isHome": false
+    }
+   ],
+   "prPoints": 4.82415515967149,
+   "prGoals": 0.43254532925355543,
+   "prPointsFromGoals": 1.7301813170142217
+  },
+  {
+   "name": "Foden",
+   "team": "MCI",
+   "position": "MID",
+   "price": 70,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "prPoints": 5.7887067589419114,
+   "prGoals": 0.36537485867853947,
+   "prPointsFromGoals": 1.8268742933926974
+  },
+  {
+   "name": "Semenyo",
+   "team": "MCI",
+   "position": "MID",
+   "price": 85,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "prPoints": 5.627521813958204,
+   "prGoals": 0.362422860151021,
+   "prPointsFromGoals": 1.812114300755105
+  },
+  {
+   "name": "Havertz",
+   "team": "ARS",
+   "position": "FWD",
+   "price": 75,
+   "opponents": [
+    {
+     "opponent": "CHE",
+     "isHome": true
+    }
+   ],
+   "prPoints": 4.23031293408148,
+   "prGoals": 0.35676162315749055,
+   "prPointsFromGoals": 1.4270464926299622
+  },
+  {
+   "name": "Barry",
+   "team": "EVE",
+   "position": "FWD",
+   "price": 55,
+   "opponents": [
+    {
+     "opponent": "MUN",
+     "isHome": true
+    }
+   ],
+   "prPoints": 3.867729511410583,
+   "prGoals": 0.3507424790817812,
+   "prPointsFromGoals": 1.4029699163271248
+  },
+  {
+   "name": "Saka",
+   "team": "ARS",
+   "position": "MID",
+   "price": 95,
+   "opponents": [
+    {
+     "opponent": "CHE",
+     "isHome": true
+    }
+   ],
+   "prPoints": 5.609314712825982,
+   "prGoals": 0.33747013961701,
+   "prPointsFromGoals": 1.6873506980850501
+  },
+  {
+   "name": "Calvert-Lewin",
+   "team": "LEE",
+   "position": "FWD",
+   "price": 60,
+   "opponents": [
+    {
+     "opponent": "BHA",
+     "isHome": false
+    }
+   ],
+   "prPoints": 3.9717669039759893,
+   "prGoals": 0.3353575683048695,
+   "prPointsFromGoals": 1.341430273219478
+  },
+  {
+   "name": "Marmoush",
+   "team": "TOT",
+   "position": "FWD",
+   "price": 70,
+   "opponents": [
+    {
+     "opponent": "NFO",
+     "isHome": false
+    }
+   ],
+   "prPoints": 4.090988257375299,
+   "prGoals": 0.326772590297523,
+   "prPointsFromGoals": 1.307090361190092
+  },
+  {
+   "name": "Gibbs-White",
+   "team": "NFO",
+   "position": "MID",
+   "price": 79,
+   "opponents": [
+    {
+     "opponent": "TOT",
+     "isHome": true
+    }
+   ],
+   "prPoints": 4.947783001959251,
+   "prGoals": 0.3149067044845445,
+   "prPointsFromGoals": 1.5745335224227226
+  },
+  {
+   "name": "McBurnie",
+   "team": "HUL",
+   "position": "FWD",
+   "price": 55,
+   "opponents": [
+    {
+     "opponent": "AVL",
+     "isHome": true
+    }
+   ],
+   "prPoints": 3.836542219838405,
+   "prGoals": 0.30292527702480343,
+   "prPointsFromGoals": 1.2117011080992137
+  }
+ ],
+ "topAssists": [
+  {
+   "name": "Cherki",
+   "team": "MCI",
+   "position": "MID",
+   "price": 77,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "prPoints": 5.989545344984281,
+   "prAssists": 0.635786598268546,
+   "prPointsFromAssists": 1.907359794805638
+  },
+  {
+   "name": "B.Fernandes",
+   "team": "MUN",
+   "position": "MID",
+   "price": 120,
+   "opponents": [
+    {
+     "opponent": "EVE",
+     "isHome": false
+    }
+   ],
+   "prPoints": 5.706992120668719,
+   "prAssists": 0.42092470140763005,
+   "prPointsFromAssists": 1.2627741042228902
+  },
+  {
+   "name": "Saka",
+   "team": "ARS",
+   "position": "MID",
+   "price": 95,
+   "opponents": [
+    {
+     "opponent": "CHE",
+     "isHome": true
+    }
+   ],
+   "prPoints": 5.609314712825982,
+   "prAssists": 0.31503446684110176,
+   "prPointsFromAssists": 0.9451034005233052
+  },
+  {
+   "name": "Haaland",
+   "team": "MCI",
+   "position": "FWD",
+   "price": 155,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "prPoints": 8.44660660833057,
+   "prAssists": 0.31119200260611823,
+   "prPointsFromAssists": 0.9335760078183547
+  },
+  {
+   "name": "Foden",
+   "team": "MCI",
+   "position": "MID",
+   "price": 70,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "prPoints": 5.7887067589419114,
+   "prAssists": 0.2883430186112892,
+   "prPointsFromAssists": 0.8650290558338676
+  },
+  {
+   "name": "Groß",
+   "team": "BHA",
+   "position": "MID",
+   "price": 55,
+   "opponents": [
+    {
+     "opponent": "LEE",
+     "isHome": true
+    }
+   ],
+   "prPoints": 4.540474917681046,
+   "prAssists": 0.27985764295292676,
+   "prPointsFromAssists": 0.8395729288587803
+  },
+  {
+   "name": "Szoboszlai",
+   "team": "LIV",
+   "position": "MID",
+   "price": 70,
+   "opponents": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "prPoints": 5.278255755071405,
+   "prAssists": 0.26998335461929024,
+   "prPointsFromAssists": 0.8099500638578707
+  },
+  {
+   "name": "Semenyo",
+   "team": "MCI",
+   "position": "MID",
+   "price": 85,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "prPoints": 5.627521813958204,
+   "prAssists": 0.2637707674100651,
+   "prPointsFromAssists": 0.7913123022301953
+  },
+  {
+   "name": "Wirtz",
+   "team": "LIV",
+   "position": "MID",
+   "price": 75,
+   "opponents": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "prPoints": 5.024096486048849,
+   "prAssists": 0.2578695773266244,
+   "prPointsFromAssists": 0.7736087319798732
+  },
+  {
+   "name": "Frimpong",
+   "team": "LIV",
+   "position": "DEF",
+   "price": 55,
+   "opponents": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "prPoints": 4.2282310692347345,
+   "prAssists": 0.2504272982419928,
+   "prPointsFromAssists": 0.7512818947259783
+  },
+  {
+   "name": "Anderson",
+   "team": "MCI",
+   "position": "MID",
+   "price": 64,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "prPoints": 5.075699210099508,
+   "prAssists": 0.2477801588017013,
+   "prPointsFromAssists": 0.7433404764051039
+  },
+  {
+   "name": "Ødegaard",
+   "team": "ARS",
+   "position": "MID",
+   "price": 66,
+   "opponents": [
+    {
+     "opponent": "CHE",
+     "isHome": true
+    }
+   ],
+   "prPoints": 3.995535329828025,
+   "prAssists": 0.23784435557283046,
+   "prPointsFromAssists": 0.7135330667184914
+  },
+  {
+   "name": "Gibbs-White",
+   "team": "NFO",
+   "position": "MID",
+   "price": 79,
+   "opponents": [
+    {
+     "opponent": "TOT",
+     "isHome": true
+    }
+   ],
+   "prPoints": 4.947783001959251,
+   "prAssists": 0.23630257486207926,
+   "prPointsFromAssists": 0.7089077245862377
+  },
+  {
+   "name": "Gakpo",
+   "team": "LIV",
+   "position": "MID",
+   "price": 70,
+   "opponents": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "prPoints": 4.57011568421645,
+   "prAssists": 0.2360542319750358,
+   "prPointsFromAssists": 0.7081626959251074
+  },
+  {
+   "name": "Elanga",
+   "team": "NEW",
+   "position": "MID",
+   "price": 61,
+   "opponents": [
+    {
+     "opponent": "BOU",
+     "isHome": true
+    }
+   ],
+   "prPoints": 3.7774375359836743,
+   "prAssists": 0.2331162197111757,
+   "prPointsFromAssists": 0.6993486591335271
+  }
+ ],
+ "bestCleanSheets": [
+  {
+   "team": "Man City",
+   "fixtures": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 2.8964239199999993,
+   "prGoalsAgainst": 0.7312285173599999,
+   "csProb": 0.481317320042814
+  },
+  {
+   "team": "Brentford",
+   "fixtures": [
+    {
+     "opponent": "SUN",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 1.8237444613200002,
+   "prGoalsAgainst": 0.9000868780800001,
+   "csProb": 0.4065343392834835
+  },
+  {
+   "team": "Arsenal",
+   "fixtures": [
+    {
+     "opponent": "CHE",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 1.8123815674800001,
+   "prGoalsAgainst": 0.9655187256000001,
+   "csProb": 0.3807856252483659
+  },
+  {
+   "team": "Aston Villa",
+   "fixtures": [
+    {
+     "opponent": "HUL",
+     "isHome": false
+    }
+   ],
+   "prGoalsFor": 1.6836232777650002,
+   "prGoalsAgainst": 1.019937312,
+   "csProb": 0.36061754585723305
+  },
+  {
+   "team": "Brighton",
+   "fixtures": [
+    {
+     "opponent": "LEE",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 1.6095885705,
+   "prGoalsAgainst": 1.0465412760000001,
+   "csProb": 0.35115018273046883
+  },
+  {
+   "team": "Liverpool",
+   "fixtures": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "prGoalsFor": 2.23358557761,
+   "prGoalsAgainst": 1.1008267578000002,
+   "csProb": 0.3325959936653221
+  },
+  {
+   "team": "Fulham",
+   "fixtures": [
+    {
+     "opponent": "CRY",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 1.4530393331999998,
+   "prGoalsAgainst": 1.2261144086550002,
+   "csProb": 0.29343051654189933
+  },
+  {
+   "team": "Nott'm Forest",
+   "fixtures": [
+    {
+     "opponent": "TOT",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 1.3532890927499999,
+   "prGoalsAgainst": 1.239890544,
+   "csProb": 0.28941589451157324
+  },
+  {
+   "team": "Man Utd",
+   "fixtures": [
+    {
+     "opponent": "EVE",
+     "isHome": false
+    }
+   ],
+   "prGoalsFor": 1.5855100331400003,
+   "prGoalsAgainst": 1.2818857447350003,
+   "csProb": 0.27751348712207125
+  },
+  {
+   "team": "Spurs",
+   "fixtures": [
+    {
+     "opponent": "NFO",
+     "isHome": false
+    }
+   ],
+   "prGoalsFor": 1.239890544,
+   "prGoalsAgainst": 1.3532890927499999,
+   "csProb": 0.25838899609554766
+  }
+ ],
+ "topBonus": [
+  {
+   "name": "Haaland",
+   "team": "MCI",
+   "position": "FWD",
+   "price": 155,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "prPoints": 8.44660660833057,
+   "prBonusPoints": 1.3965209999999997
+  },
+  {
+   "name": "Isak",
+   "team": "LIV",
+   "position": "FWD",
+   "price": 90,
+   "opponents": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "prPoints": 5.7809769636766895,
+   "prBonusPoints": 1.022616
+  },
+  {
+   "name": "Wissa",
+   "team": "NEW",
+   "position": "FWD",
+   "price": 61,
+   "opponents": [
+    {
+     "opponent": "BOU",
+     "isHome": true
+    }
+   ],
+   "prPoints": 5.698578261128081,
+   "prBonusPoints": 0.8994600000000001
+  },
+  {
+   "name": "Thiago",
+   "team": "BRE",
+   "position": "FWD",
+   "price": 80,
+   "opponents": [
+    {
+     "opponent": "SUN",
+     "isHome": true
+    }
+   ],
+   "prPoints": 5.2922348188686,
+   "prBonusPoints": 0.8387999999999999
+  },
+  {
+   "name": "B.Fernandes",
+   "team": "MUN",
+   "position": "MID",
+   "price": 120,
+   "opponents": [
+    {
+     "opponent": "EVE",
+     "isHome": false
+    }
+   ],
+   "prPoints": 5.706992120668719,
+   "prBonusPoints": 0.83562
+  },
+  {
+   "name": "N.Jackson",
+   "team": "AVL",
+   "position": "FWD",
+   "price": 65,
+   "opponents": [
+    {
+     "opponent": "HUL",
+     "isHome": false
+    }
+   ],
+   "prPoints": 4.82415515967149,
+   "prBonusPoints": 0.74448
+  },
+  {
+   "name": "Saka",
+   "team": "ARS",
+   "position": "MID",
+   "price": 95,
+   "opponents": [
+    {
+     "opponent": "CHE",
+     "isHome": true
+    }
+   ],
+   "prPoints": 5.609314712825982,
+   "prBonusPoints": 0.7388399999999999
+  },
+  {
+   "name": "Foden",
+   "team": "MCI",
+   "position": "MID",
+   "price": 70,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "prPoints": 5.7887067589419114,
+   "prBonusPoints": 0.7317899999999999
+  },
+  {
+   "name": "Gonzalo",
+   "team": "FUL",
+   "position": "FWD",
+   "price": 60,
+   "opponents": [
+    {
+     "opponent": "CRY",
+     "isHome": true
+    }
+   ],
+   "prPoints": 4.761774833776104,
+   "prBonusPoints": 0.69048
+  },
+  {
+   "name": "Cherki",
+   "team": "MCI",
+   "position": "MID",
+   "price": 77,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "prPoints": 5.989545344984281,
+   "prBonusPoints": 0.6560400000000001
+  },
+  {
+   "name": "Marmoush",
+   "team": "TOT",
+   "position": "FWD",
+   "price": 70,
+   "opponents": [
+    {
+     "opponent": "NFO",
+     "isHome": false
+    }
+   ],
+   "prPoints": 4.090988257375299,
+   "prBonusPoints": 0.6520499999999998
+  },
+  {
+   "name": "Wirtz",
+   "team": "LIV",
+   "position": "MID",
+   "price": 75,
+   "opponents": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "prPoints": 5.024096486048849,
+   "prBonusPoints": 0.65016
+  },
+  {
+   "name": "Semenyo",
+   "team": "MCI",
+   "position": "MID",
+   "price": 85,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "prPoints": 5.627521813958204,
+   "prBonusPoints": 0.6213
+  },
+  {
+   "name": "Szoboszlai",
+   "team": "LIV",
+   "position": "MID",
+   "price": 70,
+   "opponents": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "prPoints": 5.278255755071405,
+   "prBonusPoints": 0.6072
+  },
+  {
+   "name": "Cunha",
+   "team": "MUN",
+   "position": "MID",
+   "price": 80,
+   "opponents": [
+    {
+     "opponent": "EVE",
+     "isHome": false
+    }
+   ],
+   "prPoints": 4.759955009159673,
+   "prBonusPoints": 0.596542
+  }
+ ],
+ "topDefCon": [
+  {
+   "name": "Hill",
+   "team": "BOU",
+   "position": "DEF",
+   "price": 55,
+   "opponents": [
+    {
+     "opponent": "NEW",
+     "isHome": false
+    }
+   ],
+   "prPoints": 3.7567334651464197,
+   "prDefConProb": 0.6899621755455864,
+   "prDefConPoints": 1.3799243510911727
+  },
+  {
+   "name": "Muharemović",
+   "team": "LEE",
+   "position": "DEF",
+   "price": 50,
+   "opponents": [
+    {
+     "opponent": "BHA",
+     "isHome": false
+    }
+   ],
+   "prPoints": 3.704483590619608,
+   "prDefConProb": 0.6430185999938217,
+   "prDefConPoints": 1.2860371999876434
+  },
+  {
+   "name": "Ballard",
+   "team": "SUN",
+   "position": "DEF",
+   "price": 50,
+   "opponents": [
+    {
+     "opponent": "BRE",
+     "isHome": false
+    }
+   ],
+   "prPoints": 3.470279213481213,
+   "prDefConProb": 0.6208101896105335,
+   "prDefConPoints": 1.241620379221067
+  },
+  {
+   "name": "Silva",
+   "team": "BOU",
+   "position": "DEF",
+   "price": 50,
+   "opponents": [
+    {
+     "opponent": "NEW",
+     "isHome": false
+    }
+   ],
+   "prPoints": 3.4572504647900484,
+   "prDefConProb": 0.580203997755684,
+   "prDefConPoints": 1.160407995511368
+  },
+  {
+   "name": "Bijol",
+   "team": "LEE",
+   "position": "DEF",
+   "price": 50,
+   "opponents": [
+    {
+     "opponent": "BHA",
+     "isHome": false
+    }
+   ],
+   "prPoints": 3.4092241407512973,
+   "prDefConProb": 0.575806461568998,
+   "prDefConPoints": 1.151612923137996
+  },
+  {
+   "name": "Canvot",
+   "team": "CRY",
+   "position": "DEF",
+   "price": 50,
+   "opponents": [
+    {
+     "opponent": "FUL",
+     "isHome": false
+    }
+   ],
+   "prPoints": 3.898045332110457,
+   "prDefConProb": 0.5712044395676993,
+   "prDefConPoints": 1.1424088791353986
+  },
+  {
+   "name": "Anderson",
+   "team": "MCI",
+   "position": "MID",
+   "price": 64,
+   "opponents": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "prPoints": 5.075699210099508,
+   "prDefConProb": 0.5590105170450343,
+   "prDefConPoints": 1.1180210340900687
+  },
+  {
+   "name": "Lacroix",
+   "team": "CHE",
+   "position": "DEF",
+   "price": 60,
+   "opponents": [
+    {
+     "opponent": "ARS",
+     "isHome": false
+    }
+   ],
+   "prPoints": 3.2076709705049815,
+   "prDefConProb": 0.5578832352350743,
+   "prDefConPoints": 1.1157664704701487
+  },
+  {
+   "name": "Mendy",
+   "team": "HUL",
+   "position": "DEF",
+   "price": 40,
+   "opponents": [
+    {
+     "opponent": "AVL",
+     "isHome": true
+    }
+   ],
+   "prPoints": 3.299067096782795,
+   "prDefConProb": 0.538414921946717,
+   "prDefConPoints": 1.076829843893434
+  },
+  {
+   "name": "Scott",
+   "team": "BOU",
+   "position": "MID",
+   "price": 60,
+   "opponents": [
+    {
+     "opponent": "NEW",
+     "isHome": false
+    }
+   ],
+   "prPoints": 3.9868168717419534,
+   "prDefConProb": 0.538267935341311,
+   "prDefConPoints": 1.076535870682622
+  },
+  {
+   "name": "Ajer",
+   "team": "BRE",
+   "position": "DEF",
+   "price": 45,
+   "opponents": [
+    {
+     "opponent": "SUN",
+     "isHome": true
+    }
+   ],
+   "prPoints": 4.9347517573808135,
+   "prDefConProb": 0.526514595238007,
+   "prDefConPoints": 1.053029190476014
+  },
+  {
+   "name": "Richards",
+   "team": "CRY",
+   "position": "DEF",
+   "price": 50,
+   "opponents": [
+    {
+     "opponent": "FUL",
+     "isHome": false
+    }
+   ],
+   "prPoints": 3.8078872830771724,
+   "prDefConProb": 0.526514595238007,
+   "prDefConPoints": 1.053029190476014
+  },
+  {
+   "name": "Egan",
+   "team": "HUL",
+   "position": "DEF",
+   "price": 40,
+   "opponents": [
+    {
+     "opponent": "AVL",
+     "isHome": true
+    }
+   ],
+   "prPoints": 3.2297570674214784,
+   "prDefConProb": 0.5028923095896959,
+   "prDefConPoints": 1.0057846191793918
+  },
+  {
+   "name": "Andersen",
+   "team": "FUL",
+   "position": "DEF",
+   "price": 50,
+   "opponents": [
+    {
+     "opponent": "CRY",
+     "isHome": true
+    }
+   ],
+   "prPoints": 4.0779293943249515,
+   "prDefConProb": 0.4770794489043402,
+   "prDefConPoints": 0.9541588978086804
+  },
+  {
+   "name": "Alderete",
+   "team": "SUN",
+   "position": "DEF",
+   "price": 50,
+   "opponents": [
+    {
+     "opponent": "BRE",
+     "isHome": false
+    }
+   ],
+   "prPoints": 2.647955513065975,
+   "prDefConProb": 0.46935523820399916,
+   "prDefConPoints": 0.9387104764079983
+  }
+ ],
+ "bestAttackingFixtures": [
+  {
+   "team": "Man City",
+   "fixtures": [
+    {
+     "opponent": "COV",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 2.8964239199999993,
+   "prGoalsAgainst": 0.7312285173599999,
+   "csProb": 0.481317320042814
+  },
+  {
+   "team": "Liverpool",
+   "fixtures": [
+    {
+     "opponent": "IPS",
+     "isHome": false
+    }
+   ],
+   "prGoalsFor": 2.23358557761,
+   "prGoalsAgainst": 1.1008267578000002,
+   "csProb": 0.3325959936653221
+  },
+  {
+   "team": "Brentford",
+   "fixtures": [
+    {
+     "opponent": "SUN",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 1.8237444613200002,
+   "prGoalsAgainst": 0.9000868780800001,
+   "csProb": 0.4065343392834835
+  },
+  {
+   "team": "Arsenal",
+   "fixtures": [
+    {
+     "opponent": "CHE",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 1.8123815674800001,
+   "prGoalsAgainst": 0.9655187256000001,
+   "csProb": 0.3807856252483659
+  },
+  {
+   "team": "Newcastle",
+   "fixtures": [
+    {
+     "opponent": "BOU",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 1.7904680781750002,
+   "prGoalsAgainst": 1.4103754938000002,
+   "csProb": 0.24405162607371078
+  },
+  {
+   "team": "Aston Villa",
+   "fixtures": [
+    {
+     "opponent": "HUL",
+     "isHome": false
+    }
+   ],
+   "prGoalsFor": 1.6836232777650002,
+   "prGoalsAgainst": 1.019937312,
+   "csProb": 0.36061754585723305
+  },
+  {
+   "team": "Brighton",
+   "fixtures": [
+    {
+     "opponent": "LEE",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 1.6095885705,
+   "prGoalsAgainst": 1.0465412760000001,
+   "csProb": 0.35115018273046883
+  },
+  {
+   "team": "Man Utd",
+   "fixtures": [
+    {
+     "opponent": "EVE",
+     "isHome": false
+    }
+   ],
+   "prGoalsFor": 1.5855100331400003,
+   "prGoalsAgainst": 1.2818857447350003,
+   "csProb": 0.27751348712207125
+  },
+  {
+   "team": "Fulham",
+   "fixtures": [
+    {
+     "opponent": "CRY",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 1.4530393331999998,
+   "prGoalsAgainst": 1.2261144086550002,
+   "csProb": 0.29343051654189933
+  },
+  {
+   "team": "Bournemouth",
+   "fixtures": [
+    {
+     "opponent": "NEW",
+     "isHome": false
+    }
+   ],
+   "prGoalsFor": 1.4103754938000002,
+   "prGoalsAgainst": 1.7904680781750002,
+   "csProb": 0.16688203754292275
+  }
+ ],
+ "topTransfersIn": [
+  {
+   "name": "Cherki",
+   "team": "MCI",
+   "position": "MID",
+   "price": 77,
+   "ownership": 23.3,
+   "transfers": 1052100,
+   "prPoints": 5.989545344984281
+  },
+  {
+   "name": "Wissa",
+   "team": "NEW",
+   "position": "FWD",
+   "price": 61,
+   "ownership": 9.8,
+   "transfers": 544394,
+   "prPoints": 5.698578261128081
+  },
+  {
+   "name": "Elanga",
+   "team": "NEW",
+   "position": "MID",
+   "price": 61,
+   "ownership": 7.3,
+   "transfers": 450776,
+   "prPoints": 3.7774375359836743
+  },
+  {
+   "name": "De Cuyper",
+   "team": "BHA",
+   "position": "DEF",
+   "price": 47,
+   "ownership": 13.7,
+   "transfers": 442657,
+   "prPoints": 5.117651657529364
+  },
+  {
+   "name": "Ajayi",
+   "team": "HUL",
+   "position": "DEF",
+   "price": 41,
+   "ownership": 7,
+   "transfers": 381501,
+   "prPoints": 2.6851580159287627
+  },
+  {
+   "name": "Gvardiol",
+   "team": "MCI",
+   "position": "DEF",
+   "price": 56,
+   "ownership": 17.3,
+   "transfers": 319530,
+   "prPoints": 4.8061157745367264
+  },
+  {
+   "name": "Hall",
+   "team": "NEW",
+   "position": "DEF",
+   "price": 50,
+   "ownership": 7.6,
+   "transfers": 305290,
+   "prPoints": 3.7076694293733716
+  },
+  {
+   "name": "M.Sangaré",
+   "team": "BRE",
+   "position": "MID",
+   "price": 56,
+   "ownership": 12.2,
+   "transfers": 287540,
+   "prPoints": 4.624259443107714
+  },
+  {
+   "name": "João Pedro",
+   "team": "CHE",
+   "position": "FWD",
+   "price": 76,
+   "ownership": 69.8,
+   "transfers": 268847,
+   "prPoints": 3.5273549968989912
+  },
+  {
+   "name": "Calafiori",
+   "team": "ARS",
+   "position": "DEF",
+   "price": 56,
+   "ownership": 43,
+   "transfers": 254323,
+   "prPoints": 3.79498479220397
+  }
+ ],
+ "topTransfersOut": [
+  {
+   "name": "Mbeumo",
+   "team": "MUN",
+   "position": "MID",
+   "price": 80,
+   "ownership": 30.8,
+   "transfers": 418311,
+   "prPoints": 4.55233590973914
+  },
+  {
+   "name": "Tzolis",
+   "team": "ARS",
+   "position": "MID",
+   "price": 65,
+   "ownership": 23.1,
+   "transfers": 275479,
+   "prPoints": 3.8576967793446832
+  },
+  {
+   "name": "Semenyo",
+   "team": "MCI",
+   "position": "MID",
+   "price": 85,
+   "ownership": 21.2,
+   "transfers": 244160,
+   "prPoints": 5.627521813958204
+  },
+  {
+   "name": "Szoboszlai",
+   "team": "LIV",
+   "position": "MID",
+   "price": 70,
+   "ownership": 41.8,
+   "transfers": 219736,
+   "prPoints": 5.278255755071405
+  },
+  {
+   "name": "B.Fernandes",
+   "team": "MUN",
+   "position": "MID",
+   "price": 120,
+   "ownership": 48.4,
+   "transfers": 203026,
+   "prPoints": 5.706992120668719
+  },
+  {
+   "name": "Brobbey",
+   "team": "SUN",
+   "position": "FWD",
+   "price": 60,
+   "ownership": 10.6,
+   "transfers": 190395,
+   "prPoints": 3.3306246643872344
+  },
+  {
+   "name": "Gabriel",
+   "team": "ARS",
+   "position": "DEF",
+   "price": 80,
+   "ownership": 27,
+   "transfers": 183091,
+   "prPoints": 4.462540611132349
+  },
+  {
+   "name": "Thiago",
+   "team": "BRE",
+   "position": "FWD",
+   "price": 80,
+   "ownership": 14.7,
+   "transfers": 181464,
+   "prPoints": 5.2922348188686
+  },
+  {
+   "name": "Mateta",
+   "team": "CRY",
+   "position": "FWD",
+   "price": 64,
+   "ownership": 3.3,
+   "transfers": 177320,
+   "prPoints": 0
+  },
+  {
+   "name": "Calvert-Lewin",
+   "team": "LEE",
+   "position": "FWD",
+   "price": 60,
+   "ownership": 27,
+   "transfers": 174096,
+   "prPoints": 3.9717669039759893
+  }
+ ]
+}

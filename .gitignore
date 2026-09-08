@@ -8,3 +8,18 @@ __pycache__/
 
 # seleniumbase/webdriver scratch (from an abandoned FBref scrape)
 downloaded_files/
+
+# Regenerable build artifacts. Every path below is a `derived` node in src/manifest.py
+# with a declared producer and declared inputs, so losing one costs CPU, not
+# information — `.\fpl.ps1 doctor` names the script that rebuilds it.
+#
+# The inverse is the rule that matters: anything git STILL tracks under outputs/ or
+# data/ is tracked precisely because NOTHING in the tree can rebuild it. Do not add a
+# path here without first confirming a producer exists. predictions/ is never ignored
+# — a locked board is not regenerable and is the only evidence the model can be scored.
+outputs/gw_board_long.csv
+outputs/gw_board_wide.csv
+outputs/projection_detail_gw1_10.csv
+outputs/solio_ensemble_demo.csv
+data/E0_recon.csv
+data/coldstart_hist.csv

@@ -1,0 +1,202 @@
+{
+ "generatedAt": "2026-08-27T00:40:03.929Z",
+ "gameweek": 2,
+ "bestCleanSheets": [
+  {
+   "team": "Arsenal",
+   "fixtures": [
+    {
+     "opponent": "AVL",
+     "isHome": false
+    }
+   ],
+   "prGoalsFor": 1.92,
+   "prGoalsAgainst": 0.84,
+   "csProb": 0.43
+  },
+  {
+   "team": "Man Utd",
+   "fixtures": [
+    {
+     "opponent": "IPS",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 2.22,
+   "prGoalsAgainst": 0.87,
+   "csProb": 0.42
+  },
+  {
+   "team": "Liverpool",
+   "fixtures": [
+    {
+     "opponent": "NFO",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 2.13,
+   "prGoalsAgainst": 0.94,
+   "csProb": 0.39
+  },
+  {
+   "team": "Coventry",
+   "fixtures": [
+    {
+     "opponent": "HUL",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 1.67,
+   "prGoalsAgainst": 1.02,
+   "csProb": 0.36
+  },
+  {
+   "team": "Man City",
+   "fixtures": [
+    {
+     "opponent": "CRY",
+     "isHome": false
+    }
+   ],
+   "prGoalsFor": 1.93,
+   "prGoalsAgainst": 1.02,
+   "csProb": 0.36
+  },
+  {
+   "team": "Bournemouth",
+   "fixtures": [
+    {
+     "opponent": "EVE",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 1.56,
+   "prGoalsAgainst": 1.13,
+   "csProb": 0.32
+  },
+  {
+   "team": "Chelsea",
+   "fixtures": [
+    {
+     "opponent": "BHA",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 1.76,
+   "prGoalsAgainst": 1.17,
+   "csProb": 0.31
+  },
+  {
+   "team": "Leeds United",
+   "fixtures": [
+    {
+     "opponent": "BRE",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 1.39,
+   "prGoalsAgainst": 1.34,
+   "csProb": 0.26
+  }
+ ],
+ "bestAttackingFixtures": [
+  {
+   "team": "Man Utd",
+   "fixtures": [
+    {
+     "opponent": "IPS",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 2.22,
+   "prGoalsAgainst": 0.87,
+   "csProb": 0.42
+  },
+  {
+   "team": "Liverpool",
+   "fixtures": [
+    {
+     "opponent": "NFO",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 2.13,
+   "prGoalsAgainst": 0.94,
+   "csProb": 0.39
+  },
+  {
+   "team": "Man City",
+   "fixtures": [
+    {
+     "opponent": "CRY",
+     "isHome": false
+    }
+   ],
+   "prGoalsFor": 1.93,
+   "prGoalsAgainst": 1.02,
+   "csProb": 0.36
+  },
+  {
+   "team": "Arsenal",
+   "fixtures": [
+    {
+     "opponent": "AVL",
+     "isHome": false
+    }
+   ],
+   "prGoalsFor": 1.92,
+   "prGoalsAgainst": 0.84,
+   "csProb": 0.43
+  },
+  {
+   "team": "Chelsea",
+   "fixtures": [
+    {
+     "opponent": "BHA",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 1.76,
+   "prGoalsAgainst": 1.17,
+   "csProb": 0.31
+  },
+  {
+   "team": "Coventry",
+   "fixtures": [
+    {
+     "opponent": "HUL",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 1.67,
+   "prGoalsAgainst": 1.02,
+   "csProb": 0.36
+  },
+  {
+   "team": "Bournemouth",
+   "fixtures": [
+    {
+     "opponent": "EVE",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 1.56,
+   "prGoalsAgainst": 1.13,
+   "csProb": 0.32
+  },
+  {
+   "team": "Leeds United",
+   "fixtures": [
+    {
+     "opponent": "BRE",
+     "isHome": true
+    }
+   ],
+   "prGoalsFor": 1.39,
+   "prGoalsAgainst": 1.34,
+   "csProb": 0.26
+  }
+ ],
+ "_derived_from": "data/solio_cache.md",
+ "_precision": 0.01
+}
