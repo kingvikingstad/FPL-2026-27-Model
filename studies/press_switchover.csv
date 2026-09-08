@@ -1,0 +1,8 @@
+quantity,n,value,note
+weight_schedule,1,0.024390243902439025,
+weight_schedule,3,0.06976744186046512,
+weight_schedule,5,0.1111111111111111,
+weight_schedule,10,0.2,
+weight_schedule,19,0.3220338983050847,
+weight_schedule,38,0.48717948717948717,
+calibration,20,0.9373316604262575,a=0.19356 b=1.28669

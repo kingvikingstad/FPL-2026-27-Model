@@ -83,20 +83,102 @@ def devig_multiplicative(odds: np.ndarray) -> np.ndarray:
     inv = 1.0 / np.asarray(odds, float)
     return inv / inv.sum()
 
-def devig_shin(odds: np.ndarray, iters: int = 100) -> np.ndarray:
-    """Shin (1992) de-vig — corrects for insider trading; slightly better on
-    longshot-favourite bias than proportional. Optional; proportional is default."""
-    inv = 1.0 / np.asarray(odds, float)
-    b = inv / inv.sum()               # start from proportional
+def devig_shin(odds: np.ndarray, iters: int = 200, tol: float = 1e-12) -> np.ndarray:
+    """Shin (1992) de-vig — odds -> fair probs, correcting the favourite-longshot bias.
+
+    Shin models the book as a fraction `z` of insider money. With published implied
+    probabilities pi_i = 1/odds_i and booksum PI = sum(pi), the fair probability is
+
+        p_i = [ sqrt(z^2 + 4(1-z) * pi_i^2 / PI) - z ] / (2(1-z))
+
+    and `z` is the root of  sum_i sqrt(z^2 + 4(1-z) pi_i^2 / PI) = 2 + z(n-2),
+    which is what the fixed-point iteration below solves. The resulting p sums to 1 by
+    construction, so it must NOT be renormalised — renormalising is what makes the
+    correction vanish.
+
+    Reduces to proportional de-vig at z=0 (a book with no insider money), and shifts
+    probability TOWARD the favourite and away from the longshot as z rises. On a typical
+    1.55/4.20/6.50 market: +0.008 on the favourite, -0.005 on the longshot.
+
+    NB (fixed 2026-08-21) the previous implementation was a no-op. Its z-update
+    `sum((sqrt(PI)*p - 1)*p)` evaluates to about -0.64 on a normal three-way book, was
+    clipped to 0, and the in-loop renormalisation then returned the proportional
+    probabilities BITWISE. `oddsapi_feed.build_market_e0` defaults to method="shin", so
+    the whole odds path was silently running proportional de-vig. `oddsapi_feed
+    --selftest` asserts the two methods differ, and had been failing on exactly this.
+
+    Two-outcome books (over/under) have no Shin solution — n=2 makes the root equation
+    degenerate — so they fall back to proportional, which is what Shin reduces to there.
+    """
+    pi = 1.0 / np.asarray(odds, float)
+    PI = pi.sum()
+    n = len(pi)
+    if n < 3 or PI <= 1.0:
+        return pi / PI                      # no vig to remove, or a two-way book
     z = 0.0
     for _ in range(iters):
-        s = np.sqrt(z * z + 4.0 * (1 - z) * b * b / inv.sum())
-        p = (s - z) / (2.0 * (1 - z)) if z < 1 else b
-        p = np.clip(p, 1e-9, None); p = p / p.sum()
-        z_new = ((np.sqrt(inv.sum()) * p - 1) * p).sum()  # crude update
-        if abs(z_new - z) < 1e-10: break
-        z = np.clip(z_new, 0, 0.2)
-    return p / p.sum()
+        s = np.sqrt(z * z + 4.0 * (1.0 - z) * pi * pi / PI).sum()
+        z_new = float(np.clip((s - 2.0) / (n - 2.0), 0.0, 0.5))
+        if abs(z_new - z) < tol:
+            z = z_new
+            break
+        z = z_new
+    if z <= 0.0:
+        return pi / PI
+    p = (np.sqrt(z * z + 4.0 * (1.0 - z) * pi * pi / PI) - z) / (2.0 * (1.0 - z))
+    return p / p.sum()                      # guards float drift only; already ~1
+
+
+# ---------------------------------------------------------------- free odds feed
+FD_FIXTURES_URL = "https://www.football-data.co.uk/fixtures.csv"
+
+
+def fetch_football_data_fixtures(url=FD_FIXTURES_URL, div="E0", timeout=30, cache=None,
+                                 verbose=True):
+    """Upcoming fixtures with de-vigable odds. FREE, no API key.
+
+    WHY THIS EXISTS. `oddsapi_feed` needs `ODDS_API_KEY`, which is the only thing keeping
+    the match-odds path — PROJECT_KNOWLEDGE's top open item, the attack/defence split —
+    from running. It does not need to be. football-data.co.uk publishes a rolling
+    `fixtures.csv` of upcoming matches carrying exactly the columns `fixtures_to_e0`
+    already consumes: AvgH/AvgD/AvgA and Avg>2.5/Avg<2.5. That is not a coincidence —
+    `fixtures_to_e0` was written against football-data's schema in the first place.
+
+    So the key is optional, not required. The Odds API remains the better feed (more
+    books, more frequent) and `oddsapi_feed` is unchanged; this is the zero-cost path.
+
+    TWO GOTCHAS, both load-bearing:
+      * The file is UTF-8 WITH BOM. Read as latin-1 — which the rest of this module does,
+        because the historical E0 files need it — and the first column arrives named
+        'i≫¿Div' rather than 'Div', so a `Div == "E0"` filter silently matches nothing
+        and the caller sees an empty frame with no error. Read as utf-8-sig.
+      * It is ROLLING and multi-league. It carries only the next few days across every
+        division football-data covers, so outside a Premier League matchweek there may be
+        no E0 rows at all. An empty result is normal, not a failure.
+    """
+    import io
+    import urllib.request
+    raw = urllib.request.urlopen(
+        urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"}),
+        timeout=timeout).read()
+    d = pd.read_csv(io.BytesIO(raw), encoding="utf-8-sig")
+    d.columns = [str(c).lstrip("﻿").strip() for c in d.columns]
+    if "Div" not in d.columns:
+        raise RuntimeError(f"fixtures.csv has no Div column; got {list(d.columns)[:6]}")
+    if div:
+        d = d[d["Div"] == div]
+    need = ["Date", "HomeTeam", "AwayTeam", "AvgH", "AvgD", "AvgA", "Avg>2.5", "Avg<2.5"]
+    missing = [c for c in need if c not in d.columns]
+    if missing:
+        raise RuntimeError(f"fixtures.csv missing {missing}")
+    d = d.dropna(subset=need)
+    if cache:
+        d.to_csv(cache, index=False)
+    if verbose:
+        print(f"[football-data] {len(d)} {div or 'all'} fixture(s) with odds"
+              + ("" if len(d) else " — none listed right now; the file rolls a few days "
+                                  "ahead and covers every division"))
+    return d.reset_index(drop=True)
 
 # ---------------------------------------------------------------- Poisson match
 def _p_total_le2(Lam: float) -> float:

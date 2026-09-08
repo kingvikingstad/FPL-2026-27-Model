@@ -1,6 +1,6 @@
 import os as _os, sys as _sys
 _sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "src"))
-_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+_sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "scripts"))
 import config
 import os
 """
@@ -10,7 +10,7 @@ team model, RNG seed, and depth prior fixed so every difference is the prior.
 older_weight = 0.0 is single-season (25/26 only); 0.5 is current; 1.0 is equal.
 """
 import warnings; warnings.filterwarnings("ignore")
-import numpy as np, pandas as pd, sys; import os as _os, sys as _sys; _sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "src")); _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+import numpy as np, pandas as pd, sys; import os as _os, sys as _sys; _sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "src")); _sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "scripts"))
 import core_insights as ci, multiseason_priors as ms
 import bayes_model
 from bayes_model import TeamModel, project
@@ -18,6 +18,13 @@ from roster import calibrate_cold_start, _coldstart_row
 import signals as sg, starter_prior as sp
 
 REPO = config.REPO
+# Evidence, not a pipeline artifact: this sweep answers "how sensitive is the board
+# to older_weight" once, and the answer is the justification for 0.5 in
+# multiseason_priors. It lived in outputs/ and was registered in the manifest until
+# 2026-09-08, where its real inputs include the daily feed and it therefore reported
+# STALE on every run — a permanently red check nobody reads. It belongs with the
+# other 23 study CSVs instead, beside the code that produced it.
+OUT = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "older_weight_sweep.csv")
 GRID = [0.0, 0.25, 0.5, 0.75, 1.0]
 S = 3000
 SEED = 7
@@ -103,4 +110,4 @@ print("w=0.0:", list(comp.nlargest(12, "single").player))
 print("w=0.5:", list(comp.nlargest(12, "w05").player))
 print("w=1.0:", list(comp.nlargest(12, "equal").player))
 
-M.round(3).to_csv(os.path.join(config.OUTPUTS, "older_weight_sweep.csv"), index=False)
+M.round(3).to_csv(OUT, index=False)

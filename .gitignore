@@ -17,9 +17,49 @@ downloaded_files/
 # data/ is tracked precisely because NOTHING in the tree can rebuild it. Do not add a
 # path here without first confirming a producer exists. predictions/ is never ignored
 # — a locked board is not regenerable and is the only evidence the model can be scored.
-outputs/gw_board_long.csv
-outputs/gw_board_wide.csv
-outputs/projection_detail_gw1_10.csv
-outputs/solio_ensemble_demo.csv
 data/E0_recon.csv
 data/coldstart_hist.csv
+
+# More of the same rule: each has a producer, so none is worth a blob.
+
+# Hand-kept backups and dated snapshots of regenerable boards.
+*.bak
+data/*.gw3fetch
+
+# Local-machine and agent scratch. .claude/agents/ IS tracked — those seven files are
+# hand-written and nothing regenerates them; worktrees are abandoned copies (1.9 MB)
+# and settings.local.json is per-machine.
+.claude/worktrees/
+.claude/settings.local.json
+# hardcodes an absolute path into one machine's Python profile
+.claude/launch.json
+
+# Personal account identifier. Not a secret (it appears in the FPL site URL), but it
+# identifies one manager and every user supplies their own.
+data/fpl_entry_id.txt
+
+# ---------------------------------------------------------------------------
+# outputs/ is REGENERABLE BY DEFAULT.
+#
+# Stated as a default rather than a list because a list silently fails open: a new
+# artifact nobody remembered to add gets committed, and the 14.5 MB blob is in history
+# before anyone notices. Inverting it fails closed instead — a genuinely irreplaceable
+# output is invisible to git until someone names it below, which is a deliberate act.
+#
+# The exceptions are the files for which NO producer exists anywhere in src/ or
+# scripts/. Each was verified by grep on 2026-09-08, not assumed. If you add one here,
+# first confirm nothing writes it; if you write a producer for one, delete its line.
+# ---------------------------------------------------------------------------
+outputs/*
+!outputs/plans/
+!outputs/fixtures_gw1_6.csv
+!outputs/fpl_2627_team_fixtures_gw1_10_raw.csv
+!outputs/fpl_gw1_6_planner.html
+!outputs/fpl_projection_model.html
+!outputs/projection_2627_run.csv
+!outputs/team_strength_2627.csv
+# Load-bearing: a 2026-08-28 roster snapshot carrying both the contemporaneous
+# web_name and player_code. scripts/crosswalk_gw1_lock.py resolves the GW1 lock
+# against it, so the project's only true forecast score depends on this file and
+# nothing can rebuild it. Do not remove this line.
+!outputs/fpl_2627_players.csv

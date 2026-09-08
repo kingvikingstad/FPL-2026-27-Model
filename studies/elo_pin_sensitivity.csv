@@ -1,0 +1,3 @@
+arm,mean_abs_delta_net,max_abs_delta_net,max_in_posterior_sd,spearman_rho,posterior_sd,elo_weight
+no_elo,0.03135,0.08738,0.2989,0.99549,0.29238,0.45
+half_weight,0.01357,0.03408,0.1165,0.9985,0.29238,0.45

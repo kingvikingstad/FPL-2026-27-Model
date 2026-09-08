@@ -26,6 +26,7 @@ IMPLEMENTATION
 import numpy as np, pandas as pd
 import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
 from multiseason import build_2425_panel
+import defcon_roles as dcr
 
 BASE = config.REPO
 
@@ -40,6 +41,9 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
     a25 = p25.groupby(["player_code", "pos"], dropna=False).agg(
         mins=("mins", "sum"), npxg=("npxg", "sum"), xa=("xa_", "sum"),
         defcon=("defcon_raw", "sum"),
+        # chances created = the repo's key-pass equivalent, and the EXPOSURE for the
+        # assist-quality term. See to_priors and studies/rate_components.py.
+        kp=("chances_created", "sum"),
         starts=("mins", lambda s: (s >= 60).sum()), games=("mins", "size"),
         apps=("mins", lambda s: (s > 0).sum()),
         # minutes accumulated in appearances of 60+, so `cond_min / starts` is the
@@ -53,19 +57,31 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
     a24 = p24.groupby(["player_code", "pos"], dropna=False).agg(
         mins=("mins", "sum"), npxg=("npxg", "sum"), xa=("xa_", "sum"),
         defcon=("defcon_raw", "sum"),
+        kp=("chances_created", "sum"),
         starts=("mins", lambda s: (s >= 60).sum()), games=("mins", "size"),
         apps=("mins", lambda s: (s > 0).sum()),
         cond_min=("mins", lambda s: s[s >= 60].sum()),
     ).reset_index()
-    for c in ["mins", "npxg", "xa", "defcon", "starts", "games", "apps", "cond_min"]:
+    for c in ["mins", "npxg", "xa", "defcon", "kp", "starts", "games", "apps", "cond_min"]:
         a24[c] = a24[c] * older_weight
     a24["pens"] = 0.0; a24["pens_miss"] = 0.0     # 24/25 lacks the penalty split
 
+    # MINUTES THAT CAN ACTUALLY CARRY A DEFCON.
+    # `defensive_contributions` does not exist in 24/25 — the column reads as all zeros,
+    # so a24 contributes 750,949 minutes to the pooled denominator and exactly 0 to the
+    # numerator. Every DefCon rate was therefore diluted by that player's 24/25 share of
+    # minutes: measured r(24/25 share, dilution) = -1.000, i.e. arithmetic, not noise.
+    # Pooled defender rate came out at 6.41 per 90 against a measured 8.36; restricting
+    # the denominator to 25/26 gives 8.40. The other Gamma channels (npxg, xa) are
+    # genuinely present in both seasons and keep the pooled denominator.
+    a25["mins_dc"] = a25["mins"]
+    a24["mins_dc"] = 0.0
     both = pd.concat([a25, a24], ignore_index=True)
     ev = both.groupby("player_code", dropna=False).agg(
         pos=("pos", "first"),
         mins=("mins", "sum"), npxg=("npxg", "sum"), xa=("xa", "sum"),
-        defcon=("defcon", "sum"), starts=("starts", "sum"),
+        defcon=("defcon", "sum"), mins_dc=("mins_dc", "sum"), kp=("kp", "sum"),
+        starts=("starts", "sum"),
         games=("games", "sum"), apps=("apps", "sum"),
         cond_min=("cond_min", "sum"),
         pens=("pens", "sum"), pens_miss=("pens_miss", "sum"),
@@ -170,6 +186,24 @@ def _shrunk_minutes(r, pos, pos_minutes, k):
     return float(np.clip(w * own + (1 - w) * base, 60.0, 90.0))
 
 
+
+def _xa_alpha(pos, r, n90, k0, revert, prior_xa, prior_kp90, prior_q,
+              k_vol, k_qual, min_n90):
+    """Gamma shape for the assist channel, split into volume x quality where licensed.
+
+    `xa_beta` is left exactly as it was (k0 + revert*n90), so this changes the prior MEAN
+    and nothing about its strength. Rewriting beta as well would quietly alter how much
+    the simulation's draws spread, which is a separate question from where they centre.
+    """
+    if n90 < min_n90:
+        return prior_xa[pos] * k0 + revert * r.xa          # pooled, as before
+    kp = float(getattr(r, "kp", 0.0) or 0.0)
+    # (k*prior + n90 * kp/n90) / (k + n90) reduces to (k*prior + kp) / (k + n90)
+    vol = (k_vol * prior_kp90[pos] + kp) / (k_vol + n90)
+    qual = ((k_qual * prior_q[pos] + float(r.xa)) / (k_qual + kp) if kp > 0
+            else prior_q[pos])
+    return vol * qual * (k0 + revert * n90)
+
 def to_priors(ev, revert=0.70, k0=3.0, pen_xg=0.79, deep_starts=None):
     """Gamma/Beta priors from pooled two-season evidence.
 
@@ -196,7 +230,52 @@ def to_priors(ev, revert=0.70, k0=3.0, pen_xg=0.79, deep_starts=None):
 
     PRIOR_INV = {"GK": 0.02, "DEF": 0.11, "MID": 0.27, "FWD": 0.42}
     PRIOR_XA = {"GK": 0.01, "DEF": 0.05, "MID": 0.13, "FWD": 0.10}
-    PRIOR_DC = {"GK": 0.0, "DEF": 7.6, "MID": 8.4, "FWD": 4.7}
+    # ASSIST CHANNEL: VOLUME x QUALITY, not one pooled rate.
+    #
+    #     xA/90  =  (chances created/90)  x  (xA/chance)
+    #
+    # Those factors have very different reliability. Split-half, match level,
+    # Spearman-Brown corrected (studies/rate_components.py, Understat 2014-15..2025-26):
+    #
+    #     chances created/90   0.850          xA/chance   0.218
+    #     shots/90             0.897          npxG/shot   0.610
+    #
+    # and their EXPOSURES differ too: a rate per 90 is measured on minutes, a rate per
+    # chance is measured on chances. Shrinking the product on minutes alone cannot
+    # express that, so it over-shrinks the stable factor and under-shrinks the noisy one.
+    #
+    # Out-of-sample, leave-one-season-out over 2,707 consecutive-season pairs, predicting
+    # next-season xA/90:  pooled MAE 0.04359 -> split 0.04271, difference -0.00087 with a
+    # season-clustered 95% CI of (-0.00151, -0.00024). Spearman 0.775 -> 0.789. The CI
+    # excludes zero, which was the pre-registered condition for shipping this.
+    #
+    # THE SAME TEST REJECTED THE SPLIT FOR npxG: MAE 0.05197 -> 0.05387, CI
+    # (-0.00073, +0.00458), which includes zero. So npxG/90 stays pooled below. The
+    # reliability gap there is real but smaller (0.897 vs 0.610, against 0.850 vs 0.218
+    # for assists) and the pooled estimator already handles it. Splitting both would have
+    # been the intuitive move and it would have been wrong.
+    K_KP_VOL = 0.5        # fitted on the training seasons; volume is trusted almost at once
+    K_KP_QUAL = 25.0      # quality needs ~25 chances before its own rate outweighs the prior
+    # Levels measured on THIS repo's scale, not Understat's. The two sources agree closely
+    # on volume (chances/90 0.854 here vs key passes/90 0.825) but not on the per-event
+    # rate (0.097 vs 0.120), so the shrinkage CONSTANTS are borrowed from Understat — the
+    # only source with enough seasons to fit them — while the TARGETS come from here.
+    PRIOR_KP90 = {"GK": 0.057, "DEF": 0.569, "MID": 1.287, "FWD": 0.829}
+    PRIOR_XA_PER_KP = {"GK": 0.052, "DEF": 0.102, "MID": 0.098, "FWD": 0.076}
+    # The calibration sample was players with >= 450 minutes. K_KP_VOL = 0.5 means volume
+    # is barely shrunk, which is right for that regime and reckless outside it: a player
+    # with two appearances would have his noisy rate taken almost at face value. Below the
+    # threshold the pooled prior is used, because that is the regime it was fitted for.
+    SPLIT_MIN_N90 = 5.0
+    # DEF corrected 7.6 -> 8.590, the measured pooled per-90 rate over 2,934 appearances
+    # (studies/defcon_matchups.csv). The old value sat BELOW the measurement, so every
+    # thin-history defender was shrunk toward a target that was too low before any
+    # question of role arose. GK/MID/FWD are untouched — no equivalent measurement.
+    PRIOR_DC = {"GK": 0.0, "DEF": dcr.RATE_DEF_POOLED, "MID": 8.4, "FWD": 4.7}
+    # Centre-back / full-back split, applied ONLY to the DefCon prior mean. `pos` stays
+    # DEF everywhere else, so the threshold, clean-sheet and goal multipliers are
+    # unchanged. Unlabelled defenders fall back to the pooled rate above.
+    _roles = dcr.role_map()
     out = []
     for _, r in ev.iterrows():
         n90 = r.mins / 90.0
@@ -209,10 +288,16 @@ def to_priors(ev, revert=0.70, k0=3.0, pen_xg=0.79, deep_starts=None):
             "player_code": r.player_code, "pos": pos, "minutes": r.mins,
             "npxgi_alpha": PRIOR_INV[pos] * k0 + revert * (r.npxg + r.xa),
             "npxgi_beta": k0 + revert * n90,
-            "xa_alpha": PRIOR_XA[pos] * k0 + revert * r.xa,
+            "xa_alpha": _xa_alpha(pos, r, n90, k0, revert, PRIOR_XA, PRIOR_KP90,
+                                  PRIOR_XA_PER_KP, K_KP_VOL, K_KP_QUAL, SPLIT_MIN_N90),
             "xa_beta": k0 + revert * n90,
-            "defcon_alpha": PRIOR_DC[pos] * k0 + revert * r.defcon,
-            "defcon_beta": k0 + revert * n90,
+            # DefCon exposure is 25/26 minutes only — see two_season_evidence. Using the
+            # pooled n90 here halved the implied hit rate for every player who featured
+            # in 24/25, and inverted the ordering so cold-start defenders (on the 7.6
+            # prior) out-rated established ones (diluted to 6.31).
+            "defcon_alpha": (dcr.prior_rate(pos, _roles.get(r.player_code))
+                             or PRIOR_DC[pos]) * k0 + revert * r.defcon,
+            "defcon_beta": k0 + revert * (getattr(r, "mins_dc", r.mins) / 90.0),
             "start_a": 2.0 + revert * (r.starts + d_st),
             "start_b": 2.0 + revert * (max(r.games - r.starts, 0)
                                        + max(d_gm - d_st, 0.0)),

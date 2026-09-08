@@ -60,6 +60,17 @@ def _aliases(row):
     if isinstance(first, str) and isinstance(second, str):
         out.add(_norm(f"{first} {second}"))
         out.add(_norm(second))
+        # Compound surnames. FPL carries the full legal name, Understat the common one:
+        #   "Matheus Santos Carneiro da Cunha" -> Understat "Matheus Cunha"
+        #   "Bruno Guimarães Rodriguez Moura"  -> Understat "Bruno Guimarães"
+        #   "Marcos Senesi Barón"              -> Understat "Marcos Senesi"
+        # Neither the full string nor the bare surname reaches those, so first-name
+        # paired with the first AND last token of the surname are both candidates.
+        # These are only ADDITIONAL aliases — the 1:1 gate still refuses collisions.
+        toks = _norm(second).split()
+        if toks:
+            out.add(_norm(f"{first} {toks[0]}"))
+            out.add(_norm(f"{first} {toks[-1]}"))
     return {a for a in out if a}
 
 
@@ -146,6 +157,40 @@ def build_understat_crosswalk(understat_players: pd.DataFrame,
     ok2, bad2 = _one_to_one(_pairs_to_frame(stage2, "exact_name_team_pos"))
     matched.append(ok2); collisions.append(bad2)
     remaining_u -= set(ok2["understat_player_id"]); taken_codes |= set(ok2["player_code"])
+
+    # ---- stage 2b: TRANSFERS — exact name, league-wide, unique on both sides
+    # Stage 1 keys on (name, club), so anyone who changed club between the Understat
+    # season and the FPL frame cannot match: Mateus Fernandes (West Ham -> Tottenham),
+    # Morgan Rogers (Aston Villa -> Chelsea). Those are exactly the squad players whose
+    # minutes matter most, which is why the club key alone is not enough.
+    #
+    # Dropping the club constraint is only safe when the name identifies ONE player on
+    # each side, so this requires the alias to be unique among the remaining Understat
+    # rows AND to hit exactly one remaining FPL player. Anything else stays unmatched.
+    # This is still an exact-string match — no fuzziness is introduced here.
+    u_left = u[u["understat_player_id"].isin(remaining_u)]
+    name_counts = u_left["_name"].value_counts()
+    alias_idx = {}
+    for _, r in f.iterrows():
+        if r["player_code"] in taken_codes:
+            continue
+        for a in r["_aliases"]:
+            alias_idx.setdefault(a, []).append(r)
+
+    stage2b = []
+    for _, r in u_left.iterrows():
+        if name_counts.get(r["_name"], 0) != 1:
+            continue                                   # ambiguous on the Understat side
+        cands = [c for c in alias_idx.get(r["_name"], [])
+                 if c["player_code"] not in taken_codes]
+        if len(cands) == 1:
+            stage2b.append((cands[0]["player_code"], r["understat_player_id"],
+                            cands[0].get("web_name") or cands[0].get("full_name"),
+                            r["player_name"], r["team"], 0.97))
+
+    ok2b, bad2b = _one_to_one(_pairs_to_frame(stage2b, "exact_name_transfer"))
+    matched.append(ok2b); collisions.append(bad2b)
+    remaining_u -= set(ok2b["understat_player_id"]); taken_codes |= set(ok2b["player_code"])
 
     # ---- stage 3: fuzzy within club, flagged for review
     stage3, weak = [], []
@@ -326,12 +371,22 @@ if __name__ == "__main__":
         selftest(); sys.exit(0)
     if a.build:
         import sd_ingest, core_insights as ci
-        shots = sd_ingest.understat_shots(a.seasons)
-        und = (shots.assign(team=shots["team"].map(sd_ingest.normalise_team))
-               .groupby(["understat_player_id", "player_name", "team"], as_index=False)
-               .size().drop(columns="size"))
+        # Build from player-SEASON stats, not shots. A shots table only contains players
+        # who took a shot, so goalkeepers were 3/64 covered and non-shooting defenders
+        # were missing outright — the crosswalk cannot map a player it never sees. The
+        # player-season reader has one row per (season, club, player) with minutes, so
+        # every player who appeared is a candidate. Same cache cost: one request/season.
+        ps = sd_ingest.understat_player_season(a.seasons)
+        ps = ps.assign(team=ps["team"].map(sd_ingest.normalise_team))
+        und = (ps.groupby(["understat_player_id", "player_name", "team"], as_index=False)
+                 .agg(minutes=("minutes", "sum")))
         d, _, _ = ci.load(base=config.repo("2026-2027"))
-        fpl = d[["player_code", "web_name", "team", "pos"]]
+        # first_name/second_name are REQUIRED, not optional. Understat publishes full
+        # names ("Fabian Schär") while FPL's web_name is the short form ("Schär"), and
+        # `_aliases` builds the full-name alias from these two columns. Selecting them
+        # away silently reduced stage 1 to the handful of players whose short name IS
+        # their full name — 20 matches out of 461 (4%) instead of the ~80% below.
+        fpl = d[["player_code", "web_name", "first_name", "second_name", "team", "pos"]]
         xw = build_understat_crosswalk(und, fpl)
         save_crosswalk(xw)
         print(f"\nNow hand-verify {config.CROSSWALK_REVIEW}, set verified=True on the "

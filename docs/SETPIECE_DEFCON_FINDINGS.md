@@ -208,6 +208,32 @@ fourth in-sample slope.
 | change | status | escape hatch |
 |---|---|---|
 | Projected set-piece duty (20/20 clubs) | **applied** | `FPL_SETPIECE=fill\|off` |
-| DefCon opponent adjustment | **not needed** — rate is flat in opponent strength | — |
+| ~~DefCon opponent adjustment~~ | **superseded 2 Sep 2026** — see below | — |
 | CB/FB DefCon prior split | **blocked** — needs a positional source | — |
 | GW1–6 dispersion amplifier | **measured, not applied** | — |
+| DefCon opponent *identity* rating (DEF) | **applied** as a board category | `defcon_team.ratings_for_board` |
+
+### `[CORRECTION 2 Sep 2026]` "DefCon opponent adjustment not needed" was too strong
+
+§2 above measured the DefCon rate across opponent **strength quartiles** and found it
+flat. That measurement stands. The conclusion drawn from it — that the opponent does not
+matter — does not follow, and `studies/defcon_team_matchups.py` shows why: strength is a
+*scalar*, and how much defending an opponent forces is a different quantity that a
+strength bin cannot express.
+
+On opponent **identity**, estimated within player, defenders' DefCon hit rate swings
+**0.129** between the most permissive opponent (Bournemouth, Leeds, Liverpool) and the
+most suppressing (Fulham, West Ham, Chelsea, Wolves) — and the ordering is not the
+strength ordering, which is exactly why the quartile cut could not see it. Split-half
+reliability +0.555, empirical-Bayes shrink 0.68.
+
+Two things from §2 survive intact and are reinforced:
+
+- **No compensation.** Permissive opponents correlate +0.264 with opponent attacking
+  output, so DefCon and clean sheets still point the *same* way. Pick defenders on
+  fixture ease. The "hard fixture, DefCon floor" idea remains unsupported.
+- **Size.** 0.129 on the hit rate is ~0.26 DefCon points per match between the extremes,
+  against ~0.87 for the clean-sheet fixture swing. It is a **tiebreaker, not a driver**.
+
+Midfielders fail the reliability gate (r=+0.241) and ship flagged unusable. See
+`docs/DEFCON_TEAM_EXPLOSIVENESS_2026-09-02.md`.

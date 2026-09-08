@@ -2,3 +2,10 @@ numpy>=1.24
 pandas>=2.0
 scipy>=1.10
 scikit-learn>=1.3
+
+# Optional — only src/fplpage.py needs these, and only to read the predicted-XI
+# graphic. fpl.page publishes its line-ups as an image with no text version, so the
+# names come out by OCR. Every other module imports fine without them; fplpage raises
+# a message naming the missing package rather than failing obscurely.
+opencv-python
+rapidocr_onnxruntime

@@ -1,0 +1,16 @@
+player_code,display_name,team,pos,price,ep,in_xi,is_captain
+95658,Maguire,Man United,DEF,5.0,5.266,True,False
+154561,Raya,Arsenal,GK,6.0,4.222,True,False
+209036,Guéhi,Man City,DEF,6.0,4.825,True,False
+223094,Haaland,Man City,FWD,15.5,7.57,True,False
+223827,Ballard,Sunderland,DEF,5.0,5.041,True,False
+226597,Gabriel,Arsenal,DEF,8.0,6.465,True,False
+424876,Szoboszlai,Liverpool,MID,7.0,4.453,True,False
+439509,Tzolis,Arsenal,MID,6.5,5.102,True,False
+440993,Ndiaye,Everton,MID,6.0,3.98,False,False
+446008,Mbeumo,Man United,MID,8.0,7.747,True,True
+477424,Gvardiol,Man City,DEF,5.5,5.264,True,False
+489639,Verbruggen,Brighton,GK,4.5,3.008,False,False
+493250,Amad,Man United,MID,6.0,6.123,True,False
+557012,Walle Egeli,Ipswich,FWD,4.5,2.214,False,False
+631786,Kusi-Asare,Fulham,FWD,4.5,1.96,False,False

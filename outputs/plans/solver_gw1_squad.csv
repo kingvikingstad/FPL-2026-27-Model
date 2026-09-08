@@ -1,0 +1,16 @@
+player_code,display_name,team,pos,price,ep,in_xi,is_captain
+141746,B.Fernandes,Man United,MID,12.0,7.65,True,True
+446008,Mbeumo,Man United,MID,8.0,7.166,True,False
+226597,Gabriel,Arsenal,DEF,8.0,6.232,True,False
+502500,Thiago,Brentford,FWD,8.0,5.242,True,False
+477424,Gvardiol,Man City,DEF,5.5,5.021,True,False
+95658,Maguire,Man United,DEF,5.0,5.008,True,False
+17761,Tarkowski,Everton,DEF,6.0,4.981,True,False
+439509,Tzolis,Arsenal,MID,6.5,4.968,True,False
+223827,Ballard,Sunderland,DEF,5.0,4.933,True,False
+209244,Foden,Man City,MID,7.0,4.889,True,False
+154561,Raya,Arsenal,GK,6.0,4.285,True,False
+513418,Schade,Brentford,MID,6.0,4.83,False,False
+177815,Calvert-Lewin,Leeds,FWD,6.0,3.802,False,False
+498016,Roefs,Sunderland,GK,5.0,3.368,False,False
+586309,Barry,Everton,FWD,5.5,3.299,False,False

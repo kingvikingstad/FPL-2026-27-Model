@@ -197,3 +197,138 @@ REGIME_2627_PROPOSED = {
     "Bournemouth": (0.50, 0.7), "Fulham": (0.50, 0.7), "Ipswich": (0.55, 0.6),
     "Man City": (0.55, 0.6), "Tottenham": (0.45, 0.7), "Man United": (0.80, 0.4),
 }
+
+
+def resolve_regime(mode=None):
+    """Turn the REGIME env flag into a regime dict, so every runner reads it identically.
+
+    Three modes, and the distinction between the last two is the whole point:
+
+      off       (default) -> {}  : bitwise baseline identity.
+      kappa                      : VARIANCE ONLY. Keeps each club's kappa, forces
+                                   delta to its no-op 1.0. This is the project's
+                                   stated position — "regime change is an ignorance
+                                   statement, it belongs in variance, not directional
+                                   style priors" (PROJECT_KNOWLEDGE §3). Point
+                                   estimates are untouched; only the posterior widens.
+      proposed                   : delta AND kappa. The deltas are UNFITTED [JUDGMENT]
+                                   (§7: "wired but off. Turning them on shifts point
+                                   estimates on assertion. Sweep against live data
+                                   first."). Use for sensitivity analysis, not as the
+                                   headline board.
+
+    Returns (regime_dict, label).
+    """
+    mode = (mode if mode is not None else os.environ.get("REGIME", "off")).lower()
+    if mode == "proposed":
+        return dict(REGIME_2627_PROPOSED), "proposed (delta+kappa; deltas UNFITTED [JUDGMENT])"
+    if mode == "kappa":
+        # tuple -> kappa only; a bare scalar is already a kappa (see apply_regime_uncertainty)
+        reg = {c: (float(v[1]) if isinstance(v, (tuple, list)) else float(v))
+               for c, v in REGIME_2627_PROPOSED.items()}
+        return reg, "kappa-only (variance widening; point estimates unchanged)"
+    return {}, "off (baseline identity)"
+
+# ---------------------------------------------------------------------------
+XI_SIZE = 11.0
+
+
+def _logit(x, eps=1e-6):
+    x = np.clip(np.asarray(x, float), eps, 1 - eps)
+    return np.log(x / (1 - x))
+
+
+def _sigmoid(z):
+    return 1.0 / (1.0 + np.exp(-np.clip(z, -30, 30)))
+
+
+def apply_xi_constraint(players, target=XI_SIZE, group="team", verbose=True,
+                        max_iter=80, tol=1e-9):
+    """Make each club's start probabilities sum to ELEVEN.
+
+    THE DEFECT THIS FIXES  [VERIFIED 2026-08-24 against GW1]
+    ---------------------------------------------------------
+    Start priors are built per player and never see each other, so nothing enforces the
+    hardest constraint in the sport: a club starts exactly eleven players. Measured on the
+    GW1 locked board, EVERY club exceeded it and the league expected 295.1 starters
+    against a structural 220 — Chelsea 17.68, Tottenham 16.61, Man United 15.94.
+
+    It shows up as an unconditional over-projection. On GW1, model bias was +0.46 points
+    per player overall but only -0.05 among players who actually appeared: essentially
+    ALL of the error sat on players the model half-expected to play who never got on the
+    pitch. Reliability was fine at the extremes (predicted 0.94 -> 0.92 realised; 0.03 ->
+    0.00) and badly over-confident in the middle (0.33 -> 0.04, 0.66 -> 0.37) — the exact
+    signature of unnormalised probabilities, where the surplus lands on the fringe.
+
+    THE CORRECTION
+    --------------
+    A per-club shift in LOG-ODDS, solved so the club's probabilities sum to `target`:
+
+        p_i  ->  sigmoid(logit(p_i) + c_club)
+
+    Chosen over multiplicative rescaling for two reasons: it cannot push a probability
+    outside (0, 1), and it preserves the ordering AND the relative odds of every pair of
+    players at the club. It is the minimal exponential tilt that satisfies the constraint,
+    so it removes the surplus without inventing new information about who loses out.
+
+    Because the shift is negative (every club is over), nailed starters barely move — a
+    player at 0.97 has a large log-odds and absorbs a small shift almost invisibly —
+    while fringe players at 0.3 take most of the correction. That is the right incidence:
+    the extremes were already calibrated and the middle was not.
+
+    Applied AFTER the depth prior and any predicted XI, and BEFORE availability, so an
+    injury flag still overrides everything. Clubs are solved independently by bisection.
+    """
+    p = players.copy()
+    if "start_a" not in p.columns or group not in p.columns:
+        return p, pd.DataFrame()
+    a = p["start_a"].astype(float)
+    b = p["start_b"].astype(float)
+    strength = a + b
+    p0 = a / strength
+    rows = []
+    for club, idx in p.groupby(group).groups.items():
+        idx = list(idx)
+        q = p0.loc[idx].values
+        tot = float(np.sum(q))
+        # TWO-SIDED, because Sigma p = 11 is an equality, not a ceiling. A club whose
+        # probabilities sum to 10 is also wrong: someone has to be the eleventh, and the
+        # tilt spreads that mass in proportion to the odds already assigned, which is the
+        # maximum-entropy answer given no further information. NB every club in the live
+        # 26/27 board is OVER, so only the downward direction is exercised on real data;
+        # the upward one is correct by the same argument but is not yet validated.
+        # A club with fewer than eleven listed players cannot be solved and is skipped.
+        if len(idx) < int(target) or abs(tot - target) < 1e-9:
+            rows.append({"team": club, "before": tot, "after": tot, "shift": 0.0})
+            continue
+        z = _logit(q)
+        lo, hi = -30.0, 30.0
+        c = 0.0
+        for _ in range(max_iter):
+            c = 0.5 * (lo + hi)
+            s_ = float(np.sum(_sigmoid(z + c)))
+            if abs(s_ - target) < tol:
+                break
+            if s_ > target:
+                hi = c
+            else:
+                lo = c
+        newp = _sigmoid(z + c)
+        # hold the PRIOR STRENGTH fixed: this changes the mean, not the confidence.
+        # Re-deriving a+b from scratch would silently discard how much evidence each
+        # player's prior was built on, which is the thing the shrinkage layer exists to
+        # get right.
+        p.loc[idx, "start_a"] = newp * strength.loc[idx].values
+        p.loc[idx, "start_b"] = (1.0 - newp) * strength.loc[idx].values
+        rows.append({"team": club, "before": tot, "after": float(np.sum(newp)),
+                     "shift": float(c)})
+    rep = pd.DataFrame(rows)
+    if verbose and len(rep):
+        over = rep[rep.before > target + 1e-9]
+        under = rep[rep.before < target - 1e-9]
+        print(f"[xi-constraint] {len(over)} clubs over {target:.0f} expected starters, "
+              f"{len(under)} under; league {rep.before.sum():.1f} -> {rep.after.sum():.1f}")
+        for _, r in over.nlargest(4, "before").iterrows():
+            print(f"    {r['team']:16s} {r['before']:5.2f} -> {r['after']:5.2f}  "
+                  f"(log-odds shift {r['shift']:+.2f})")
+    return p, rep

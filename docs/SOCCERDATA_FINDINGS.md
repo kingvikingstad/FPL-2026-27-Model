@@ -265,6 +265,19 @@ PPDA. **Not substituted** — §3 was out of scope for this pass and the substit
 `defcon_env`'s CBIRT channel and therefore the live board. G4 also requires routing PPDA to the
 DefCon channel only. Recorded here as the evidence base for doing it.
 
+> **DONE [2026-08-28]** — `src/press_measured.py`, evidence `studies/press_switchover.py`.
+> Not a substitution in the end: a straight swap is wrong because a season-aggregate PPDA is
+> not available in-season, and an early-season one is mostly noise (single-match reliability
+> 0.168 over 12 Understat seasons). The judgment table is instead *revised* toward measured
+> press at weight `n/(n+40)` — 2% after one match, 20% by GW10. Two things this section could
+> not have known:
+> - **Understat 26/27 is not obtainable offline**, so the in-season feed is rebuilt from the
+>   FPL repo and calibrated onto the Understat scale (r = 0.937, 20 clubs, 25/26).
+> - **That proxy is worth much less than Understat itself.** With Understat as the feed the
+>   optimal weight is `k = 11.5` (−27.5% MSE, 220 team-seasons); with the proxy the optimum is
+>   `k ≈ 45` and `k = 12` loses. `k = 40` is the value non-negative under both. Refreshing this
+>   cache in-season is what would unlock the rest of the gain.
+
 ---
 
 ## 8. Data-quality findings in the existing repo

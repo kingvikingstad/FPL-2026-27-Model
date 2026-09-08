@@ -1,0 +1,31 @@
+{
+ "team_id": 374258,
+ "entry_name": "Relegation United",
+ "manager": "Mike Jones",
+ "gw": 3,
+ "bank": 0.0,
+ "squad_value": 100.6,
+ "gw_points": 45,
+ "overall_points": 244,
+ "overall_rank": 50275,
+ "transfers_made": 0,
+ "transfer_cost": 0,
+ "active_chip": "wildcard",
+ "unmapped": [],
+ "overlay": {
+  "applied": "2026-09-06",
+  "reason": "GW4 transfer made after the GW3 fetch; FPL's public picks endpoint does not publish a gameweek's picks until that gameweek starts, so a pending transfer is invisible to fpl_entry and has to be applied by hand.",
+  "out": {
+   "web_name": "Cherki",
+   "player_code": 466052,
+   "list_price": 7.8
+  },
+  "in": {
+   "web_name": "Rogers",
+   "player_code": 244850,
+   "list_price": 7.5
+  },
+  "bank_note": "Bank is UNKNOWN, not 0.3. FPL sells at purchase price plus half of any rise, and Cherki was bought on the GW3 wildcard, so his selling price lies between 7.5 and 7.8 depending on when he rose. The public feed cannot say; only the auth-only my-team endpoint carries selling price, which this project deliberately does not touch.",
+  "note": "Superseded automatically by the next `fpl_entry.py` run once GW4 has started."
+ }
+}

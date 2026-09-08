@@ -89,6 +89,11 @@ gw_board_long.csv / gw_board_wide.csv. Horizon-aggregate runner: `scripts/run_fi
 - **`market_odds.py`** — betting-odds-implied team strength (26/27 outright markets → market
   Elo, blended into the team model via the ClubElo path). Embedded snapshot + live-fetch stub.
 - **`press_index.py`** — manager-aware PPDA; conditions the CBIRT (MID/FWD) DefCon channel.
+  `resolve_ppda()` blends the judgment table with measured 26/27 press; `press_factor()` is
+  unchanged at every call site.
+- **`press_measured.py`** — measures PPDA from 26/27 results and revises the judgment
+  forecast at weight `n/(n+40)` (2% at GW1, 20% by GW10). Feed is rebuilt from the FPL repo
+  and calibrated onto the Understat scale (r=0.937). Evidence: `studies/press_switchover.py`.
 - **`lineups.py`** — source-agnostic XI ingestion (file CSV/JSON or API-Football).
 - **`solio_ensemble.py`** — fetch/parse/align/blend/benchmark vs Solio's public feed;
   `benchmark_within_team` (isolates the attacking-share term).
@@ -120,6 +125,29 @@ drives goals 3x harder early. **Applied 2026-08-11:** a single-step GW1-3 home d
 not a schedule because md4-6 shows no discount and the segment profile is non-monotone.
 Board effect confined to GW1-3, home −0.084 / away +0.079, net ~0),
 `defcon_matchups` (DefCon flat in opponent strength; CB vs FB 2.3x — see §5),
+`defcon_team_matchups` (opponent **identity**, which a strength quartile cannot express.
+DefCon hit rate swings **0.129** across opponents, within player — Bournemouth/Leeds/
+Liverpool permissive, Fulham/West Ham/Chelsea/Wolves suppressing, and the ordering is NOT
+the strength ordering. Split-half r=+0.555, EB shrink 0.68 agreeing independently.
+**Shipped** as `defcon_opponent_category` in `team_projections_season.csv`; worth ~0.25
+pts/match between extremes vs ~0.87 for the clean-sheet swing, so a **tiebreaker not a
+driver**, and it points the SAME way as clean sheets (corr +0.264 with opponent attack) so
+there is still no "hard fixture, DefCon floor" trade. MID fails the gate (r=+0.241),
+ships flagged unusable. **Matchup (club x opponent) is a null**: it clears a permutation
+null but match identity explains more (R2 0.278 vs 0.170) and the two meetings of the same
+pair correlate **r=-0.217** — it is match-level shock, not tactics. **Own-team DefCon is
+NOT identified** within a season (club nested in player); untested, not dead — needs a
+second season of DefCon with transfers),
+`team_explosiveness` (are teams differentially explosive? **Two nulls and one reversed
+finding.** Per-club dispersion reliability r=+0.006 vs simulated true-Poisson null
+(-0.426,+0.480); return concentration r=+0.363 vs shuffled null (-0.415,+0.397),
+borderline and inside. But the league's upper tail is **THINNER** than Poisson: P(4+)
+observed 4.08% vs implied 6.54%, at the 0.2nd percentile of a simulated null that already
+carries the convexity bias. **The engine OVERSTATES blowouts by ~60% relative**, exactly
+where captaincy concentrates. `apply_tail_calibration` implements it **OFF BY DEFAULT** —
+wiring it in moves the CS engine validated at GA r=0.89/CS r=0.93. Two traps that each
+flipped a result: in-sample lambda deflated dispersion to 0.887 vs 1.056 cross-fitted, and
+P(4+) convexity in lambda needs a simulated null, not a z-test),
 `early_dispersion` (does the model under-disperse strength in GW1-6? residual slope +0.101
 CI (+0.002,+0.206) early vs −0.023 CI (−0.056,+0.009) later, difference +0.127
 CI (+0.018,+0.235). **Measured, NOT applied** — barely clears zero, third test of the same
@@ -135,6 +163,26 @@ all four Solio metrics improve),
 by 0.5 min. **Do not scrape historical ages**),
 `rest_congestion` (fixture congestion: **null**, +0.00000 xG per day of rest advantage,
 clustered CI (−0.0043,+0.0040); short-turnaround cut −0.070 xG CI (−0.170,+0.033) n=208),
+`fixture_congestion` (the same question re-opened with the instrument the 19 Aug audit
+named — actual cup and European fixtures by recovery day, not PL-only rest. The
+attenuation was real: **14.3% of club-PL-matches sit in the wrong recovery bucket** when
+cups are invisible. Correcting it does not change the answer. GW1-26, established
+starters: P(start) at a 3-day turnaround **+0.001, CI (−0.014,+0.019)**; team residual xG
+**+0.122, CI (−0.046,+0.287)** — both fail their pre-registered rules and both point the
+wrong way for fatigue. **Results too**: points +0.03, CI (−0.238,+0.280); win rate −0.003,
+CI (−0.110,+0.099) — though note the MDE on points is 0.40/match, larger than home
+advantage, so this is a weaker null than the xG one. **Trap recorded**: the rest
+DIFFERENTIAL against a RAW outcome manufactures a large backwards effect (tired side +0.32
+points) because the short-rested side is the European side — the quality gap by bucket is a
+symmetric ±0.255 ppg. Symmetry of the regressor is not exchangeability of the units;
+`rest_congestion` was right to pair the differential with an opponent-adjusted outcome.
+Adjusted, it is +0.064 CI (−0.229,+0.352). Mechanism found instead: rotation is spent on the **cup team**, and
+that is where competition matters — share of 60+ minute players who are PL regulars is
+84.3% in the league, 74.3% CL, 58.2% EL, 46.9% EFL Cup. ≤2-day turnarounds essentially do
+not exist (n=1). **Competition main effects are club identity** — the Conference League is
+Crystal Palace — and no competition parameter was adopted. GW27+ untested: knockout kickoff
+times are 6/50 and the FA Cup is absent from the source entirely. See
+docs/FIXTURE_CONGESTION_2026-09-01.md),
 `penalty_assignment` (declared `penalties_order` BEATS measured history — 85.7% precision
 covering 39.1% vs 45.0%/34.8%; the runners are right to use it, correcting an implication in
 SOCCERDATA_FINDINGS §6.4. Real gap is coverage: ~6 clubs have no declared taker),
@@ -226,6 +274,103 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
   strength toward the market, strengthening promoted-opponent clean-sheet fixtures.
 - **Press-conditioned CBIRT:** Anderson held at City (Solio-aligned 56%); Munoz/Fernandes/Touré
   (high-press regime clubs) boosted; deep-block Everton midfielders cut.
+- **Minutes-per-start is an in-season signal, and the channel is missing (2026-09-01):**
+  `inseason.update_minutes` does a Beta update on realised STARTS and stops there —
+  `exp_minutes`, the minutes a player is expected to last GIVEN a start, is touched by no
+  in-season path (grep: no hits). So a player withdrawn at half time every week is
+  indistinguishable from one who plays every minute; both register as "started" and both keep
+  their prior `exp_minutes`. This is the player-specific counterpart of the positional
+  **Minutes exposure fix (2026-08-11)** above: `MINUTES_IF_START` corrected the constant, the
+  per-player in-season update was never built. It biases twice, since `exp_minutes` scales
+  attacking exposure as well as appearance points.
+  **Pre-registered and met at every cutoff** (`studies/minutes_per_start.py`, evidence
+  `studies/minutes_per_start.csv`). Leave-one-season-out over 2023-24/24-25/25-26, 398 players,
+  4,205 player-season-cutoff rows; blend `(1-w)*prior + w*early` against a rest-of-season
+  minutes-per-start target. Rule fixed in advance: ship at k only if RMSE falls ≥2% against
+  w=0 AND the sign holds in ≥3 held-out seasons.
+
+  | k | 1 | 2 | 3 | 5 | 8 | 10 |
+  |---|---|---|---|---|---|---|
+  | w | 0.18 | 0.24 | 0.32 | 0.40 | 0.54 | 0.63 |
+  | RMSE gain | 5.5% | 7.2% | 9.5% | 12.4% | 15.5% | 18.9% |
+
+- **The start prior is too strong for its evidence — direction verified, constants NOT
+  identified (2026-09-01):** `update_minutes` adds ONE pseudo-observation per realised match
+  to a Beta prior carrying ~one per prior-season match, so a long-career player arrives with
+  ~34 pseudo-matches and two weeks of not being picked move him almost nowhere. Spurs after
+  GW2: **Dubravka 0.880 on 34.1 pseudo-matches, 0 starts from 2 → 0.831; Kinsky 0.652 on 13.8,
+  2 starts from 2 → 0.696** — the keeper who started both ranked BELOW two who had not played
+  a minute, and Dubravka was being offered as a rotation option. `apply_availability` cannot
+  catch it: these players are FIT, just not selected. Board-wide 372 players had started none
+  of their club's two matches and 139 still carried `app_ev > 0.5`.
+  Pre-registered, leave-one-season-out over 2023-24/24-25/25-26, **Brier on 204,682 individual
+  remaining matches** (`studies/start_prior_strength.py`, evidence
+  `studies/start_prior_strength.csv`). The current corner `w=1, κ=∞` is beaten at every
+  cutoff, 3/3 folds: **8.4% / 9.5% / 11.1% / 11.5%** at k = 2/3/5/8.
+  **`[CHECK]`, NOT `[VERIFIED]`, on any constant.** The Brier surface is a RIDGE, not a peak —
+  at k=5 ten of forty-eight grid points sit within 0.5pp of the optimum, along a diagonal.
+  Once a prior is capped at κ, scaling κ and `w` together leaves the prior-mass-to-evidence
+  balance unchanged, so **only the ratio w/κ ≈ 0.15–0.40 is identified**. Two endpoints score
+  identically and the study cannot choose between them: keep `w=1` and **cap the prior near 5
+  pseudo-matches**, or leave it uncapped and **weight a realised match ~8×**. The per-cutoff
+  pairs the grid search emits are arbitrary points on that ridge; `ridge()` reports the
+  near-optimal set on every run so no precise-looking constant escapes unqualified.
+  **Position ordering is a recorded NULL** — see §7. What survives: **goalkeepers are where the
+  fault is worst**, gaining 14.9–19.7% against DEF's 5.6–8.6% at every cutoff.
+  **Scope**: fits a previous-season prior, not the two-season pooled production prior after
+  cold-start fill, depth and regime shrinkage — it validates the weighting PRINCIPLE, not a
+  drop-in constant. Cold-start players never enter (no prior season); their start prior comes
+  from the ownership calibration, which this does not test. Tzolis is one of those.
+  **Interim guard, presentation only:** `gw_explorer` holds players who have started none of
+  their club's completed matches out of the likely-starter pool, which feeds the percentile
+  reference, the shading scale, the shortlist bands and the rotation enumeration. That is a
+  view-layer patch over a model fault, and it is labelled as such on the page.
+
+  All 3/3 folds positive at every k. The weights are far larger than the team channel's
+  (0.01–0.25) because minutes-per-start is a direct observation of a player's own role, not a
+  noisy proxy for team strength. **It is a tail correction:** at k=2 the median player moves
+  1.15 minutes and 0.7% move more than ten; in 26/27 after GW2, 16 of 183 players with 2+
+  starts average under 70 min/start. `[VERIFIED]` on the parameter — **`[CHECK]` on points**:
+  the study establishes that early minutes-per-start predicts later minutes-per-start, NOT
+  that the board scores better, because points depend on minutes through the 60-minute
+  threshold and through exposure scaling, neither linear in `exp_minutes`. A points secondary
+  was drafted, found to blend a minutes prior against a points target — a scale mismatch that
+  answers nothing — and deleted rather than left in looking like evidence. Prompted by Tzolis:
+  cold start, p_start 0.97 from the ownership calibration, 2 starts from 2, 120 minutes across
+  them, still projecting top-10 for his position.
+
+- **The minutes likelihood is exchangeable and should not be** `[VERIFIED 2026-09-07]`
+  (`studies/start_persistence.py`, `studies/start_recency.py`; full writeup
+  `docs/START_PERSISTENCE_2026-09-07.md`). 113,571 player-matches, 22/23–25/26, native `starts`.
+  **Lag-1:** P(start | started) 0.798 vs P(start | benched) 0.076, pooled gap +0.722 — but the
+  *within-player-season* gap is **+0.493** (proxy seasons +0.405). Two-thirds real state
+  dependence, one-third frailty. **Duration:** against a permutation null that holds each
+  player's own start count fixed and destroys only the ORDER, the excess in P(start at t+1 |
+  k consecutive starts) is +0.190 at k=1, +0.153 at k=3, +0.080 at k=6, +0.030 at k=8, and
+  indistinguishable from zero from k=10 on (k=20: obs 0.959, null 0.936, CI [0.926, 0.980]).
+  Raw h(k) rises to 0.96 by k=20 **and so does the null** — a long streak is a filter that
+  selects high-p players, so `h(k) = const` is the WRONG null and testing against it would
+  "find" a streak effect that is entirely frailty. **Asymmetry, the usable half:** P(start next
+  | k consecutive non-starts) = 0.276 / 0.114 / 0.046 / 0.014 at k = 1 / 3 / 8 / 20. Being
+  dropped is far more informative than being picked and saturates far more slowly.
+  *Consequence:* NOT a streak covariate — the excess is already zero past k≈8, so one would
+  re-encode the base rate the Beta prior holds. The indictment is of the LIKELIHOOD: a
+  conjugate Beta update reads a count, so start-start-bench and bench-start-start give an
+  identical posterior. Fix is a geometric recency weight `u_d = λ^d` on the estimator's own
+  observations, renormalised to the raw match count so it moves only the order and does not
+  confound with the `W_MINUTES`/κ ridge. **λ is a function of FORECAST HORIZON** (LOSO, κ=4):
+  λ* = 0.40/0.50/0.55/0.65/**0.75**/0.82 at h = 1/2/3/5/**10**/rest, gains +7.9%/+5.6%/+4.0%/
+  +2.6%/**+1.2%**/+0.3%, positive in 4/4 folds to h=10. Short horizon, short memory. The
+  pre-registered gate (h=1) fires ADOPT at +3.5% but **cannot pin λ** — the gain is monotone to
+  the grid floor there, because the last match nearly suffices for the next; that limit is
+  right at h=1 and ruinous for a ten-week board. Rest-of-season fails the 1% gate. Shipped OFF
+  (`INSEASON_LAM=0.75` with `INSEASON_KAPPA=4`); `[CHECK]` on points, see §6.9.
+  *Board effect, GW1-38, decomposed so neither flag is credited with the other's movement:*
+  κ=4 alone moves 497/653 players (mean |Δ| 7.75 season points, max 38.1); λ=0.75 **on top of
+  κ=4** moves 102 (mean 0.73, max 8.8). κ is by far the bigger lever and the two must never be
+  reported jointly. The recency-only moves have the right shape — same-club rotation pairs move
+  in OPPOSITE directions (Enzo +8.8 vs O'Reilly −8.8, Foden −8.4 at Man City) — which is the
+  exchangeability failure being corrected, visible directly on the board.
 
 ---
 
@@ -238,13 +383,55 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
 3. **2023-24 data** — for walk-forward joint fit of `older_weight` × shrinkage K (resolves Isak).
 4. **CBIRT DefCon — press index ADDED** (`press_index.py`): the MID/FWD channel is now
    conditioned on PPDA (Anderson correctly holds at City; high-press-club midfielders boosted).
-   Remaining: the formal `manager_FE jointly zero` test (§4.4) still needs the fitted regression
-   with the press covariate, now available.
+   The judgment PPDA table now **self-revises against 26/27 results** (`press_measured.py`,
+   evidence `studies/press_switchover.py`) — the open item there is closed. Remaining: the
+   formal `manager_FE jointly zero` test (§4.4) still needs the fitted regression with the
+   press covariate, now available.
+   *Partial null recorded:* the switchover weight the evidence supports is `k=40`, not the
+   `k=12` that is optimal when the feed is Understat itself. On the feed actually available
+   offline, `k=12` **loses** 3.6%. `k=40` is the value non-negative under both backtests; the
+   cost of not having Understat 26/27 is roughly two-thirds of the available gain. Refreshing
+   the `sd_ingest` Understat cache in-season would let `k` move toward 12 — the single highest-
+   value follow-up on this channel.
 5. **`market_share × κ` joint sweep** (grid, not coordinate-wise) once GW1 results land.
 6. **Fix remaining dedup** to key on `player_code` end-to-end (cold-start ids now unique; the
    `player+team` dedup in some runners should move to id/player_code).
 7. **Transfer/chip optimisation solver** — the capability Solio has and we don't.
-8. BPS/DEF refinement: concentrate the −10% haircut on `BONUS_PER_CS[DEF]`; full-back vs
+8. **Build `inseason.update_exp_minutes`, then A/B it on scored gameweeks.** The calibration
+   is done and passed (§5, `studies/minutes_per_start.py`): weights 0.18 → 0.63 as k runs 1 → 10.
+   What is NOT done is the code path or the proof it helps POINTS. Ship it off by default,
+   then run the board A/B — same seed, channel off against on, scored against real gameweeks —
+   because the study validates the parameter and not the projection built on it. Blocked on
+   nothing; the denominator it needs (`inseason.appearances().start_minutes`, minutes accrued
+   in started matches only) already exists.
+9. **Re-fit the start-prior strength against the REAL prior, then A/B it.** §5 shows the
+   current `W_MINUTES = 1.0` against an uncapped Beta is dominated by ~11% on Brier, but the
+   study fits a previous-season prior and only the ratio w/κ is identified. Two jobs, in
+   order: (a) re-run the sweep against the actual two-season pooled prior as installed, which
+   is what decides whether the fix is a `W_MINUTES` change or a cap on prior strength — they
+   are indistinguishable on the approximation and need not be on the real one; (b) board A/B
+   on scored gameweeks, same seed. Land this with §6.8 if both are ready, since they touch the
+   same channel and a joint A/B avoids attributing one's gain to the other. Highest-value item
+   on the minutes layer, which §3 already calls the dominant single-GW lever.
+   **Land `INSEASON_LAM` in this same A/B (§5, 2026-09-07).** Recency weighting was fitted at
+   κ=4 and reallocates the very evidence whose total weight (a) is re-fitting, so run apart
+   each would be credited with the other's gain — the same argument that already ties §6.8 to
+   this item. Three levers, one A/B: `INSEASON_W_MIN`, `INSEASON_KAPPA`, `INSEASON_LAM`.
+   The prerequisite that used to sit here — a `gw_panel` correction the λ leg needed — is
+   **CLOSED [2026-09-08]**, and the diagnosis first recorded for it was WRONG, which is
+   worth carrying because the wrong version is the plausible one. The 22 starts that
+   `recency_starts` dropped and the raw `starts` column kept were not cup ties: `gw_panel`
+   admitted a whole gameweek as soon as ANY match in it had finished, so GW3 carried 22
+   half-time starts from an unfinished Arsenal-Chelsea that `played` correctly excluded
+   (16 players with `starts > club_matches`, masked all along by `update_minutes`
+   clamping). `gw_panel` now applies the finished guard PER MATCH, so raw and
+   recency-weighted counts agree at source and λ=1 is a true identity on the raw count.
+   The λ-on and λ-off arms of the A/B now differ by recency ALONE, which is what makes the
+   A/B clean. Two properties came in with that fix and the λ leg depends on both:
+   `recency_starts` keys on `team_now` while placing each start on the club he played for
+   that week, so a mid-season mover stays ONE row; and `club_matches` is summed per
+   gameweek over the club he was at that week.
+10. BPS/DEF refinement: concentrate the −10% haircut on `BONUS_PER_CS[DEF]`; full-back vs
    centre-back CBI split. GK save-metric recompute (low priority).
 
 ---
@@ -261,6 +448,26 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
 - **δ regime mean-pull values** — unfitted `[JUDGMENT]`; wired but off. Turning them on shifts
   point estimates on assertion. Sweep against live data first.
 - **Recalibrating the team model on Solio** — it's already market-calibrated; that would overfit.
+- **Position-specific weight on realised starts** — pre-registered as H-POS in
+  `studies/start_prior_strength.py`: goalkeepers should need realised evidence weighted more
+  heavily than forwards, because a forward left out of two is rotation while a keeper left out
+  of two has been dropped. Tested as "GK's fitted `w` strictly above FWD's in every held-out
+  season" and it held in **3 of 12** — NOT SUPPORTED, recorded as a null. Do not reintroduce
+  it as "keepers are more nailed" or any other phrasing without a fresh registration.
+  The ratio w/κ does look ordered (GK ~0.30–0.40 against DEF ~0.15–0.20) and it would be easy
+  to call that a win; it is not one. The comparison was not pre-registered, and
+  re-parameterising after seeing the result to rescue a failed test is the exact move this
+  register exists to refuse. It is a hypothesis a future study may register, not a finding.
+  Note this null does NOT weaken the main result: the overall direction passed its own rule,
+  and goalkeepers still show the largest gain of any position — just not via `w`.
+- **A `streak_k` covariate on the start prior** — NOT built, and the study that could have
+  motivated one is the reason (§5, 2026-09-07). Measured against a frailty-preserving
+  permutation null, the streak excess is zero from k=10 on, so a streak term would mostly
+  re-encode the player's own base rate — which the Beta prior already holds. That is double
+  counting, and it is why the raw h(k) curve rising to 0.96 by k=20 is a **diagnosis and not
+  a finding**. `INSEASON_LAM` is not this under another name: it re-weights the ORDER of the
+  estimator's own observations and adds no predictor. Nor is it a rotation multiplier — it
+  carries no fixture-conditional term, and congestion stays dead three ways over.
 
 ---
 
@@ -281,6 +488,17 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
 - **`E0.csv` and `fpl-data-stats.csv` not required** — reconstructed from the repo
   (`reconstruct_e0.py`, `reconstruct_coldstart.py`).
 - **PL match filter:** keep only `match_id` containing `-prem-`. **Prices in millions.**
+- **Minutes per start needs `start_minutes`, not `minutes`.** Total minutes over starts is wrong
+  for anyone who both started some matches and came off the bench in others — the substitute
+  minutes land in the numerator with no start in the denominator and the ratio can exceed 90.
+  `inseason.appearances` now returns `start_minutes` (minutes accrued in started matches only)
+  for exactly this denominator. The per-gameweek read is extracted as `inseason.gw_panel`, with
+  `inseason.last_appearance` giving each player his own CLUB's most recent finished gameweek —
+  not the league's, which diverges the moment a week splits.
+- **FPL only publishes a real `starts` column from 2022-23.** Earlier seasons in `FPL_HISTORY`
+  have it inferred from a minutes threshold, which miscounts a 60-minute substitute as a
+  starter. Any study conditioning on starting must drop those seasons rather than caveat them —
+  `studies/minutes_per_start.py` does, which is why it evaluates three seasons and not eight.
 - **Data source:** public **olbauday/FPL-Core-Insights** repo; `core_insights.load` at
   `<repo>/data/2026-2027`.
 

@@ -1,0 +1,374 @@
+player_code,understat_player_id,name_fpl,name_understat,team,match_method,confidence,verified
+119471,76,Schär,Fabian Schär,Newcastle,exact_name_team,1.0,True
+180974,87,Joelinton,Joelinton,Newcastle,exact_name_team,1.0,True
+80201,181,Leno,Bernd Leno,Fulham,exact_name_team,1.0,True
+84450,204,Xhaka,Granit Xhaka,Sunderland,exact_name_team,1.0,True
+60307,239,Groß,Pascal Groß,Brighton,exact_name_team,1.0,True
+153133,500,Iwobi,Alex Iwobi,Fulham,exact_name_team,1.0,True
+88894,592,Barkley,Ross Barkley,Aston Villa,exact_name_team,1.0,True
+115556,660,Davies,Ben Davies,Tottenham,exact_name_team,1.0,True
+173879,702,Abraham,Tammy Abraham,Aston Villa,exact_name_team,1.0,True
+159506,725,Aina,Ola Aina,Nott'm Forest,exact_name_team,1.0,True
+111234,741,Pickford,Jordan Pickford,Everton,exact_name_team,1.0,True
+54469,825,Smith,Adam Smith,Bournemouth,exact_name_team,1.0,True
+97032,833,Virgil,Virgil van Dijk,Liverpool,exact_name_team,1.0,True
+155503,852,Woodman,Freddie Woodman,Liverpool,exact_name_team,1.0,True
+153366,910,Reed,Harrison Reed,Fulham,exact_name_team,1.0,True
+106760,1006,Shaw,Luke Shaw,Man United,exact_name_team,1.0,True
+149484,1024,Mings,Tyrone Mings,Aston Villa,exact_name_team,1.0,True
+204936,1116,Donnarumma,Gianluigi Donnarumma,Man City,exact_name_team,1.0,True
+141746,1228,B.Fernandes,Bruno Fernandes,Man United,exact_name_team,1.0,True
+223541,1433,Chiesa,Federico Chiesa,Liverpool,exact_name_team,1.0,True
+106611,1653,Keane,Michael Keane,Everton,exact_name_team,1.0,True
+17761,1665,Tarkowski,James Tarkowski,Everton,exact_name_team,1.0,True
+95658,1687,Maguire,Harry Maguire,Man United,exact_name_team,1.0,True
+105717,1760,Masuaku,Arthur Masuaku,Sunderland,exact_name_team,1.0,True
+155408,1789,Cook,Lewis Cook,Bournemouth,exact_name_team,1.0,True
+101188,1823,Digne,Lucas Digne,Aston Villa,exact_name_team,1.0,True
+152551,2182,Lerma,Jefferson Lerma,Crystal Palace,exact_name_team,1.0,True
+195546,2203,Buendía,Emiliano Buendía,Aston Villa,exact_name_team,1.0,True
+91651,2254,Kovačić,Mateo Kovacic,Man City,exact_name_team,1.0,True
+184029,2517,Ødegaard,Martin Odegaard,Arsenal,exact_name_team,1.0,True
+204120,3645,Boscagli,Olivier Boscagli,Brighton,exact_name_team,1.0,True
+98980,4401,Martinez,Emiliano Martinez,Aston Villa,exact_name_team,1.0,True
+60689,4456,Wood,Chris Wood,Nott'm Forest,exact_name_team,1.0,True
+219847,5220,Havertz,Kai Havertz,Arsenal,exact_name_team,1.0,True
+215711,5221,Bailey,Leon Bailey,Aston Villa,exact_name_team,1.0,True
+219168,5232,Isak,Alexander Isak,Liverpool,exact_name_team,1.0,True
+135720,5261,Danso,Kevin Danso,Tottenham,exact_name_team,1.0,True
+195384,5304,Merino,Mikel Merino,Arsenal,exact_name_team,1.0,True
+205651,5543,G.Jesus,Gabriel Jesus,Arsenal,exact_name_team,1.0,True
+98747,5552,Pope,Nick Pope,Newcastle,exact_name_team,1.0,True
+204480,5553,Rice,Declan Rice,Arsenal,exact_name_team,1.0,True
+177815,5555,Calvert-Lewin,Dominic Calvert-Lewin,Leeds,exact_name_team,1.0,True
+109646,5590,Tosin,Tosin Adarabioyo,Chelsea,exact_name_team,1.0,True
+200617,5595,James,Daniel James,Leeds,exact_name_team,1.0,True
+226597,5613,Gabriel,Gabriel,Arsenal,exact_name_team,1.0,True
+121709,5652,Benitez,Walter Benítez,Crystal Palace,exact_name_team,1.0,True
+200834,5659,Mukiele,Nordi Mukiele,Sunderland,exact_name_team,1.0,True
+232185,5675,Sarr,Ismaila Sarr,Crystal Palace,exact_name_team,1.0,True
+210462,5722,Sangaré,Ibrahim Sangare,Nott'm Forest,exact_name_team,1.0,True
+231747,5735,Mateta,Jean-Philippe Mateta,Crystal Palace,exact_name_team,1.0,True
+216646,5786,Wissa,Yoane Wissa,Newcastle,exact_name_team,1.0,True
+226944,5789,Kamara,Boubacar Kamara,Aston Villa,exact_name_team,1.0,True
+167074,5973,Tete,Kenny Tete,Fulham,exact_name_team,1.0,True
+212319,6026,Richarlison,Richarlison,Tottenham,exact_name_team,1.0,True
+83299,6048,Dunk,Lewis Dunk,Brighton,exact_name_team,1.0,True
+209244,6055,Foden,Phil Foden,Man City,exact_name_team,1.0,True
+114243,6063,J.Murphy,Jacob Murphy,Newcastle,exact_name_team,1.0,True
+184667,6080,Lindelöf,Victor Lindelöf,Aston Villa,exact_name_team,1.0,True
+108413,6104,Hughes,Will Hughes,Crystal Palace,exact_name_team,1.0,True
+202993,6108,Bentancur,Rodrigo Bentancur,Tottenham,exact_name_team,1.0,True
+209400,6145,Kamada,Daichi Kamada,Crystal Palace,exact_name_team,1.0,True
+166477,6157,Castagne,Timothy Castagne,Fulham,exact_name_team,1.0,True
+227444,6174,Milenković,Nikola Milenkovic,Nott'm Forest,exact_name_team,1.0,True
+168636,6219,Enes Ünal,Enes Ünal,Bournemouth,exact_name_team,1.0,True
+244954,6221,Pau,Pau Torres,Aston Villa,exact_name_team,1.0,True
+174874,6314,Andersen,Joachim Andersen,Fulham,exact_name_team,1.0,True
+199598,6369,Ampadu,Ethan Ampadu,Leeds,exact_name_team,1.0,True
+214225,6377,Rodon,Joe Rodon,Leeds,exact_name_team,1.0,True
+247632,6382,Neto,Pedro Neto,Chelsea,exact_name_team,1.0,True
+209046,6456,Hudson-Odoi,Callum Hudson-Odoi,Nott'm Forest,exact_name_team,1.0,True
+205533,6482,Nketiah,Eddie Nketiah,Crystal Palace,exact_name_team,1.0,True
+174594,6544,Nmecha,Lukas Nmecha,Leeds,exact_name_team,1.0,True
+446008,6552,Mbeumo,Bryan Mbeumo,Man United,exact_name_team,1.0,True
+180736,6615,Chalobah,Trevoh Chalobah,Chelsea,exact_name_team,1.0,True
+200089,6630,Willock,Joe Willock,Newcastle,exact_name_team,1.0,True
+206915,6665,C.Jones,Curtis Jones,Liverpool,exact_name_team,1.0,True
+201666,6681,Barnes,Harvey Barnes,Newcastle,exact_name_team,1.0,True
+434752,6807,Bijol,Jaka Bijol,Leeds,exact_name_team,1.0,True
+172780,6818,Maddison,James Maddison,Tottenham,exact_name_team,1.0,True
+111317,6820,Brooks,David Brooks,Bournemouth,exact_name_team,1.0,True
+76357,6835,Cairney,Tom Cairney,Fulham,exact_name_team,1.0,True
+184349,6837,Sessegnon,Ryan Sessegnon,Fulham,exact_name_team,1.0,True
+222531,6857,Gibbs-White,Morgan Gibbs-White,Nott'm Forest,exact_name_team,1.0,True
+462424,6888,Saliba,William Saliba,Arsenal,exact_name_team,1.0,True
+85633,6903,Sels,Matz Sels,Nott'm Forest,exact_name_team,1.0,True
+441164,6912,Pedro Porro,Pedro Porro,Tottenham,exact_name_team,1.0,True
+463067,6937,Georginio,Georginio Rutter,Brighton,exact_name_team,1.0,True
+222683,6963,Kluivert,Justin Kluivert,Bournemouth,exact_name_team,1.0,True
+218364,7075,Sosa,Borna Sosa,Crystal Palace,exact_name_team,1.0,True
+180135,7078,Longstaff,Sean Longstaff,Leeds,exact_name_team,1.0,True
+430871,7080,Cunha,Matheus Cunha,Man United,exact_name_team,1.0,True
+437505,7148,Isidor,Wilson Isidor,Sunderland,exact_name_team,1.0,True
+207283,7166,Jensen,Mathias Jensen,Brentford,exact_name_team,1.0,True
+221632,7218,Romero,Cristian Romero,Tottenham,exact_name_team,1.0,True
+242880,7240,B.Badiashile,Benoit Badiashile Mukinayi,Chelsea,exact_name_team,1.0,True
+224117,7254,Gyökeres,Viktor Gyokeres,Arsenal,exact_name_team,1.0,True
+242882,7268,Diakité,Bafode Diakite,Bournemouth,exact_name_team,1.0,True
+216051,7281,Dalot,Diogo Dalot,Man United,exact_name_team,1.0,True
+223340,7322,Saka,Bukayo Saka,Arsenal,exact_name_team,1.0,True
+200785,7352,Adams,Tyler Adams,Bournemouth,exact_name_team,1.0,True
+78916,7382,Burn,Dan Burn,Newcastle,exact_name_team,1.0,True
+434399,7432,Reinildo,Reinildo,Sunderland,exact_name_team,1.0,True
+232928,7438,Garner,James Garner,Everton,exact_name_team,1.0,True
+481655,7526,Zubimendi,Martín Zubimendi,Arsenal,exact_name_team,1.0,True
+444463,7589,Fofana,Wesley Fofana,Chelsea,exact_name_team,1.0,True
+172649,7702,Henderson,Dean Henderson,Crystal Palace,exact_name_team,1.0,True
+122806,7723,McGinn,John McGinn,Aston Villa,exact_name_team,1.0,True
+199798,7726,Konsa,Ezri Konsa Ngoyo,Aston Villa,exact_name_team,1.0,True
+444145,7752,Martinelli,Gabriel Martinelli,Arsenal,exact_name_team,1.0,True
+220627,7753,Justin,James Justin,Leeds,exact_name_team,1.0,True
+184341,7768,Mount,Mason Mount,Man United,exact_name_team,1.0,True
+437738,7791,Bornauw,Sebastiaan Bornauw,Leeds,exact_name_team,1.0,True
+210156,7814,Awoniyi,Taiwo Awoniyi,Nott'm Forest,exact_name_team,1.0,True
+209365,7902,De Ligt,Matthijs de Ligt,Man United,exact_name_team,1.0,True
+200720,7904,Kelleher,Caoimhin Kelleher,Brentford,exact_name_team,1.0,True
+486520,8000,Gruev,Ilia Gruev,Leeds,exact_name_team,1.0,True
+458249,8044,Zirkzee,Joshua Zirkzee,Man United,exact_name_team,1.0,True
+225796,8067,James,Reece James,Chelsea,exact_name_team,1.0,True
+470313,8117,Woltemade,Nick Woltemade,Newcastle,exact_name_team,1.0,True
+466075,8129,Calafiori,Riccardo Calafiori,Arsenal,exact_name_team,1.0,True
+215136,8204,N.Williams,Neco Williams,Nott'm Forest,exact_name_team,1.0,True
+489888,8211,Adli,Amine Adli,Bournemouth,exact_name_team,1.0,True
+244723,8214,Mitchell,Tyrick Mitchell,Crystal Palace,exact_name_team,1.0,True
+250199,8252,Dominguez,Nicolás Domínguez,Nott'm Forest,exact_name_team,1.0,True
+223094,8260,Haaland,Erling Haaland,Man City,exact_name_team,1.0,True
+475168,8272,João Pedro,João Pedro,Chelsea,exact_name_team,1.0,True
+207189,8285,Berge,Sander Berge,Fulham,exact_name_team,1.0,True
+465642,8378,Thiaw,Malick Thiaw,Newcastle,exact_name_team,1.0,True
+243016,8379,Mac Allister,Alexis Mac Allister,Liverpool,exact_name_team,1.0,True
+438234,8393,Marmoush,Omar Marmoush,Man City,exact_name_team,1.0,True
+494595,8397,Wirtz,Florian Wirtz,Liverpool,exact_name_team,1.0,True
+470315,8401,Netz,Luca Netz,Nott'm Forest,exact_name_team,1.0,True
+427623,8430,Richards,Chris Richards,Crystal Palace,exact_name_team,1.0,True
+480455,8476,Branthwaite,Jarrad Branthwaite,Everton,exact_name_team,1.0,True
+246301,8489,J.Cuenca,Jorge Cuenca,Fulham,exact_name_team,1.0,True
+244851,8497,Palmer,Cole Palmer,Chelsea,exact_name_team,1.0,True
+220237,8635,Botman,Sven Botman,Newcastle,exact_name_team,1.0,True
+494521,8640,Truffert,Adrien Truffert,Bournemouth,exact_name_team,1.0,True
+484420,8651,E.Le Fée,Enzo Le Fée,Sunderland,exact_name_team,1.0,True
+456512,8662,Ndoye,Dan Ndoye,Nott'm Forest,exact_name_team,1.0,True
+493362,8700,Xavi,Xavi Simons,Tottenham,exact_name_team,1.0,True
+232413,8706,Eze,Eberechi Eze,Arsenal,exact_name_team,1.0,True
+221399,8720,Harrison,Jack Harrison,Leeds,exact_name_team,1.0,True
+184254,8858,Vicario,Guglielmo Vicario,Tottenham,exact_name_team,1.0,True
+440089,8859,Damsgaard,Mikkel Damsgaard,Brentford,exact_name_team,1.0,True
+178301,8865,Watkins,Ollie Watkins,Aston Villa,exact_name_team,1.0,True
+463034,8868,Delap,Liam Delap,Chelsea,exact_name_team,1.0,True
+476887,8920,Bakwa,Dilane Bakwa,Nott'm Forest,exact_name_team,1.0,True
+169528,8940,Robinson,Antonee Robinson,Fulham,exact_name_team,1.0,True
+232653,8941,J.Ramsey,Jacob Ramsey,Newcastle,exact_name_team,1.0,True
+472713,8942,Hickey,Aaron Hickey,Brentford,exact_name_team,1.0,True
+171314,8961,Rúben,Rúben Dias,Man City,exact_name_team,1.0,True
+248875,8981,Doku,Jéremy Doku,Man City,exact_name_team,1.0,True
+201895,8986,Alderete,Omar Alderete,Sunderland,exact_name_team,1.0,True
+510663,8995,Ekitiké,Hugo Ekitike,Liverpool,exact_name_team,1.0,True
+482609,9017,Gusto,Malo Gusto,Chelsea,exact_name_team,1.0,True
+232787,9040,Gallagher,Conor Gallagher,Tottenham,exact_name_team,1.0,True
+215059,9098,Sánchez,Robert Sánchez,Chelsea,exact_name_team,1.0,True
+513418,9156,Schade,Kevin Schade,Brentford,exact_name_team,1.0,True
+226182,9205,Bogle,Jayden Bogle,Leeds,exact_name_team,1.0,True
+508479,9272,Jörgensen,Filip Jorgensen,Chelsea,exact_name_team,1.0,True
+440993,9307,Ndiaye,Iliman Ndiaye,Everton,exact_name_team,1.0,True
+216094,9328,Frimpong,Jeremie Frimpong,Liverpool,exact_name_team,1.0,True
+490145,9332,Scarlett,Dane Scarlett,Tottenham,exact_name_team,1.0,True
+486672,9453,Caicedo,Moisés Caicedo,Chelsea,exact_name_team,1.0,True
+244858,9501,Carvalho,Fabio Carvalho,Brentford,exact_name_team,1.0,True
+449434,9524,Elanga,Anthony Elanga,Newcastle,exact_name_team,1.0,True
+490094,9554,Iroegbunam,Tim Iroegbunam,Everton,exact_name_team,1.0,True
+538207,9556,Osula,William Osula,Newcastle,exact_name_team,1.0,True
+72147,9614,M.Bizot,Marco Bizot,Aston Villa,exact_name_team,1.0,True
+533463,9662,O.Dango,Dango Ouattara,Brentford,exact_name_team,1.0,True
+449871,9667,Onana,Amadou Onana,Aston Villa,exact_name_team,1.0,True
+154561,9676,Raya,David Raya,Arsenal,exact_name_team,1.0,True
+191866,9677,Ajer,Kristoffer Ajer,Brentford,exact_name_team,1.0,True
+231065,9678,Pinnock,Ethan Pinnock,Brentford,exact_name_team,1.0,True
+194010,9679,Henry,Rico Henry,Brentford,exact_name_team,1.0,True
+204580,9680,Janelt,Vitaly Janelt,Brentford,exact_name_team,1.0,True
+449027,9693,Mamardashvili,Giorgi Mamardashvili,Liverpool,exact_name_team,1.0,True
+432830,9733,Collins,Nathan Collins,Brentford,exact_name_team,1.0,True
+215413,9739,Dewsbury-Hall,Kiernan Dewsbury-Hall,Everton,exact_name_team,1.0,True
+547027,9767,Diarra,Habib Diarra,Sunderland,exact_name_team,1.0,True
+511499,9780,Tel,Mathys Tel,Tottenham,exact_name_team,1.0,True
+424876,9788,Szoboszlai,Dominik Szoboszlai,Liverpool,exact_name_team,1.0,True
+441264,9789,Brobbey,Brian Brobbey,Sunderland,exact_name_team,1.0,True
+477424,9790,Gvardiol,Josko Gvardiol,Man City,exact_name_team,1.0,True
+465694,9802,N.Gonzalez,Nico González,Man City,exact_name_team,1.0,True
+466525,9910,Stach,Anton Stach,Leeds,exact_name_team,1.0,True
+448104,9911,Hincapie,Piero Hincapié,Arsenal,exact_name_team,1.0,True
+243526,9944,Gudmundsson,Gabriel Gudmundsson,Leeds,exact_name_team,1.0,True
+486385,9983,Beto,Beto,Everton,exact_name_team,1.0,True
+514356,10004,Lavia,Romeo Lavia,Chelsea,exact_name_team,1.0,True
+500040,10024,Mosquera,Cristhian Mosquera,Arsenal,exact_name_team,1.0,True
+515597,10025,Bogarde,Lamare Bogarde,Aston Villa,exact_name_team,1.0,True
+491279,10050,Van de Ven,Micky van de Ven,Tottenham,exact_name_team,1.0,True
+492777,10120,Bradley,Conor Bradley,Liverpool,exact_name_team,1.0,True
+432714,10126,McAtee,James McAtee,Nott'm Forest,exact_name_team,1.0,True
+550090,10169,Coppola,Diego Coppola,Brighton,exact_name_team,1.0,True
+547701,10184,Gray,Archie Gray,Tottenham,exact_name_team,1.0,True
+487838,10216,Hall,Lewis Hall,Newcastle,exact_name_team,1.0,True
+224967,10291,Mykolenko,Vitalii Mykolenko,Everton,exact_name_team,1.0,True
+243571,10292,Patterson,Nathan Patterson,Everton,exact_name_team,1.0,True
+503301,10348,Hutchinson,Omari Hutchinson,Nott'm Forest,exact_name_team,1.0,True
+183656,10405,Dasilva,Josh Dasilva,Brentford,exact_name_team,1.0,True
+535301,10527,Baleba,Carlos Baleba,Brighton,exact_name_team,1.0,True
+463936,10542,Gittens,Jamie Bynoe-Gittens,Chelsea,exact_name_team,1.0,True
+550864,10564,Yoro,Leny Yoro,Man United,exact_name_team,1.0,True
+496661,10586,Dibling,Tyler Dibling,Everton,exact_name_team,1.0,True
+230001,10696,Mazraoui,Noussair Mazraoui,Man United,exact_name_team,1.0,True
+441266,10697,Gravenberch,Ryan Gravenberch,Liverpool,exact_name_team,1.0,True
+244042,10717,Muniz,Rodrigo Muniz,Fulham,exact_name_team,1.0,True
+444765,10721,Van den Berg,Sepp van den Berg,Brentford,exact_name_team,1.0,True
+201658,10741,Tavernier,Marcus Tavernier,Bournemouth,exact_name_team,1.0,True
+158499,10744,Christie,Ryan Christie,Bournemouth,exact_name_team,1.0,True
+463981,10747,Hill,James Hill,Bournemouth,exact_name_team,1.0,True
+427637,10751,Aaronson,Brenden Aaronson,Leeds,exact_name_team,1.0,True
+232859,10764,Spence,Djed Spence,Tottenham,exact_name_team,1.0,True
+221820,10802,Martinez,Lisandro Martínez,Man United,exact_name_team,1.0,True
+460028,10805,Colwill,Levi Colwill,Chelsea,exact_name_team,1.0,True
+249231,10809,Lewis-Potter,Keane Lewis-Potter,Brentford,exact_name_team,1.0,True
+550839,10822,Odobert,Wilson Odobert,Tottenham,exact_name_team,1.0,True
+477064,10847,Lewis,Rico Lewis,Man City,exact_name_team,1.0,True
+465351,11000,Matheus N.,Matheus Nunes,Man City,exact_name_team,1.0,True
+204968,11003,Yates,Ryan Yates,Nott'm Forest,exact_name_team,1.0,True
+247412,11070,Strand Larsen,Jørgen Strand Larsen,Crystal Palace,exact_name_team,1.0,True
+499175,11132,Nwaneri,Ethan Nwaneri,Arsenal,exact_name_team,1.0,True
+492859,11155,Gnonto,Wilfried Gnonto,Leeds,exact_name_team,1.0,True
+515621,11167,Chadi Riad,Chadi Riad,Crystal Palace,exact_name_team,1.0,True
+516895,11174,Mainoo,Kobbie Mainoo,Man United,exact_name_team,1.0,True
+574458,11253,M.Sarr,Mamadou Sarr,Chelsea,exact_name_team,1.0,True
+532529,11269,Hinshelwood,Jack Hinshelwood,Brighton,exact_name_team,1.0,True
+607464,11281,Kayode,Michael Kayode,Brentford,exact_name_team,1.0,True
+243298,11296,Gakpo,Cody Gakpo,Liverpool,exact_name_team,1.0,True
+502697,11297,Alcaraz,Carlos Alcaraz,Everton,exact_name_team,1.0,True
+513466,11331,Röhl,Merlin Röhl,Everton,exact_name_team,1.0,True
+448047,11356,Enzo,Enzo Fernández,Chelsea,exact_name_team,1.0,True
+248857,11357,Madueke,Noni Madueke,Arsenal,exact_name_team,1.0,True
+509416,11385,Ayari,Yasin Ayari,Brighton,exact_name_team,1.0,True
+547719,11386,L.Miley,Lewis Miley,Newcastle,exact_name_team,1.0,True
+461199,11461,Mundle,Romaine Mundle,Sunderland,exact_name_team,1.0,True
+472769,11592,O'Reilly,Nico O'Reilly,Man City,exact_name_team,1.0,True
+499309,11633,Marc Guiu,Marc Guiu,Chelsea,exact_name_team,1.0,True
+445122,11707,J.Timber,Jurriën Timber,Arsenal,exact_name_team,1.0,True
+544877,11709,Kerkez,Milos Kerkez,Liverpool,exact_name_team,1.0,True
+535818,11710,Adingra,Simon Adingra,Sunderland,exact_name_team,1.0,True
+489639,11711,Verbruggen,Bart Verbruggen,Brighton,exact_name_team,1.0,True
+232892,11728,Bassey,Calvin Bassey,Fulham,exact_name_team,1.0,True
+232112,11766,Ugarte,Manuel Ugarte,Man United,exact_name_team,1.0,True
+441302,11807,Maatsen,Ian Maatsen,Aston Villa,exact_name_team,1.0,True
+477555,11903,Bobb,Oscar Bobb,Fulham,exact_name_team,1.0,True
+596777,11944,Dorgu,Patrick Dorgu,Man United,exact_name_team,1.0,True
+433036,11965,Reijnders,Tijjani Reijnders,Man City,exact_name_team,1.0,True
+435997,11966,Okafor,Noah Okafor,Leeds,exact_name_team,1.0,True
+485711,11974,Šeško,Benjamin Sesko,Man United,exact_name_team,1.0,True
+512462,12014,O'Brien,Jake O'Brien,Everton,exact_name_team,1.0,True
+460842,12027,Kudus,Mohammed Kudus,Tottenham,exact_name_team,1.0,True
+575476,12123,Murillo,Murillo,Nott'm Forest,exact_name_team,1.0,True
+503139,12149,Scott,Alex Scott,Bournemouth,exact_name_team,1.0,True
+545477,12199,A.Murphy,Alex Murphy,Newcastle,exact_name_team,1.0,True
+499169,12272,Lewis-Skelly,Myles Lewis-Skelly,Arsenal,exact_name_team,1.0,True
+247348,12408,Muñoz,Daniel Muñoz,Crystal Palace,exact_name_team,1.0,True
+496221,12409,Wharton,Adam Wharton,Crystal Palace,exact_name_team,1.0,True
+577016,12535,Acheampong,Josh Acheampong,Chelsea,exact_name_team,1.0,True
+660392,12726,Uche,Christantus Uche,Crystal Palace,exact_name_team,1.0,True
+609873,12757,Armstrong,Harrison Armstrong,Everton,exact_name_team,1.0,True
+467779,12758,Wieffer,Mats Wieffer,Brighton,exact_name_team,1.0,True
+592031,12759,Minteh,Yankuba Minteh,Brighton,exact_name_team,1.0,True
+500151,12905,Savona,Nicolò Savona,Nott'm Forest,exact_name_team,1.0,True
+570526,12912,Bergvall,Lucas Bergvall,Tottenham,exact_name_team,1.0,True
+586309,12916,Barry,Thierno Barry,Everton,exact_name_team,1.0,True
+444102,12963,Evanilson,Evanilson,Bournemouth,exact_name_team,1.0,True
+489706,13038,Devenny,Justin Devenny,Crystal Palace,exact_name_team,1.0,True
+485047,13068,Morato,Morato,Nott'm Forest,exact_name_team,1.0,True
+606745,13080,Heaven,Ayden Heaven,Man United,exact_name_team,1.0,True
+651426,13091,Canvot,Jaydee Canvot,Crystal Palace,exact_name_team,1.0,True
+491007,13094,D.Essugo,Dário Essugo,Chelsea,exact_name_team,1.0,True
+547037,13150,J.Fletcher,Jack Fletcher,Man United,exact_name_team,1.0,True
+219249,13206,O'Riley,Matt O'Riley,Brighton,exact_name_team,1.0,True
+502500,13222,Thiago,Thiago,Brentford,exact_name_team,1.0,True
+499726,13224,Olusesi,Callum Olusesi,Tottenham,exact_name_team,1.0,True
+631786,13262,Kusi-Asare,Jonah Kusi-Asare,Fulham,exact_name_team,1.0,True
+494307,13298,Alleyne,Max Alleyne,Man City,exact_name_team,1.0,True
+549067,13306,Abbott,Zach Abbott,Nott'm Forest,exact_name_team,1.0,True
+485055,13348,Kinsky,Antonín Kinsky,Tottenham,exact_name_team,1.0,True
+514254,13364,Gomez,Diego Gómez,Brighton,exact_name_team,1.0,True
+606921,13387,Esse,Romain Esse,Crystal Palace,exact_name_team,1.0,True
+606798,13392,A.García,Andrés García,Aston Villa,exact_name_team,1.0,True
+547676,13467,Fredricson,Tyler Fredricson,Man United,exact_name_team,1.0,True
+575901,13474,Soler,Julio Soler,Bournemouth,exact_name_team,1.0,True
+567119,13476,Mheuka,Shumaira Mheuka,Chelsea,exact_name_team,1.0,True
+599303,13532,Neave,Sean Neave,Newcastle,exact_name_team,1.0,True
+597320,13584,Howell,Harry Howell,Brighton,exact_name_team,1.0,True
+611922,13692,Ngumoha,Rio Ngumoha,Liverpool,exact_name_team,1.0,True
+465730,13711,De Cuyper,Maxim De Cuyper,Brighton,exact_name_team,1.0,True
+498016,13712,Roefs,Robin Roefs,Sunderland,exact_name_team,1.0,True
+487676,13713,Hume,Trai Hume,Sunderland,exact_name_team,1.0,True
+519634,13714,Seelt,Jenson Seelt,Sunderland,exact_name_team,1.0,True
+577669,13716,Sadiki,Noah Sadiki,Sunderland,exact_name_team,1.0,True
+549912,13717,Talbi,Chemsdine Talbi,Sunderland,exact_name_team,1.0,True
+554197,13719,Rigg,Chris Rigg,Sunderland,exact_name_team,1.0,True
+624773,13775,Estêvão,Estêvão,Chelsea,exact_name_team,1.0,True
+551210,13776,Hato,Jorrel Hato,Chelsea,exact_name_team,1.0,True
+590014,13777,Cardines,Rio Cardines,Crystal Palace,exact_name_team,1.0,True
+482973,13778,Igor Jesus,Igor Jesus,Nott'm Forest,exact_name_team,1.0,True
+543295,13780,Milambo,Antoni Milambo,Brentford,exact_name_team,1.0,True
+235826,13835,Piroe,Joël Piroe,Leeds,exact_name_team,1.0,True
+645618,13870,Burrowes,Bradley Burrowes,Aston Villa,exact_name_team,1.0,True
+616077,13872,Dowman,Max Dowman,Arsenal,exact_name_team,1.0,True
+620487,14027,Milosavljević,Veljko Milosavljevic,Bournemouth,exact_name_team,1.0,True
+608181,14028,Tzimas,Stefanos Tzimas,Brighton,exact_name_team,1.0,True
+549074,14029,Watson,Tom Watson,Brighton,exact_name_team,1.0,True
+560552,14030,Kevin,Kevin,Fulham,exact_name_team,1.0,True
+590039,14055,Mukasa,Divine Mukasa,Man City,exact_name_team,1.0,True
+465247,14056,Lammens,Senne Lammens,Man United,exact_name_team,1.0,True
+167512,14099,O'Nien,Luke O'Nien,Sunderland,exact_name_team,1.0,True
+647850,14118,Kostoulas,Charalampos Kostoulas,Brighton,exact_name_team,1.0,True
+556637,14127,Oriola,Nehemiah Oriola,Brighton,exact_name_team,1.0,True
+640419,14134,Byfield,Jun'ai Byfield,Tottenham,exact_name_team,1.0,True
+499716,14176,Rowswell,James Rowswell,Tottenham,exact_name_team,1.0,True
+577285,14193,George Hemmings,George Hemmings,Aston Villa,exact_name_team,1.0,True
+576628,14198,Lacey,Shea Lacey,Man United,exact_name_team,1.0,True
+672492,14263,Drakes-Thomas,Joél Drakes-Thomas,Crystal Palace,exact_name_team,1.0,True
+576620,14266,Bendito Mantato,Bendito Mantato,Man United,exact_name_team,1.0,True
+519913,14272,Fletcher,Tyler Fletcher,Man United,exact_name_team,1.0,True
+593174,14356,Furo,Kaye Furo,Brentford,exact_name_team,1.0,True
+614574,14374,Tóth.A,Alex Tóth,Bournemouth,exact_name_team,1.0,True
+499604,14395,Rayan,Rayan,Bournemouth,exact_name_team,1.0,True
+616221,14410,Souza,Souza,Tottenham,exact_name_team,1.0,True
+536661,14424,Angulo,Nilson Angulo,Sunderland,exact_name_team,1.0,True
+515046,14425,Ellborg,Melker Ellborg,Sunderland,exact_name_team,1.0,True
+699989,14460,Jocelin.T,Djiamgone Jocelin Ta Bi,Sunderland,exact_name_team,1.0,True
+75115,468,Wilson,Callum Wilson,West Ham,exact_name_transfer,0.97,True
+50175,501,Welbeck,Danny Welbeck,Brighton,exact_name_transfer,0.97,True
+56979,605,Henderson,Jordan Henderson,Brentford,exact_name_transfer,0.97,True
+114283,675,Grealish,Jack Grealish,Everton,exact_name_transfer,0.97,True
+59735,780,Darlow,Karl Darlow,Leeds,exact_name_transfer,0.97,True
+212314,1537,Lukić,Sasa Lukic,Fulham,exact_name_transfer,0.97,True
+122798,1688,Robertson,Andrew Robertson,Liverpool,exact_name_transfer,0.97,True
+219924,3203,Diop,Issa Diop,Fulham,exact_name_transfer,0.97,True
+153682,5596,Wilson,Harry Wilson,Fulham,exact_name_transfer,0.97,True
+166989,5956,Tielemans,Youri Tielemans,Aston Villa,exact_name_transfer,0.97,True
+200641,6492,Nelson,Reiss Nelson,Brentford,exact_name_transfer,0.97,True
+67089,6532,Dubravka,Martin Dubravka,Burnley,exact_name_transfer,0.97,True
+433154,6756,McNeil,Dwight McNeil,Everton,exact_name_transfer,0.97,True
+220362,6885,Disasi,Axel Disasi,West Ham,exact_name_transfer,0.97,True
+128295,7083,Nørgaard,Christian Nørgaard,Arsenal,exact_name_transfer,0.97,True
+444884,7546,Elliott,Harvey Elliott,Aston Villa,exact_name_transfer,0.97,True
+209036,7603,Guéhi,Marc Guehi,Crystal Palace,exact_name_transfer,0.97,True
+432422,7958,Tonali,Sandro Tonali,Newcastle,exact_name_transfer,0.97,True
+485337,8006,Guessand,Evann Guessand,Aston Villa,exact_name_transfer,0.97,True
+208706,8327,Bruno G.,Bruno Guimarães,Newcastle,exact_name_transfer,0.97,True
+222694,8717,Struijk,Pascal Struijk,Leeds,exact_name_transfer,0.97,True
+437499,8853,Lacroix,Maxence Lacroix,Crystal Palace,exact_name_transfer,0.97,True
+432720,9077,Trafford,James Trafford,Man City,exact_name_transfer,0.97,True
+215379,9154,Anderson,Elliot Anderson,Nott'm Forest,exact_name_transfer,0.97,True
+428580,9681,Onyeka,Frank Onyeka,Brentford,exact_name_transfer,0.97,True
+469272,9977,Tchaouna,Loum Tchaouna,Burnley,exact_name_transfer,0.97,True
+493105,10552,Garnacho,Alejandro Garnacho,Chelsea,exact_name_transfer,0.97,True
+444180,10746,Anthony,Jaidon Anthony,Burnley,exact_name_transfer,0.97,True
+242898,10760,Johnson,Brennan Johnson,Crystal Palace,exact_name_transfer,0.97,True
+469142,10807,Van Hecke,Jan Paul van Hecke,Brighton,exact_name_transfer,0.97,True
+221466,10864,Senesi,Marcos Senesi,Bournemouth,exact_name_transfer,0.97,True
+536916,11362,Buonanotte,Facundo Buonanotte,Chelsea,exact_name_transfer,0.97,True
+437730,11363,Semenyo,Antoine Semenyo,Bournemouth,exact_name_transfer,0.97,True
+448089,11384,Gomes,João Gomes,Wolves,exact_name_transfer,0.97,True
+532605,11808,Andrey Santos,Andrey Santos,Chelsea,exact_name_transfer,0.97,True
+244850,12412,Rogers,Morgan Rogers,Aston Villa,exact_name_transfer,0.97,True
+550615,12573,George,Tyrique George,Chelsea,exact_name_transfer,0.97,True
+551226,12948,Fernandes,Mateus Fernandes,West Ham,exact_name_transfer,0.97,True
+448514,6674,Aït-Nouri,Rayan Ait Nouri,Man City,fuzzy,0.9655,False
+209289,7230,Smith Rowe,Emile Smith-Rowe,Fulham,fuzzy,0.9677,False
+578153,11763,Khusanov,Abduqodir Khusanov,Man City,fuzzy,0.9444,False
+508395,11772,Yarmoliuk,Yehor Yarmolyuk,Brentford,fuzzy,0.9333,False
+231416,13066,F.Kadıoğlu,Ferdi Kadioglu,Brighton,fuzzy,0.9286,False

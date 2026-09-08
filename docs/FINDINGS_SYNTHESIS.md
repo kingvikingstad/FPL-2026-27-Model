@@ -112,6 +112,12 @@ looked plausible and died on evidence.
 | **Major-tournament summers** hurt GW1–6 | null, underpowered | all p 0.25–0.99; MDE 0.34 goals/match |
 | **Transfer churn** → worse results by month | null | +0.98 pts per SD of churn (t=1.08) |
 | **Fixture congestion** (rest days) | null | **+0.00000 xG** per day of rest advantage |
+| **Fixture congestion** (actual cup/European fixtures, by recovery day) | null, on the sharper instrument | **P(start) +0.001**, CI (−0.014, +0.019) at a 3-day turnaround |
+| **DefCon by opponent identity** | **signal — shipped** | hit-rate swing **0.129**, split-half r=+0.555 |
+| **DefCon by matchup** (club × opponent) | null — match-level shock | two meetings of a pair correlate **r=−0.217** |
+| **Team explosiveness** (dispersion) | null | reliability r=+0.006 vs null (−0.426, +0.480) |
+| **Team explosiveness** (return concentration) | null, borderline | r=+0.363 vs shuffled null (−0.415, +0.397) |
+| **League goal tail vs Poisson** | **thinner, not fatter** | P(4+) 4.08% observed vs 6.54% implied, 0.2nd pctile |
 | **Age** → minutes decline | null | incremental r² **+0.0027** |
 | **Mid-table GW1–6 fade** | probable false positive | see §3 |
 
@@ -128,6 +134,38 @@ obvious fix makes it worse. The reusable win was the loader and the identity res
 with a wide one. Rest: ±0.004 xG per day, so a four-day swing sits inside 1% of a
 team-match. Age: a 34- and 26-year-old with identical minutes records differ by **0.5
 minutes** next season.
+
+**Congestion was then re-opened and survived.** `rest_congestion` could only see league
+matches and said so; `fixture_congestion` uses the real cup and European calendar and
+confirms the misclassification was material — 14.3% of club-PL-matches were in the wrong
+recovery bucket — without changing the conclusion. Established starters lose 0.1pp of
+start probability after a three-day turnaround, CI ±2pp. The mechanism turned out to be
+that clubs absorb congestion in the **cup team**: 84.3% of 60+ minute league appearances go
+to established regulars, against 74.3% in the Champions League and 46.9% in the EFL Cup.
+That gradient — not a fatigue penalty — is what "which competition" buys you. Caveat kept
+in view: GW27+ is untested, because knockout kickoff times are missing and the FA Cup is
+absent from the source.
+
+**Explosiveness came back inverted, and the inversion is the useful part.** The premise
+was that some teams score in bursts, which the engine's Poisson draw cannot represent. Two
+nulls say teams do not differ — per-club dispersion reliability r=+0.006 against a
+simulated true-Poisson null band of (−0.426, +0.480). But the league as a whole has a
+**thinner** upper tail than Poisson: 4.08% of team-matches reach 4+ goals where the model
+implies 6.54%, at the 0.2nd percentile of a null that already carries the convexity bias of
+an estimated λ. The engine **overstates blowouts by ~60% relative**, and does so exactly on
+the fixtures captaincy concentrates in. The correction ships off by default because it
+moves the clean-sheet engine.
+
+Two traps in that study each flipped a result on their own, and both are worth carrying
+forward: an **in-sample λ** (41 parameters on 760 rows) deflated Pearson dispersion to
+0.887 versus 1.056 cross-fitted, and **P(4+) is convex in λ**, so a noisy λ̂ manufactures a
+thin tail from estimation error — which is why the null had to be simulated rather than
+computed as a z-test.
+
+**A signal did survive**, which makes the surrounding nulls more credible: DefCon opponent
+*identity* moves a defender's hit rate by 0.129, split-half r=+0.555, where the earlier
+strength-quartile cut saw nothing. Strength is a scalar; identity is not. It ships as a
+board category and is a tiebreaker, not a driver.
 
 ---
 

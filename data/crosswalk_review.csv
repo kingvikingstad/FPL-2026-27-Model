@@ -1,0 +1,170 @@
+player_code,understat_player_id,name_fpl,name_understat,team,match_method,confidence,verified
+49262.0,489,Steele,James Milner,Brighton,below_threshold,0.4167,False
+466052.0,579,Cherki,Nathan Aké,Man City,below_threshold,0.4545,False
+244860.0,585,Hackney,Seamus Coleman,Everton,below_threshold,0.2857,False
+220566.0,586,Rodrigo,John Stones,Man City,below_threshold,0.4138,False
+536694.0,603,M.França,Nathaniel Clyne,Crystal Palace,below_threshold,0.4138,False
+,638,,Kyle Walker,Burnley,below_threshold,0.0,False
+636852.0,652,Steur,Kieran Trippier,Newcastle,below_threshold,0.48,False
+499300.0,668,Aznou,Idrissa Gueye,Everton,below_threshold,0.3478,False
+477547.0,695,Hjelde,Bertrand Traoré,Sunderland,below_threshold,0.2857,False
+81441.0,766,Gillespie,Jamaal Lascelles,Newcastle,below_threshold,0.4667,False
+,843,,James Ward-Prowse,Burnley,below_threshold,0.0,False
+,885,,Kyle Walker-Peters,West Ham,below_threshold,0.0,False
+209289.0,900,Smith Rowe,Adama Traoré,Fulham,below_threshold,0.4545,False
+248056.0,902,Tanaka,Sam Byram,Leeds,below_threshold,0.3333,False
+232571.0,925,Patterson,Patrick Roberts,Sunderland,below_threshold,0.5,False
+,934,,Axel Tuanzebe,Burnley,below_threshold,0.0,False
+,978,,Sam Johnstone,Wolves,below_threshold,0.0,False
+171287.0,987,Gomez,Joseph Gomez,Liverpool,below_threshold,0.8571,False
+,1018,,Josh Cullen,Burnley,below_threshold,0.0,False
+445087.0,1250,Araujo,Mohamed Salah,Liverpool,below_threshold,0.4615,False
+116535.0,1257,A.Becker,Alisson,Liverpool,below_threshold,0.6667,False
+441191.0,1545,Livramento,Emil Krafth,Newcastle,below_threshold,0.3846,False
+154566.0,1679,Solanke,Dominic Solanke,Tottenham,below_threshold,0.7895,False
+,1776,,Jarrod Bowen,West Ham,below_threshold,0.0,False
+493250.0,2248,Amad,Casemiro,Man United,below_threshold,0.4211,False
+,2310,,Alphonse Areola,West Ham,below_threshold,0.0,False
+220566.0,2496,Rodrigo,Rodri,Man City,below_threshold,0.8333,False
+204822.0,2958,O.Richards,Oleksandr Zinchenko,Nott'm Forest,below_threshold,0.4375,False
+220566.0,3635,Rodrigo,Bernardo Silva,Man City,below_threshold,0.5,False
+438464.0,3697,Doucouré,Odsonne Edouard,Crystal Palace,below_threshold,0.4,False
+505079.0,4105,McNally,Raúl Jiménez,Fulham,below_threshold,0.4,False
+,4419,,Adam Armstrong,Wolves,below_threshold,0.0,False
+,4422,,Ashley Barnes,Burnley,below_threshold,0.0,False
+109745.0,5061,Arrizabalaga,Kepa,Arsenal,below_threshold,0.4706,False
+,5355,,Jacob Bruun Larsen,Burnley,below_threshold,0.0,False
+465680.0,5544,Kalimuendo,Angus Gunn,Nott'm Forest,below_threshold,0.4444,False
+,5584,,Aaron Wan-Bissaka,West Ham,below_threshold,0.0,False
+,5598,,Angel Gomes,Wolves,below_threshold,0.0,False
+632794.0,5603,Bamba,Aaron Ramsdale,Newcastle,below_threshold,0.4615,False
+154566.0,5609,Solanke,Yves Bissouma,Tottenham,below_threshold,0.3,False
+214572.0,5743,Austin,Randal Kolo Muani,Tottenham,below_threshold,0.4516,False
+451340.0,6049,Mitoma,Solly March,Brighton,below_threshold,0.3529,False
+,6098,,Niclas Füllkrug,West Ham,below_threshold,0.0,False
+614071.0,6122,Manzambi,Douglas Luiz,Aston Villa,below_threshold,0.3077,False
+647681.0,6326,Leoni,Ibrahima Konaté,Liverpool,below_threshold,0.4138,False
+653481.0,6345,Alysson,Jadon Sancho,Aston Villa,below_threshold,0.5161,False
+,6722,,Konstantinos Mavropanos,West Ham,below_threshold,0.0,False
+,6816,,Jean-Clair Todibo,West Ham,below_threshold,0.0,False
+,6852,,Matt Doherty,Wolves,below_threshold,0.0,False
+,6935,,Naif Aguerd,West Ham,below_threshold,0.0,False
+560262.0,6986,Kroupi.Jr,Hamed Junior Traore,Bournemouth,below_threshold,0.5625,False
+620109.0,7134,Palestra,Marc Cucurella,Chelsea,below_threshold,0.5,False
+463210.0,7208,Charles,Samuel Chukwueze,Fulham,below_threshold,0.4286,False
+198869.0,7298,White,Ben White,Arsenal,below_threshold,0.7826,False
+,7332,,Max Kilman,West Ham,below_threshold,0.0,False
+,7365,,Lucas Paquetá,West Ham,below_threshold,0.0,False
+,7498,,Lyle Foster,Burnley,below_threshold,0.0,False
+439509.0,7698,Tzolis,Leandro Trossard,Arsenal,below_threshold,0.3871,False
+,7762,,Jean-Ricner Bellegarde,Wolves,below_threshold,0.0,False
+,7908,,Marshall Munetsi,Wolves,below_threshold,0.0,False
+,7943,,Igor Julio,West Ham,below_threshold,0.0,False
+465680.0,8056,Kalimuendo,Arnaud Kalimuendo Muinga,Nott'm Forest,below_threshold,0.8293,False
+466052.0,8094,Cherki,Mathis Cherki,Man City,below_threshold,0.64,False
+493250.0,8127,Amad,Amad Diallo Traore,Man United,below_threshold,0.7586,False
+611665.0,8150,Touré,Anthony Gordon,Newcastle,below_threshold,0.3448,False
+,8267,,Guido Rodríguez,West Ham,below_threshold,0.0,False
+,8288,,Tomas Soucek,West Ham,below_threshold,0.0,False
+,8351,,Ki-Jana Hoever,Wolves,below_threshold,0.0,False
+,8384,,Armando Broja,Burnley,below_threshold,0.0,False
+93605.0,8537,Meunier,Dennis Cirkin,Sunderland,below_threshold,0.4,False
+451490.0,8780,Costinha,Joël Veltman,Brighton,below_threshold,0.4286,False
+465680.0,8786,Kalimuendo,Stefan Ortega Moreno,Nott'm Forest,below_threshold,0.4324,False
+158983.0,8808,Endo,Wataru Endo,Liverpool,below_threshold,0.7059,False
+,8812,,Sasa Kalajdzic,Wolves,below_threshold,0.0,False
+487053.0,8831,Udogie,Iyenoma Destiny Udogie,Tottenham,below_threshold,0.7778,False
+,8845,,Hee-Chan Hwang,Wolves,below_threshold,0.0,False
+199796.0,8864,Cash,Matthew Cash,Aston Villa,below_threshold,0.8182,False
+,8875,,Tolu Arokodare,Wolves,below_threshold,0.0,False
+,8969,,Florentino Luís,Burnley,below_threshold,0.0,False
+482442.0,9021,P.M.Sarr,Pape Sarr,Tottenham,below_threshold,0.75,False
+488024.0,9024,Yeremy,Yeremi Pino,Crystal Palace,below_threshold,0.9091,False
+214572.0,9105,Austin,Radu Dragusin,Tottenham,below_threshold,0.6667,False
+,9451,,Chimuanya Ugochukwu,Burnley,below_threshold,0.0,False
+,9487,,Maxime Estève,Burnley,below_threshold,0.0,False
+,9492,,Crysencio Summerville,West Ham,below_threshold,0.0,False
+441191.0,9512,Livramento,Valentino Livramento,Newcastle,below_threshold,0.8571,False
+,9558,,Hannibal Mejbri,Burnley,below_threshold,0.0,False
+,9740,,José Sá,Wolves,below_threshold,0.0,False
+614071.0,9749,Manzambi,Donyell Malen,Aston Villa,below_threshold,0.4444,False
+,9958,,Yerson Mosquera,Wolves,below_threshold,0.0,False
+,10140,,Hugo Bueno,Wolves,below_threshold,0.0,False
+508395.0,10205,Yarmoliuk,Myles Peart-Harris,Brentford,below_threshold,0.375,False
+,10293,,Toti,Wolves,below_threshold,0.0,False
+548308.0,10715,Phillips,João Palhinha,Tottenham,below_threshold,0.3571,False
+,10756,,Joe Worrall,Burnley,below_threshold,0.0,False
+,10770,,Soungoutou Magassa,West Ham,below_threshold,0.0,False
+577974.0,10803,Amass,Tyrell Malacia,Man United,below_threshold,0.32,False
+451340.0,10806,Mitoma,Kaoru Mitoma,Brighton,below_threshold,0.6667,False
+,10856,,Emmanuel Agbadou,Wolves,below_threshold,0.0,False
+,10945,,Santiago Bueno,Wolves,below_threshold,0.0,False
+,10948,,Valentín Castellanos,West Ham,below_threshold,0.0,False
+488024.0,11033,Yeremy,Kaden Rodney,Crystal Palace,below_threshold,0.4444,False
+496208.0,11231,Gannon-Doak,Ben Doak,Bournemouth,below_threshold,0.7273,False
+,11243,,Bashir Humphreys,Burnley,below_threshold,0.0,False
+487117.0,11310,Ferguson,Brajan Gruda,Brighton,below_threshold,0.4,False
+,11361,,Daniel Bentley,Wolves,below_threshold,0.0,False
+560262.0,11504,Kroupi.Jr,Eli Junior Kroupi,Bournemouth,below_threshold,0.8667,False
+,11701,,Zeki Amdouni,Burnley,below_threshold,0.0,False
+,11704,,Hjalmar Ekdal,Burnley,below_threshold,0.0,False
+510281.0,11735,Savinho,Sávio,Man City,below_threshold,0.8333,False
+,11824,,Lucas Pires,Burnley,below_threshold,0.0,False
+204822.0,11936,O.Richards,Lorenzo Lucca,Nott'm Forest,below_threshold,0.3846,False
+457569.0,12032,Petrović,Djordje Petrovic,Bournemouth,below_threshold,0.8,False
+451302.0,12054,Bayindir,Altay Bayindir,Man United,below_threshold,0.8571,False
+,12094,,Mike Trésor,Burnley,below_threshold,0.0,False
+,12113,,Jackson Tchatchoua,Wolves,below_threshold,0.0,False
+561245.0,12168,Rodríguez,Alejandro Jiménez,Bournemouth,below_threshold,0.5455,False
+591386.0,12203,Nyoni,Treymaurice Nyoni,Liverpool,below_threshold,0.7407,False
+,12234,,Tawanda Chirewa,Wolves,below_threshold,0.0,False
+,12358,,Oliver Scarles,West Ham,below_threshold,0.0,False
+,12359,,Callum Marshall,West Ham,below_threshold,0.0,False
+201595.0,12369,Perri,Lucas Perri,Leeds,below_threshold,0.7333,False
+577725.0,12410,King,Joshua King,Fulham,below_threshold,0.9,False
+,12474,,George Earthy,West Ham,below_threshold,0.0,False
+507433.0,12595,Valdimarsson,Hákon Valdimarsson,Brentford,below_threshold,0.878,False
+,12721,,Ladislav Krejcí,Wolves,below_threshold,0.0,False
+,12756,,Rodrigo Gomes,Wolves,below_threshold,0.0,False
+575458.0,12766,Jair Cunha,Jota Silva,Nott'm Forest,below_threshold,0.5,False
+,12774,,Andy Irving,West Ham,below_threshold,0.0,False
+,12910,,Mads Hermansen,West Ham,below_threshold,0.0,False
+,13022,,André,Wolves,below_threshold,0.0,False
+,13026,,Luis Guilherme,West Ham,below_threshold,0.0,False
+477547.0,13064,Hjelde,Lutsharel Geertruida,Sunderland,below_threshold,0.4,False
+,13156,,Pedro Lima,Wolves,below_threshold,0.0,False
+,13200,,Fernando López,Wolves,below_threshold,0.0,False
+,13220,,Tom Edozie,Wolves,below_threshold,0.0,False
+496208.0,13242,Gannon-Doak,Ben Winterburn,Bournemouth,below_threshold,0.4286,False
+,13247,,Ezra Mayers,West Ham,below_threshold,0.0,False
+690838.0,13310,Madjo,Jamaldeen Jimoh,Aston Villa,below_threshold,0.5,False
+451490.0,13399,Costinha,Joe Knight,Brighton,below_threshold,0.3846,False
+,13484,,Mateus Mané,Wolves,below_threshold,0.0,False
+223827.0,13715,Ballard,Dan Ballard,Sunderland,below_threshold,0.88,False
+93605.0,13718,Meunier,Eliezer Mayenda,Sunderland,below_threshold,0.3636,False
+223827.0,13720,Ballard,Dan Neil,Sunderland,below_threshold,0.4545,False
+,13723,,El Hadji Malick Diouf,West Ham,below_threshold,0.0,False
+,13724,,Freddie Potts,West Ham,below_threshold,0.0,False
+,13726,,Oliver Sonne,Burnley,below_threshold,0.0,False
+,13727,,Quilindschy Hartman,Burnley,below_threshold,0.0,False
+,13728,,Josh Laurent,Burnley,below_threshold,0.0,False
+,13729,,Zian Flemming,Burnley,below_threshold,0.0,False
+,13730,,Marcus Edwards,Burnley,below_threshold,0.0,False
+,13731,,Max Weiss,Burnley,below_threshold,0.0,False
+,13740,,David Møller Wolfe,Wolves,below_threshold,0.0,False
+,13741,,Jhon Arias,Wolves,below_threshold,0.0,False
+575458.0,13779,Jair Cunha,Jair,Nott'm Forest,below_threshold,0.5714,False
+248056.0,13834,Tanaka,Ao Tanaka,Leeds,below_threshold,0.8,False
+221389.0,14017,John,John Victor,Nott'm Forest,below_threshold,0.7586,False
+513545.0,14217,Sangaré,Romelle Donovan,Brentford,below_threshold,0.3333,False
+,14219,,Mohamadou Kanté,West Ham,below_threshold,0.0,False
+,14281,,Jaydon Banel,Burnley,below_threshold,0.0,False
+,14290,,Pablo,West Ham,below_threshold,0.0,False
+,14394,,Jerome Abbey,Wolves,below_threshold,0.0,False
+653481.0,14446,Alysson,Alysson Edward,Aston Villa,below_threshold,0.7368,False
+549939.0,14584,Penders,Jesse Derry,Chelsea,below_threshold,0.4444,False
+448514.0,6674,Aït-Nouri,Rayan Ait Nouri,Man City,fuzzy,0.9655,False
+209289.0,7230,Smith Rowe,Emile Smith-Rowe,Fulham,fuzzy,0.9677,False
+578153.0,11763,Khusanov,Abduqodir Khusanov,Man City,fuzzy,0.9444,False
+508395.0,11772,Yarmoliuk,Yehor Yarmolyuk,Brentford,fuzzy,0.9333,False
+231416.0,13066,F.Kadıoğlu,Ferdi Kadioglu,Brighton,fuzzy,0.9286,False

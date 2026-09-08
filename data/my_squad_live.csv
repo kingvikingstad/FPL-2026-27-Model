@@ -1,0 +1,16 @@
+gw,player_code,web_name,pos,team,now_cost,slot,in_xi,is_captain,is_vice,multiplier,bench_order
+3,489639,Verbruggen,GK,Brighton,4.5,1,True,False,False,1,
+3,466075,Calafiori,DEF,Arsenal,5.7,2,True,False,False,1,
+3,472769,O'Reilly,DEF,Man City,6.5,3,True,False,False,1,
+3,487838,Hall,DEF,Newcastle,5.1,4,True,False,False,1,
+3,60307,Groß,MID,Brighton,5.5,5,True,False,False,1,
+3,244851,Palmer,MID,Chelsea,9.6,6,True,False,False,1,
+3,244850,Rogers,MID,Chelsea,7.5,7,True,False,False,1,
+3,424876,Szoboszlai,MID,Liverpool,7.0,8,True,False,False,1,
+3,475168,João Pedro,FWD,Chelsea,7.7,9,True,False,False,1,
+3,219168,Isak,FWD,Liverpool,9.0,10,True,False,True,1,
+3,223094,Haaland,FWD,Man City,15.5,11,True,True,False,2,
+3,86873,Lecomte,GK,Fulham,4.0,12,False,False,False,0,1.0
+3,199798,Konsa,DEF,Arsenal,4.4,13,False,False,False,0,2.0
+3,243413,Slater,MID,Hull,4.5,14,False,False,False,0,3.0
+3,108416,Egan,DEF,Hull,4.1,15,False,False,False,0,4.0

@@ -37,6 +37,11 @@ import bayes_model as bm
 
 rng = np.random.default_rng(11)
 
+# ONE definition of a haul and a blank, so a consumer computing these from the board's
+# dumped draws cannot quietly disagree with what this module calls the same word.
+HAUL_PTS = 10          # a returning captain's week
+BLANK_PTS = 2          # played, did nothing — an appearance point or two
+
 
 # ---------------------------------------------------------------------------
 # Draw the full posterior-predictive point distribution per player
@@ -113,7 +118,8 @@ def point_draws(players, tm, tsamp, gw_lo, gw_hi, S=4000):
 # The captaincy function
 # ---------------------------------------------------------------------------
 def captain_picks(players, tm, tsamp, gameweek, horizon=1, S=4000,
-                  haul=10, blank=2, top=12, min_own_template=15.0):
+                  haul=HAUL_PTS, blank=BLANK_PTS, top=12,
+                  min_own_template=15.0):
     """Rank captaincy options for a gameweek on the TAIL of the posterior.
 
     Returns a frame with EV, ceiling, floor, P(haul), P(blank), a risk label,

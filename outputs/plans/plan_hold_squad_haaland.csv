@@ -1,0 +1,16 @@
+player_code,display_name,unique_label,player,team,pos,price,ep,in_xi,is_captain
+80201,Leno,Leno (FUL),Leno,Fulham,GK,4.5,2.328,False,False
+95658,Maguire,Maguire (MUN),Maguire,Man United,DEF,5.0,5.266,True,False
+106760,Shaw,Shaw (MUN),Shaw,Man United,DEF,4.5,4.838,False,False
+154561,Raya,Raya (ARS),Raya,Arsenal,GK,6.0,4.222,True,False
+215379,Anderson,Anderson (MCI),Anderson,Man City,MID,6.5,4.771,True,False
+223094,Haaland,Haaland (MCI),Haaland,Man City,FWD,15.5,7.57,True,False
+226597,Gabriel,Gabriel (ARS),Gabriel,Arsenal,DEF,8.0,6.465,True,False
+439509,Tzolis,Tzolis (ARS),Tzolis,Arsenal,MID,6.5,5.102,True,False
+446008,Mbeumo,Mbeumo (MUN),Mbeumo,Man United,MID,8.0,7.747,True,True
+465642,Thiaw,Thiaw (NEW),Thiaw,Newcastle,DEF,5.0,4.283,False,False
+477424,Gvardiol,Gvardiol (MCI),Gvardiol,Man City,DEF,5.5,5.264,True,False
+502500,Thiago,Thiago (BRE),Thiago,Brentford,FWD,8.0,5.142,True,False
+513418,Schade,Schade (BRE),Schade,Brentford,MID,6.0,4.89,True,False
+533463,O.Dango,O.Dango (BRE),O.Dango,Brentford,MID,6.5,4.954,True,False
+631786,Kusi-Asare,Kusi-Asare (FUL),Kusi-Asare,Fulham,FWD,4.5,1.945,False,False

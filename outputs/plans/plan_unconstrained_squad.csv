@@ -1,0 +1,16 @@
+player_code,display_name,unique_label,player,team,pos,price,ep,in_xi,is_captain,bench_order
+97032,Virgil,Virgil (LIV),Virgil,Liverpool,DEF,6.5,4.523,True,False,
+177815,Calvert-Lewin,Calvert-Lewin (LEE),Calvert-Lewin,Leeds,FWD,6.0,3.137,True,False,
+201658,Tavernier,Tavernier (BOU),Tavernier,Bournemouth,MID,6.0,3.337,True,False,
+204936,Donnarumma,Donnarumma (MCI),Donnarumma,Man City,GK,5.5,3.265,False,False,
+209036,Guéhi,Guéhi (MCI),Guéhi,Man City,DEF,6.0,4.741,True,False,
+223094,Haaland,Haaland (MCI),Haaland,Man City,FWD,15.5,5.915,True,True,
+424876,Szoboszlai,Szoboszlai (LIV),Szoboszlai,Liverpool,MID,7.0,3.804,True,False,
+439509,Tzolis,Tzolis (ARS),Tzolis,Arsenal,MID,6.5,4.019,True,False,
+440993,Ndiaye,Ndiaye (EVE),Ndiaye,Everton,MID,6.0,3.895,False,False,2.0
+446008,Mbeumo,Mbeumo (MUN),Mbeumo,Man United,MID,8.0,5.422,True,False,
+451284,van Ewijk,van Ewijk (COV),van Ewijk,Coventry,DEF,4.0,4.258,False,False,1.0
+461102,Thomas,Thomas (COV),Thomas,Coventry,DEF,4.0,3.975,True,False,
+465247,Lammens,Lammens (MUN),Lammens,Man United,GK,5.0,3.059,True,False,
+494521,Truffert,Truffert (BOU),Truffert,Bournemouth,DEF,5.5,3.833,False,False,3.0
+502500,Thiago,Thiago (BRE),Thiago,Brentford,FWD,8.0,4.045,True,False,

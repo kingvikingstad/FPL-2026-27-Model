@@ -187,7 +187,7 @@ if __name__ == "__main__":
         print(f"\n===== HORIZON H = {H} gameweeks  (test n={r.n_test.iloc[0]}) =====")
         print(r[["variant", "Spearman", "MAE"]].to_string(index=False, float_format=lambda x: f"{x:.3f}"))
     res = pd.concat(all_res, ignore_index=True)
-    res.to_csv(os.path.join(config.OUTPUTS, "multihorizon_results.csv"), index=False)
+    res.to_csv(_os.path.join(config.OUTPUTS, "multihorizon_results.csv"), index=False)
 
     # feature importance shift across horizons (full model)
     print("\n" + "="*66); print("Feature importance shift: single-GW vs 12-GW (full model)"); print("="*66)
@@ -212,6 +212,6 @@ if __name__ == "__main__":
     rank = (te.sort_values("proj", ascending=False)
               [["web_name","team_name","pos","sched_nfix","sched_att","proj","y"]]
               .rename(columns={"y":"actual_next6"}).head(25).reset_index(drop=True))
-    rank.to_csv(os.path.join(config.OUTPUTS, "sample_projection_gw20_next6.csv"), index=False)
+    rank.to_csv(_os.path.join(config.OUTPUTS, "sample_projection_gw20_next6.csv"), index=False)
     print("\n" + "="*66); print(f"Sample: top-25 projected NEXT-{H}-GW totals from GW{ORIGIN}"); print("="*66)
     print(rank.round(2).to_string())

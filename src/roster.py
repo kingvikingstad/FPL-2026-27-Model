@@ -228,7 +228,7 @@ if __name__ == "__main__":
     res = project(players, tm, tsamp, 1, 38, S=1200)
     res = res.merge(players[["web_name", "pos", "team", "cold_start"]].drop_duplicates(["web_name", "pos", "team"]),
                     left_on=["player", "pos", "team"], right_on=["web_name", "pos", "team"], how="left")
-    res.round(2).to_csv(os.path.join(config.OUTPUTS, "projection_2627_with_roster.csv"), index=False)
+    res.round(2).to_csv(_os.path.join(config.OUTPUTS, "projection_2627_with_roster.csv"), index=False)
 
     print("\n=== Promoted-team players now projected (top 8 cold-start) ===")
     cold = res[res.cold_start == True].head(8)

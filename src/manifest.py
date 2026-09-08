@@ -211,19 +211,14 @@ _NODES = [
                   "defcon_ev", "cs_ev", "app_ev", "att_ev", "ppm"),
          nonnull=("player", "team", "mean", "cost"),
          note="GW1-6 decision board under the DefCon environment layer"),
-    # NOTE: this one is a CALIBRATION SWEEP, not a decision surface. Declaring its real
-    # inputs makes it STALE every time the feed moves, which is daily, and a check that
-    # is always red is a check nobody reads. It is registered because it is durable and
-    # regenerable; if the noise costs more than the coverage, the fix is to move it to
-    # studies/ as evidence for older_weight=0.5, not to under-declare its inputs here.
-    Node("older_weight_sweep.csv", _out("older_weight_sweep.csv"), "derived",
-         producer="scripts/sweep_older_weight.py",
-         inputs=("players.csv", "playerstats.csv", "teams.csv", "team_elo_2627.csv",
-                 "E0_recon.csv", "coldstart_hist.csv", "pms_panel.pkl"),
-         min_rows=200,
-         columns=("player", "pos", "team", "cost", "own", "range"),
-         nonnull=("player", "range"),
-         note="two-season older_weight sensitivity, 0.0-1.0; the evidence for 0.5"),
+    # older_weight_sweep was registered here on 2026-09-08 and unregistered the same day.
+    # It is a CALIBRATION SWEEP, not a pipeline artifact: it answers "how sensitive is the
+    # board to older_weight" once, and that answer is the justification for 0.5. Its real
+    # inputs include the daily feed, so as a derived node it reported STALE on every run
+    # and prescribed re-running a sweep nobody wanted re-run — a permanently red check
+    # trains people to skim the whole report. It now lives at studies/older_weight_sweep
+    # with the other 23 evidence CSVs. The rule this leaves behind: a node earns a place
+    # in this graph by being an INPUT to a decision, not merely by being durable.
 
     # --- orphan: read by live code, produced by nothing -----------------------
     # None currently, and an empty section here is the finding, not an omission.

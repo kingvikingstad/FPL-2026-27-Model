@@ -34,6 +34,50 @@ from fpl_xp_model import (GOAL_POINTS, CLEAN_SHEET_PTS, ASSIST_POINTS,
                           DEFCON_THRESHOLD, DEFCON_PTS)
 
 rng = np.random.default_rng(7)
+# Seed for the PER-PLAYER generators used inside project(). Runners already rebind
+# `rng` before each call; this is the equivalent knob for the player layer.
+PROJECT_SEED = 7
+
+
+def _player_key(p):
+    """A stable identifier for one player's random stream.
+
+    Must not change when unrelated players are added, removed or reordered, so it keys on
+    `player_code` — the project's stable join key — and falls back to a CRC of name+club.
+    Python's built-in hash() is salted per process and would silently break reproducibility
+    between runs, so it is not used.
+    """
+    code = p.get("player_code") if hasattr(p, "get") else None
+    if code is not None and code == code and str(code) not in ("", "None"):
+        try:
+            return int(code)
+        except (TypeError, ValueError):
+            pass
+    import zlib
+    return int(zlib.crc32(f"{p.get('web_name')}|{p.get('team')}".encode("utf-8")))
+
+
+def _player_rng(p, seed=None):
+    """An independent, reproducible generator for one player.
+
+    THE POINT. project() used to draw every player from one shared sequential stream, so
+    the draws a player received depended on every player simulated before him. That is not
+    merely an ordering quirk: numpy's beta/gamma/poisson use rejection sampling, so the
+    number of raw bits consumed depends on the PARAMETER VALUES. Changing one player's
+    start_a therefore re-randomised everyone downstream — measured at 48 players moved,
+    19 of them at other clubs, from a single perturbation.
+
+    The board was still reproducible given identical input, so the determinism check
+    passed, but no A/B was clean: a measured difference was the real effect plus a
+    re-randomisation term. Per-player streams remove that term entirely.
+
+    Team-level correlation is unaffected. It lives in `tsamp`, drawn once outside this
+    function and indexed identically for every player, so draw s still means the same
+    team-strength world for everyone. What becomes independent across players is exactly
+    what the model already assumes is conditionally independent given team strength.
+    """
+    return np.random.default_rng([int(PROJECT_SEED if seed is None else seed),
+                                  _player_key(p)])
 LEAGUE_MU = 1.40
 BET_NAME = {"Man Utd": "Man United", "Spurs": "Tottenham"}
 # per-position bonus that rides along with a goal (recovered in the earlier
@@ -341,7 +385,16 @@ def _home_effect(home, gameweek, is_home):
     return np.maximum(home - half, 0.0) if is_home else np.zeros_like(home) + half
 
 
-def project(players, tm, tsamp, gw_lo, gw_hi, S=1500):
+def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, seed=None, return_draws=False):
+    """Posterior-predictive points per player over [gw_lo, gw_hi].
+
+    `return_draws=True` additionally returns the raw (n_players, S) draw matrix in the
+    row order of the returned frame. Summaries cannot substitute for it whenever the
+    question is about a SUM of players — a squad total, a bench boost — because
+    percentiles are not additive: the 95th percentile of a sum is not the sum of the
+    95th percentiles, and assuming otherwise overstates the upper tail badly. It is off
+    by default because the matrix is large and nothing in the normal board path needs it.
+    """
     sched, long = schedule()
     win = long[(long.gameweek >= gw_lo) & (long.gameweek <= gw_hi)]
     # per-team, per-fixture expected goals for/against for all S draws
@@ -366,6 +419,7 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500):
         fix_by_team[team] = (np.array(lf), np.array(la))   # (nfix, S)
 
     out = []
+    draw_rows = []
     for _, p in players.iterrows():
         if p.team not in fix_by_team:
             continue
@@ -374,25 +428,28 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500):
         if nfix == 0:
             continue
         pos = p.pos
+        # this player's own stream — see _player_rng
+        prng = _player_rng(p, seed)
         # availability draws (shared across the window -> nailed/rotation risk)
-        p_start = rng.beta(p.start_a, p.start_b, S)         # (S,)
+        p_start = prng.beta(p.start_a, p.start_b, S)         # (S,)
         # attacking involvement rate (per 90) and defcon rate draws
         # rate draws, sanitised: a NaN/inf prior would crash the Poisson and a
         # runaway rate is not physically meaningful (no player exceeds these).
         def _safe(draw, hi):
             d = np.asarray(draw, float)
             return np.clip(np.nan_to_num(d, nan=0.0, posinf=hi, neginf=0.0), 0.0, hi)
-        inv_rate = _safe(rng.gamma(max(float(np.nan_to_num(p.npxgi_alpha, nan=0.05)), 1e-6),
+        inv_rate = _safe(prng.gamma(max(float(np.nan_to_num(p.npxgi_alpha, nan=0.05)), 1e-6),
                                    1 / max(float(np.nan_to_num(p.npxgi_beta, nan=1.5)), 1e-6), S), 2.0)
-        xa_rate  = _safe(rng.gamma(max(float(np.nan_to_num(p.xa_alpha, nan=0.02)), 1e-6),
+        xa_rate  = _safe(prng.gamma(max(float(np.nan_to_num(p.xa_alpha, nan=0.02)), 1e-6),
                                    1 / max(float(np.nan_to_num(p.xa_beta, nan=1.5)), 1e-6), S), 1.5)
-        dc_rate  = _safe(rng.gamma(max(float(np.nan_to_num(p.defcon_alpha, nan=5.0)), 1e-6),
+        dc_rate  = _safe(prng.gamma(max(float(np.nan_to_num(p.defcon_alpha, nan=5.0)), 1e-6),
                                    1 / max(float(np.nan_to_num(p.defcon_beta, nan=1.5)), 1e-6), S), 40.0)
         pts = np.zeros(S)
         dc_pts = np.zeros(S); cs_pts = np.zeros(S)
+        app_pts = np.zeros(S); att_pts = np.zeros(S); conc_pts = np.zeros(S)
         for f in range(nfix):
-            start = rng.random(S) < p_start
-            sub   = (~start) & (rng.random(S) < p.sub_app_rate)
+            start = prng.random(S) < p_start
+            sub   = (~start) & (prng.random(S) < p.sub_app_rate)
             mins  = np.where(start, _minutes_if_start(pos, p),
                              np.where(sub, _minutes_if_sub(), 0.0))
             played = mins > 0; played60 = mins >= 60
@@ -400,36 +457,58 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500):
             # attacking: split xGI into goals vs assists via xa share
             share_a = np.clip(xa_rate / np.maximum(inv_rate, 1e-6), 0, 1)
             exp_involve = inv_rate * m90 * (lam_for[f] / LEAGUE_MU)
-            open_goals = rng.poisson(np.maximum(exp_involve * (1 - share_a), 0))
+            open_goals = prng.poisson(np.maximum(exp_involve * (1 - share_a), 0))
             # penalties are separate from non-penalty xGI: add for the designated
             # taker only (pen_xg90 set by the set-piece layer, else 0)
             pen_xg90 = float(getattr(p, "pen_xg90", 0.0) or 0.0)
-            pen_goals = rng.poisson(np.maximum(pen_xg90 * m90, 0)) if pen_xg90 > 0 else 0
+            pen_goals = prng.poisson(np.maximum(pen_xg90 * m90, 0)) if pen_xg90 > 0 else 0
             goals   = open_goals + pen_goals
-            assists = rng.poisson(np.maximum(exp_involve * share_a, 0))
+            assists = prng.poisson(np.maximum(exp_involve * share_a, 0))
             gp = goals * GOAL_POINTS[pos] + goals * BONUS_PER_GOAL[pos]
             ap = assists * (ASSIST_POINTS + BONUS_PER_ASSIST)
-            # clean sheet / concession (need 60 mins), team-level
-            cs = (rng.poisson(lam_against[f]) == 0) & played60
+            # clean sheet / concession (need 60 mins), team-level.
+            # ONE realisation of goals conceded drives both, because they are the same
+            # event. The previous version drew lam_against TWICE and derived the clean
+            # sheet from one draw and the concession penalty from the other, so a
+            # simulation path could hand a defender clean-sheet points AND a two-goal
+            # concession penalty in the same match — a state that cannot occur.
+            # E[csp] and E[concp] were each individually right, so `mean` was unbiased
+            # and this was invisible there; what was wrong was their JOINT distribution,
+            # i.e. sd, p5/p95 and the captaincy tail, which is precisely what the
+            # posterior draws are retained for.
+            conc = prng.poisson(lam_against[f])
+            cs = (conc == 0) & played60
             csp = cs * (CLEAN_SHEET_PTS[pos] + BONUS_PER_CS[pos])
-            conc = rng.poisson(lam_against[f])
             concp = np.where(np.isin(pos, ["GK", "DEF"]) & played60,
                              -np.floor(conc / 2), 0.0)
             # defensive contribution threshold (per match)
             thr = DEFCON_THRESHOLD.get(pos, 999)
-            dc_cnt = rng.poisson(np.maximum(dc_rate * m90, 0))
+            dc_cnt = prng.poisson(np.maximum(dc_rate * m90, 0))
             dcp = np.where(dc_cnt >= thr, DEFCON_PTS, 0.0)
             appp = np.where(played60, 2.0, np.where(played, 1.0, 0.0))
             pts += appp + gp + ap + csp + concp + dcp
             dc_pts += dcp; cs_pts += csp
+            app_pts += appp; att_pts += gp + ap; conc_pts += concp
         q = np.percentile(pts, [5, 25, 50, 75, 95])
+        if return_draws:
+            draw_rows.append(pts.copy())
         out.append({"id": p.id, "player": p.web_name, "pos": pos, "team": p.team,
                     "own": p.own, "cost": p.cost, "nfix": nfix,
                     "mean": pts.mean(), "sd": pts.std(),
                     "defcon_ev": dc_pts.mean(), "cs_ev": cs_pts.mean(),
+                    # the remaining components, so the five sum back to `mean` exactly
+                    # and a decomposition needs no residual bucket
+                    "app_ev": app_pts.mean(), "att_ev": att_pts.mean(),
+                    "conc_ev": conc_pts.mean(),
                     "p5": q[0], "p25": q[1], "median": q[2], "p75": q[3], "p95": q[4]})
-    res = pd.DataFrame(out).sort_values("mean", ascending=False).reset_index(drop=True)
-    return res
+    res = pd.DataFrame(out).sort_values("mean", ascending=False)
+    if return_draws:
+        # `res` is sorted by mean, `draw_rows` is in append order. Reindex the matrix by
+        # the same permutation or every draw row is attributed to the wrong player —
+        # silently, and only detectably in the tails.
+        D = np.array(draw_rows)[res.index.to_numpy()] if len(draw_rows) else np.empty((0, S))
+        return res.reset_index(drop=True), D
+    return res.reset_index(drop=True)
 
 
 if __name__ == "__main__":
@@ -446,7 +525,7 @@ if __name__ == "__main__":
     tstab["net"] = tstab.attack + tstab.defence
     tstab["promoted"] = tstab.team.isin(PROMOTED)
     tstab = tstab.sort_values("net", ascending=False)
-    tstab.round(3).to_csv(os.path.join(config.OUTPUTS, "team_strength_posteriors_2627.csv"), index=False)
+    tstab.round(3).to_csv(_os.path.join(config.OUTPUTS, "team_strength_posteriors_2627.csv"), index=False)
     print("\nTeam strength posteriors (net = attack+defence):")
     print(tstab.round(3).to_string(index=False))
 
@@ -454,7 +533,7 @@ if __name__ == "__main__":
     players = player_posteriors()
     for lo, hi, tag in [(1, 6, "GW1-6"), (1, 38, "full-season")]:
         res = project(players, tm, tsamp, lo, hi, S=1500)
-        res.round(2).to_csv(fos.path.join(config.OUTPUTS, "projection_2627_{tag}.csv"), index=False)
+        res.round(2).to_csv(_os.path.join(config.OUTPUTS, f"projection_2627_{tag}.csv"), index=False)
         print(f"\n=== 2026/27 {tag}: top 15 by posterior-mean points (90% CI) ===")
         show = res.head(15)[["player","pos","team","nfix","mean","p5","p95","own"]]
         print(show.round(1).to_string(index=False))

@@ -46,9 +46,15 @@ If you do not use your free transfer, you are able to make an additional free tr
 At other times you are limited to 20 transfers in any single Gameweek. This rule does not apply when playing a Wildcard or a Free Hit Chip.
 
 African Cup of Nations (AFCON) Transfers
-Following the Gameweek 15 Deadline on Sat 6 Dec 06:00 and ahead of Gameweek 16 on Sat 13 Dec 08:30, Managers will be topped up to the maximum of 5 free transfers, regardless of how many transfers are available to them at that point.
+**[STALE — 2025/26 ONLY. DOES NOT APPLY IN 2026/27.]** The paragraph below was an
+AFCON-window provision carried over from last season's rules page. There is no
+equivalent top-up this season; the free-transfer bank follows the ordinary carry rule
+above (earn 1 per Gameweek, store up to 5) for every Gameweek. Any planner that pins the
+bank to 5 ahead of GW16 is modelling a rule that no longer exists — corrected 2026-08-31.
 
-They do not need to be used in Gameweek 16, they can be carried over between Gameweeks and used at any time.
+> ~~Following the Gameweek 15 Deadline on Sat 6 Dec 06:00 and ahead of Gameweek 16 on Sat 13 Dec 08:30, Managers will be topped up to the maximum of 5 free transfers, regardless of how many transfers are available to them at that point.~~
+>
+> ~~They do not need to be used in Gameweek 16, they can be carried over between Gameweeks and used at any time.~~
 
 Wildcards
 For information on wildcards please refer to the chips section of the rules.

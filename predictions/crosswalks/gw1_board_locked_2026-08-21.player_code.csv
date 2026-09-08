@@ -1,0 +1,585 @@
+player,team,pos,cost,player_code,resolution
+Mbeumo,Man United,MID,8.0,446008.0,roster-exact
+Haaland,Man City,FWD,15.5,223094.0,roster-exact
+B.Fernandes,Man United,MID,12.0,141746.0,roster-exact
+Gabriel,Arsenal,DEF,8.0,226597.0,roster-exact
+Amad,Man United,MID,6.0,493250.0,roster-exact
+Gvardiol,Man City,DEF,5.5,477424.0,roster-exact
+Calafiori,Arsenal,DEF,5.5,466075.0,roster-exact
+Mosquera,Arsenal,DEF,5.5,500040.0,roster-exact
+Cunha,Man United,MID,8.0,430871.0,roster-exact
+Semenyo,Man City,MID,8.5,437730.0,roster-exact
+Foden,Man City,MID,7.0,209244.0,roster-exact
+Thiago,Brentford,FWD,8.0,502500.0,roster-exact
+Dalot,Man United,DEF,5.0,216051.0,roster-exact
+Maguire,Man United,DEF,5.0,95658.0,roster-exact
+Palmer,Chelsea,MID,9.5,244851.0,roster-exact
+White,Arsenal,DEF,5.5,198869.0,roster-exact
+Ballard,Sunderland,DEF,5.0,223827.0,roster-exact
+Tzolis,Arsenal,MID,6.5,439509.0,roster-exact
+Schade,Brentford,MID,6.0,513418.0,roster-exact
+Havertz,Arsenal,FWD,7.5,219847.0,roster-exact
+O'Reilly,Man City,DEF,6.5,472769.0,roster-exact
+O.Dango,Brentford,MID,6.5,533463.0,roster-exact
+Guéhi,Man City,DEF,6.0,209036.0,roster-exact
+Ødegaard,Arsenal,MID,6.5,184029.0,roster-exact
+Collins,Brentford,DEF,5.5,432830.0,roster-exact
+Tarkowski,Everton,DEF,6.0,17761.0,roster-exact
+Shaw,Man United,DEF,4.5,106760.0,roster-exact
+Anderson,Man City,MID,6.5,215379.0,roster-exact
+Tielemans,Man United,MID,6.0,166989.0,roster-exact
+Isak,Liverpool,FWD,9.0,219168.0,roster-exact
+Gakpo,Liverpool,MID,7.0,243298.0,roster-exact
+Lacroix,Chelsea,DEF,6.0,437499.0,roster-exact
+Wirtz,Liverpool,MID,7.5,494595.0,roster-exact
+Saka,Arsenal,MID,9.5,223340.0,roster-exact
+Virgil,Liverpool,DEF,6.5,97032.0,roster-exact
+Andrey Santos,Man United,MID,5.0,532605.0,roster-exact
+E.Le Fée,Sunderland,MID,6.0,484420.0,roster-exact
+Szoboszlai,Liverpool,MID,7.0,424876.0,roster-exact
+João Pedro,Chelsea,FWD,7.5,475168.0,roster-exact
+Canvot,Crystal Palace,DEF,5.0,651426.0,roster-exact
+Murillo,Nott'm Forest,DEF,5.5,575476.0,roster-exact
+Eze,Arsenal,MID,6.5,232413.0,roster-exact
+Gibbs-White,Nott'm Forest,MID,8.0,222531.0,roster-exact
+Richards,Crystal Palace,DEF,5.0,427623.0,roster-exact
+Hincapie,Arsenal,DEF,5.5,448104.0,roster-exact
+Raya,Arsenal,GK,6.0,154561.0,roster-exact
+N.Williams,Nott'm Forest,DEF,5.0,215136.0,roster-exact
+Sarr,Crystal Palace,MID,6.5,232185.0,roster-exact
+Wieffer,Brighton,DEF,5.0,467779.0,roster-exact
+Gyökeres,Arsenal,FWD,7.5,224117.0,roster-exact
+Ngumoha,Liverpool,MID,6.0,611922.0,roster-exact
+Milenković,Nott'm Forest,DEF,5.5,227444.0,roster-exact
+Vuskovic,Brighton,DEF,5.0,610799.0,roster-exact
+Ajer,Brentford,DEF,4.5,191866.0,roster-exact
+Khusanov,Man City,DEF,5.5,578153.0,roster-exact
+Rice,Arsenal,MID,7.5,204480.0,roster-exact
+Branthwaite,Everton,DEF,5.5,480455.0,roster-exact
+Hume,Sunderland,DEF,4.5,487676.0,roster-exact
+Diomande,Nott'm Forest,DEF,5.5,568420.0,roster-exact
+De Cuyper,Brighton,DEF,4.5,465730.0,roster-exact
+Calvert-Lewin,Leeds,FWD,6.0,177815.0,roster-exact
+Kayode,Brentford,DEF,4.5,607464.0,roster-exact
+Rúben,Man City,DEF,5.5,171314.0,roster-exact
+Ndiaye,Everton,MID,6.0,440993.0,roster-exact
+Sangaré,Brentford,MID,5.5,,unresolved: absent from 2026-08-28 roster at this price
+Mykolenko,Everton,DEF,4.5,224967.0,roster-exact
+Senesi,Tottenham,DEF,6.0,221466.0,roster-exact
+Thiaw,Newcastle,DEF,5.0,465642.0,roster-exact
+Mukiele,Sunderland,DEF,5.5,200834.0,roster-exact
+Barnes,Newcastle,MID,6.0,201666.0,roster-exact
+Jensen,Brentford,MID,5.5,207283.0,roster-exact
+Palestra,Chelsea,DEF,5.5,620109.0,roster-exact
+Reinildo,Sunderland,DEF,4.5,434399.0,roster-exact
+Dorgu,Man United,MID,6.0,596777.0,roster-exact
+Neto,Chelsea,MID,6.5,247632.0,roster-exact
+Kovačić,Man City,MID,5.5,91651.0,roster-exact
+Rogers,Chelsea,MID,7.5,244850.0,roster-exact
+Heaven,Man United,DEF,4.5,606745.0,roster-exact
+Madueke,Arsenal,MID,6.5,248857.0,roster-exact
+Aina,Nott'm Forest,DEF,4.5,159506.0,roster-exact
+Davis,Ipswich,DEF,4.0,455084.0,roster-exact
+Bijol,Leeds,DEF,5.0,434752.0,roster-exact
+O'Brien,Everton,DEF,5.0,512462.0,roster-exact
+Aït-Nouri,Man City,DEF,5.5,448514.0,roster-exact
+Tavernier,Bournemouth,MID,6.0,201658.0,roster-exact
+Mitchell,Crystal Palace,DEF,4.5,244723.0,roster-exact
+Xhaka,Sunderland,MID,5.5,84450.0,roster-exact
+Watkins,Aston Villa,FWD,8.0,178301.0,roster-exact
+Gomez,Brighton,MID,5.0,514254.0,roster-exact
+Botman,Newcastle,DEF,5.0,220237.0,roster-exact
+Lammens,Man United,GK,5.0,465247.0,roster-exact
+Dewsbury-Hall,Everton,MID,6.5,215413.0,roster-exact
+Van Hecke,Tottenham,DEF,5.0,469142.0,roster-exact
+Yoro,Man United,DEF,5.0,550864.0,roster-exact
+F.Kadıoğlu,Brighton,DEF,4.5,231416.0,roster-exact
+Bruno G.,Arsenal,MID,7.0,208706.0,roster-exact
+Maatsen,Aston Villa,DEF,4.5,441302.0,roster-exact
+Caicedo,Chelsea,MID,5.5,486672.0,roster-exact
+Ampadu,Leeds,MID,5.5,199598.0,roster-exact
+Alderete,Sunderland,DEF,5.0,201895.0,roster-exact
+Stach,Leeds,MID,6.0,466525.0,roster-exact
+Justin,Leeds,DEF,4.5,220627.0,roster-exact
+Osula,Newcastle,FWD,6.0,538207.0,roster-exact
+Janelt,Brentford,MID,5.0,204580.0,roster-exact
+Frimpong,Liverpool,DEF,5.5,216094.0,roster-exact
+Barry,Everton,FWD,5.5,586309.0,roster-exact
+Lewis-Potter,Brentford,MID,5.5,249231.0,roster-exact
+Jacquet,Liverpool,DEF,5.0,606702.0,roster-exact
+Hinshelwood,Brighton,MID,6.0,532529.0,roster-exact
+Rodon,Leeds,DEF,4.5,214225.0,roster-exact
+Sangaré,Nott'm Forest,MID,5.0,210462.0,webname-change: Sangaré -> I.Sangaré
+O'Shea,Ipswich,DEF,4.0,216616.0,roster-exact
+Fernandes,Tottenham,MID,6.0,551226.0,roster-exact
+Wilson,Leeds,MID,6.5,153682.0,roster-exact
+Scott,Bournemouth,MID,6.0,503139.0,roster-exact
+Matheus N.,Man City,DEF,6.0,465351.0,roster-exact
+Greaves,Ipswich,DEF,4.0,449429.0,roster-exact
+Diop,Ipswich,DEF,4.0,219924.0,roster-exact
+Cash,Aston Villa,DEF,4.5,199796.0,roster-exact
+Wharton,Crystal Palace,MID,5.5,496221.0,roster-exact
+Brobbey,Sunderland,FWD,6.0,441264.0,roster-exact
+O'Nien,Sunderland,DEF,4.0,167512.0,roster-exact
+Donnarumma,Man City,GK,5.5,204936.0,roster-exact
+Groß,Brighton,MID,5.5,60307.0,roster-exact
+Bassey,Fulham,DEF,4.5,232892.0,roster-exact
+Robinson,Fulham,DEF,4.5,169528.0,roster-exact
+Pau,Aston Villa,DEF,4.5,244954.0,roster-exact
+James,Chelsea,DEF,5.5,225796.0,roster-exact
+Gravenberch,Liverpool,MID,6.0,441266.0,roster-exact
+Bogle,Leeds,DEF,4.5,226182.0,roster-exact
+Igor Jesus,Nott'm Forest,FWD,6.0,482973.0,roster-exact
+Dunk,Brighton,DEF,4.5,83299.0,roster-exact
+J.Cuenca,Fulham,DEF,4.5,246301.0,roster-exact
+Chadi Riad,Crystal Palace,DEF,4.5,515621.0,roster-exact
+Muñoz,Crystal Palace,DEF,5.5,247348.0,roster-exact
+Aaronson,Leeds,MID,5.5,427637.0,roster-exact
+Roefs,Sunderland,GK,5.0,498016.0,roster-exact
+García,Fulham,FWD,6.0,,unresolved: absent from 2026-08-28 roster at this price
+Evanilson,Bournemouth,FWD,6.0,444102.0,roster-exact
+Tel,Tottenham,MID,6.0,511499.0,roster-exact
+Iwobi,Fulham,MID,5.5,153133.0,roster-exact
+Colwill,Chelsea,DEF,5.0,460028.0,roster-exact
+Kerkez,Liverpool,DEF,5.5,544877.0,roster-exact
+Hackney,Everton,MID,5.5,244860.0,roster-exact
+McGinn,Aston Villa,MID,5.5,122806.0,roster-exact
+Tonali,Tottenham,MID,5.5,432422.0,roster-exact
+Angulo,Sunderland,MID,5.0,536661.0,roster-exact
+Rayan,Bournemouth,MID,6.5,499604.0,roster-exact
+Pickford,Everton,GK,5.5,111234.0,roster-exact
+Muharemović,Leeds,DEF,5.0,522047.0,roster-exact
+Maeda,Ipswich,MID,5.5,442967.0,roster-exact
+Cherki,Man City,MID,7.5,466052.0,roster-exact
+L.Miley,Newcastle,MID,5.5,547719.0,roster-exact
+Hill,Bournemouth,DEF,5.5,463981.0,roster-exact
+Meunier,Sunderland,DEF,4.5,93605.0,roster-exact
+McNeil,Crystal Palace,MID,5.5,433154.0,roster-exact
+Kamada,Crystal Palace,MID,5.0,209400.0,roster-exact
+Garnacho,Aston Villa,MID,6.0,493105.0,roster-exact
+Buendía,Aston Villa,MID,6.0,195546.0,roster-exact
+Richarlison,Tottenham,FWD,6.0,212319.0,roster-exact
+Hall,Newcastle,DEF,5.0,487838.0,roster-exact
+Ayari,Brighton,MID,5.5,509416.0,roster-exact
+Verbruggen,Brighton,GK,4.5,489639.0,roster-exact
+Palacios,Fulham,MID,5.5,571779.0,roster-exact
+Bobb,Fulham,MID,5.5,477555.0,roster-exact
+Kelleher,Brentford,GK,5.0,200720.0,roster-exact
+Kluivert,Bournemouth,MID,6.0,222683.0,roster-exact
+Lukić,Ipswich,MID,5.0,212314.0,roster-exact
+Röhl,Everton,MID,5.0,513466.0,roster-exact
+Lavia,Chelsea,MID,5.0,514356.0,roster-exact
+Truffert,Bournemouth,DEF,5.5,494521.0,roster-exact
+Fatawu,Ipswich,MID,5.5,531442.0,roster-exact
+Sels,Nott'm Forest,GK,5.0,85633.0,roster-exact
+Sadiki,Sunderland,MID,5.0,577669.0,roster-exact
+Núñez,Ipswich,MID,5.0,501390.0,roster-exact
+Mingueza,Crystal Palace,DEF,4.5,242313.0,roster-exact
+Castagne,Fulham,DEF,4.5,166477.0,roster-exact
+Gallagher,Tottenham,MID,5.5,232787.0,roster-exact
+King,Fulham,MID,5.5,577725.0,roster-exact
+Cook,Bournemouth,MID,5.0,155408.0,roster-exact
+Georginio,Brighton,FWD,5.5,463067.0,roster-exact
+Boscagli,Brighton,DEF,4.5,204120.0,roster-exact
+Kamara,Aston Villa,MID,5.0,226944.0,roster-exact
+Emersonn,Ipswich,FWD,5.5,543968.0,roster-exact
+Elanga,Newcastle,MID,6.0,449434.0,roster-exact
+J.Ramsey,Newcastle,MID,5.0,232653.0,roster-exact
+Enzo,Chelsea,MID,7.0,448047.0,roster-exact
+Strand Larsen,Crystal Palace,FWD,6.0,247412.0,roster-exact
+Konsa,Aston Villa,DEF,4.5,,unresolved: absent from 2026-08-28 roster at this price
+Pedro Porro,Tottenham,DEF,5.5,441164.0,roster-exact
+Schlager,Nott'm Forest,MID,5.0,204561.0,roster-exact
+Araujo,Liverpool,DEF,5.5,445087.0,roster-exact
+Belloumi,Hull,MID,5.0,540324.0,roster-exact
+Willock,Newcastle,MID,5.0,200089.0,roster-exact
+Robertson,Tottenham,DEF,4.5,122798.0,roster-exact
+McBurnie,Hull,FWD,5.5,169432.0,roster-exact
+Wood,Nott'm Forest,FWD,6.0,60689.0,roster-exact
+Barkley,Aston Villa,MID,5.0,88894.0,roster-exact
+A.Becker,Liverpool,GK,5.5,116535.0,roster-exact
+Ndoye,Nott'm Forest,MID,5.5,456512.0,roster-exact
+Armstrong,Everton,MID,5.0,609873.0,roster-exact
+Slater,Hull,MID,4.5,243413.0,roster-exact
+Berge,Fulham,MID,5.0,207189.0,roster-exact
+Silva,Bournemouth,DEF,5.0,483067.0,roster-exact
+Onyeka,Coventry,MID,5.0,428580.0,roster-exact
+Grimes,Coventry,MID,5.0,168144.0,roster-exact
+Crooks,Hull,MID,4.5,101282.0,roster-exact
+Rashford,Man United,MID,7.0,176297.0,roster-exact
+Sánchez,Chelsea,GK,5.0,215059.0,roster-exact
+Merino,Arsenal,MID,6.0,195384.0,roster-exact
+Moore,Tottenham,MID,5.0,499721.0,roster-exact
+Šeško,Man United,FWD,7.0,485711.0,roster-exact
+Burn,Newcastle,DEF,5.0,78916.0,roster-exact
+Keane,Everton,DEF,5.0,106611.0,roster-exact
+Martinez,Aston Villa,GK,5.0,98980.0,roster-exact
+Florentino,Ipswich,MID,5.0,216055.0,roster-exact
+van Ewijk,Coventry,DEF,4.0,451284.0,roster-exact
+Hato,Chelsea,DEF,4.5,551210.0,roster-exact
+Solanke,Tottenham,FWD,6.0,154566.0,roster-exact
+Scherpen,Ipswich,GK,4.5,240514.0,roster-exact
+Leno,Fulham,GK,4.5,80201.0,roster-exact
+Lewis-Skelly,Arsenal,MID,5.5,499169.0,roster-exact
+Schär,Newcastle,DEF,5.0,119471.0,roster-exact
+Thomas,Coventry,DEF,4.0,461102.0,roster-exact
+Martinelli,Arsenal,MID,6.5,444145.0,roster-exact
+Johnson,Everton,MID,6.0,242898.0,roster-exact
+Talbi,Sunderland,MID,5.5,549912.0,roster-exact
+Dasilva,Coventry,DEF,4.0,173878.0,roster-exact
+Martinez,Man United,DEF,5.0,221820.0,roster-exact
+Struijk,Brighton,DEF,5.0,222694.0,roster-exact
+Trafford,Leeds,GK,5.0,432720.0,roster-exact
+Henderson,Crystal Palace,GK,5.0,172649.0,roster-exact
+Amenda,Coventry,DEF,4.0,539142.0,roster-exact
+Lindelöf,Aston Villa,DEF,4.5,184667.0,roster-exact
+Yirenkyi,Coventry,MID,5.0,661888.0,roster-exact
+Kudus,Tottenham,MID,6.5,460842.0,roster-exact
+Wissa,Newcastle,FWD,6.0,216646.0,roster-exact
+Estêvão,Chelsea,MID,6.5,624773.0,roster-exact
+Stroud,Hull,MID,5.0,608227.0,roster-exact
+Zirkzee,Man United,FWD,5.5,458249.0,roster-exact
+Pope,Newcastle,GK,5.0,98747.0,roster-exact
+Walle Egeli,Ipswich,FWD,4.5,557012.0,roster-exact
+Sessegnon,Fulham,DEF,4.5,184349.0,roster-exact
+Simms,Coventry,FWD,5.0,218997.0,roster-exact
+Kinsky,Tottenham,GK,4.5,485055.0,roster-exact
+Mateta,Crystal Palace,FWD,6.5,231747.0,roster-exact
+Dominguez,Nott'm Forest,MID,5.0,250199.0,roster-exact
+Damsgaard,Brentford,MID,5.5,440089.0,roster-exact
+Hjertø-Dahl,Hull,MID,5.0,552946.0,roster-exact
+Mazraoui,Man United,DEF,4.5,230001.0,roster-exact
+Kusi-Asare,Fulham,FWD,4.5,631786.0,roster-exact
+Tete,Fulham,DEF,4.5,167074.0,roster-exact
+Zubimendi,Arsenal,MID,5.5,481655.0,roster-exact
+Gray,Tottenham,MID,5.0,547701.0,roster-exact
+Adams,Bournemouth,MID,5.0,200785.0,roster-exact
+Tanaka,Leeds,MID,5.0,248056.0,roster-exact
+Smith,Bournemouth,DEF,4.5,54469.0,roster-exact
+Wilson,Brentford,FWD,5.5,75115.0,roster-exact
+Tchaouna,Coventry,MID,5.5,469272.0,roster-exact
+Savinho,Man City,MID,6.5,,unresolved: absent from 2026-08-28 roster at this price
+Sakamoto,Coventry,MID,5.0,501459.0,roster-exact
+Awoniyi,Nott'm Forest,FWD,5.5,,unresolved: absent from 2026-08-28 roster at this price
+Egan,Hull,DEF,4.0,108416.0,roster-exact
+Mac Allister,Liverpool,MID,5.5,243016.0,roster-exact
+Ajayi,Hull,DEF,4.0,146426.0,roster-exact
+M.Bizot,Aston Villa,GK,4.5,72147.0,roster-exact
+Maddison,Tottenham,MID,6.5,172780.0,roster-exact
+G.Jesus,Arsenal,FWD,6.0,205651.0,roster-exact
+Woltemade,Newcastle,FWD,6.0,470313.0,roster-exact
+Grealish,Man City,MID,6.5,114283.0,roster-exact
+Giles,Hull,DEF,4.0,232351.0,roster-exact
+Mainoo,Man United,MID,5.5,516895.0,roster-exact
+Beto,Everton,FWD,5.5,486385.0,roster-exact
+Coyle,Hull,DEF,4.0,193278.0,roster-exact
+Anthony,Brentford,MID,6.0,444180.0,roster-exact
+Nmecha,Leeds,FWD,5.5,174594.0,roster-exact
+Smith Rowe,Fulham,MID,5.5,209289.0,roster-exact
+Marmoush,Man City,FWD,7.0,438234.0,roster-exact
+Carvalho,Brentford,MID,5.0,244858.0,roster-exact
+J.Murphy,Newcastle,MID,6.0,114243.0,roster-exact
+Yarmoliuk,Brentford,MID,5.0,508395.0,roster-exact
+Petrović,Bournemouth,GK,4.5,457569.0,roster-exact
+Elliott,Liverpool,MID,5.5,444884.0,roster-exact
+Welbeck,Chelsea,FWD,6.0,50175.0,roster-exact
+Gusto,Chelsea,DEF,5.0,482609.0,roster-exact
+A.García,Aston Villa,DEF,4.0,606798.0,roster-exact
+Thomas-Asante,Coventry,FWD,5.0,230730.0,roster-exact
+Reed,Fulham,MID,4.5,153366.0,roster-exact
+N.Jackson,Chelsea,FWD,6.5,517052.0,roster-exact
+Lewis,Man City,DEF,4.5,477064.0,roster-exact
+Mount,Man United,MID,5.5,184341.0,roster-exact
+Ömür,Hull,MID,5.0,208481.0,roster-exact
+Mason-Clark,Coventry,MID,5.5,241293.0,roster-exact
+Torp,Coventry,MID,5.5,226965.0,roster-exact
+Muniz,Fulham,FWD,5.5,244042.0,roster-exact
+Chiesa,Liverpool,MID,5.5,223541.0,roster-exact
+Mings,Aston Villa,DEF,4.5,149484.0,roster-exact
+Touré,Newcastle,MID,6.0,611665.0,roster-exact
+Munoz,Liverpool,MID,6.5,551499.0,roster-exact
+Nwaneri,Arsenal,MID,5.5,499175.0,roster-exact
+Millar,Hull,MID,5.0,232905.0,roster-exact
+Isidor,Sunderland,FWD,5.5,437505.0,roster-exact
+Amass,Man United,DEF,4.0,577974.0,roster-exact
+Yeremy,Crystal Palace,MID,5.5,488024.0,roster-exact
+Morato,Nott'm Forest,DEF,5.0,485047.0,roster-exact
+Fletcher,Man United,MID,4.5,519913.0,roster-exact
+Obi,Man United,FWD,4.5,596047.0,roster-exact
+Delap,Chelsea,FWD,5.5,463034.0,roster-exact
+Okafor,Leeds,MID,6.0,435997.0,roster-exact
+Rushworth,Coventry,GK,4.5,472739.0,roster-exact
+Bentancur,Tottenham,MID,5.5,202993.0,roster-exact
+Hutchinson,Nott'm Forest,MID,5.5,503301.0,roster-exact
+Nketiah,Crystal Palace,FWD,5.5,205533.0,roster-exact
+Mundle,Sunderland,MID,5.0,461199.0,roster-exact
+Hughes,Crystal Palace,MID,4.5,108413.0,roster-exact
+Hudson-Odoi,Nott'm Forest,MID,6.0,209046.0,roster-exact
+Nelson,Arsenal,MID,5.5,200641.0,roster-exact
+Dowman,Arsenal,MID,5.5,616077.0,roster-exact
+Danso,Tottenham,DEF,5.0,135720.0,roster-exact
+Kostoulas,Brighton,FWD,5.5,647850.0,roster-exact
+Perri,Leeds,GK,4.5,201595.0,roster-exact
+McAteer,Ipswich,MID,4.5,461587.0,roster-exact
+Kevin,Fulham,MID,5.5,560552.0,roster-exact
+Lerma,Crystal Palace,MID,5.0,152551.0,roster-exact
+Enes Ünal,Bournemouth,FWD,5.5,168636.0,roster-exact
+Gittens,Chelsea,MID,6.0,463936.0,roster-exact
+Bendito Mantato,Man United,MID,4.5,576620.0,roster-exact
+C.Jones,Liverpool,MID,5.5,206915.0,roster-exact
+Tosin,Chelsea,DEF,4.5,109646.0,roster-exact
+Brooks,Bournemouth,MID,5.0,111317.0,roster-exact
+Abraham,Aston Villa,FWD,5.5,173879.0,roster-exact
+George,Everton,MID,5.5,550615.0,roster-exact
+Tsimikas,Liverpool,DEF,5.0,214285.0,roster-exact
+McAtee,Nott'm Forest,MID,5.5,432714.0,roster-exact
+Alcaraz,Everton,MID,5.0,502697.0,roster-exact
+Diarra,Sunderland,MID,5.5,547027.0,roster-exact
+Collyer,Man United,MID,5.0,490881.0,roster-exact
+Marc Guiu,Chelsea,FWD,5.0,499309.0,roster-exact
+Philogene,Ipswich,MID,5.5,481624.0,roster-exact
+N.Gonzalez,Man City,MID,5.5,465694.0,roster-exact
+Aznou,Everton,DEF,4.0,499300.0,roster-exact
+Olusesi,Tottenham,MID,4.5,499726.0,roster-exact
+Henry,Brentford,DEF,4.5,194010.0,roster-exact
+Furlong,Ipswich,DEF,4.0,176420.0,roster-exact
+Clarke,Ipswich,MID,5.5,443261.0,roster-exact
+Vitor Reis,Man City,DEF,4.5,616222.0,roster-exact
+Lacey,Man United,MID,5.0,576628.0,roster-exact
+Burrowes,Aston Villa,MID,4.5,645618.0,roster-exact
+J.Fletcher,Man United,MID,5.0,547037.0,roster-exact
+Bindon,Nott'm Forest,DEF,4.0,538638.0,roster-exact
+O'Riley,Brighton,MID,5.5,219249.0,roster-exact
+James,Leeds,MID,5.0,200617.0,roster-exact
+Davies,Tottenham,DEF,4.0,115556.0,roster-exact
+Bailey,Aston Villa,MID,5.5,215711.0,roster-exact
+O.Richards,Nott'm Forest,DEF,4.0,204822.0,roster-exact
+Longstaff,Leeds,MID,5.0,180135.0,roster-exact
+Kipré,Ipswich,DEF,4.0,183015.0,roster-exact
+Abbott,Nott'm Forest,DEF,4.0,549067.0,roster-exact
+Hickey,Brentford,DEF,4.5,472713.0,roster-exact
+Schuster,Brentford,DEF,4.5,513086.0,roster-exact
+Dubravka,Tottenham,GK,4.0,67089.0,roster-exact
+Neave,Newcastle,FWD,4.5,599303.0,roster-exact
+Steur,Newcastle,MID,5.0,636852.0,roster-exact
+Disasi,Chelsea,DEF,4.5,220362.0,roster-exact
+Steele,Brighton,GK,4.0,49262.0,roster-exact
+Acheampong,Chelsea,DEF,4.5,577016.0,roster-exact
+Endo,Liverpool,MID,5.0,158983.0,roster-exact
+Chavarria,Chelsea,DEF,5.0,498444.0,roster-exact
+Jair Cunha,Nott'm Forest,DEF,4.5,575458.0,roster-exact
+Devenny,Crystal Palace,MID,5.0,489706.0,roster-exact
+Fábio Vieira,Arsenal,MID,5.5,438098.0,roster-exact
+Furo,Brentford,FWD,4.5,593174.0,roster-exact
+Pinnock,Brentford,DEF,4.5,231065.0,roster-exact
+Bamba,Newcastle,MID,5.0,632794.0,roster-exact
+Bergvall,Tottenham,MID,5.5,570526.0,roster-exact
+Guessand,Crystal Palace,MID,5.5,485337.0,roster-exact
+Udogie,Tottenham,DEF,4.5,487053.0,roster-exact
+George Hemmings,Aston Villa,MID,4.5,577285.0,roster-exact
+Svoboda,Brighton,DEF,5.0,454490.0,roster-exact
+Meslier,Arsenal,GK,5.0,437495.0,roster-exact
+Charles,Fulham,MID,5.0,463210.0,roster-exact
+Tomiyasu,Crystal Palace,DEF,4.5,223723.0,roster-exact
+Johnson,Ipswich,DEF,4.0,222018.0,roster-exact
+Darlow,Man United,GK,4.5,59735.0,roster-exact
+Mukasa,Man City,MID,4.5,590039.0,roster-exact
+Seelt,Sunderland,DEF,4.5,519634.0,roster-exact
+Monga,Man City,MID,5.0,649208.0,roster-exact
+Horníček,Newcastle,GK,5.0,470551.0,roster-exact
+Costinha,Brighton,DEF,4.5,451490.0,roster-exact
+Arrizabalaga,Arsenal,GK,5.0,109745.0,roster-exact
+Ramsay,Liverpool,DEF,4.0,489580.0,roster-exact
+Hirst,Ipswich,FWD,5.0,222625.0,roster-exact
+Taylor,Ipswich,MID,4.5,231899.0,roster-exact
+Bakwa,Nott'm Forest,MID,5.5,476887.0,roster-exact
+M.Sarr,Chelsea,DEF,4.5,574458.0,roster-exact
+Oriola,Brighton,MID,4.5,556637.0,roster-exact
+Netz,Nott'm Forest,DEF,4.5,470315.0,roster-exact
+Scarlett,Tottenham,FWD,4.5,490145.0,roster-exact
+Barco,Chelsea,MID,5.5,543158.0,roster-exact
+Quenda,Chelsea,MID,5.5,593117.0,roster-exact
+Koumas,Liverpool,MID,5.0,514514.0,roster-exact
+Mheuka,Chelsea,FWD,4.5,567119.0,roster-exact
+Palmer,Ipswich,GK,4.0,112520.0,roster-exact
+Echeverri,Man City,MID,5.0,575204.0,roster-exact
+McConnell,Liverpool,MID,4.5,491501.0,roster-exact
+B.Badiashile,Chelsea,DEF,4.5,242880.0,roster-exact
+Souza,Tottenham,DEF,4.0,616221.0,roster-exact
+Mudryk,Chelsea,MID,5.5,465920.0,roster-exact
+Lucky,Liverpool,DEF,4.0,519440.0,roster-exact
+Henderson,Chelsea,MID,5.0,56979.0,roster-exact
+D.Essugo,Chelsea,MID,4.5,491007.0,roster-exact
+Emegha,Chelsea,FWD,5.0,503037.0,roster-exact
+Ji-soo,Brentford,DEF,4.5,570241.0,roster-exact
+Nyoni,Liverpool,MID,5.0,591386.0,roster-exact
+Sosa,Crystal Palace,DEF,4.5,218364.0,roster-exact
+Anselmino,Chelsea,DEF,4.5,622758.0,roster-exact
+Yohanna,Brighton,MID,5.0,700308.0,roster-exact
+Rigg,Sunderland,MID,5.0,554197.0,roster-exact
+Dibling,Everton,MID,5.5,496661.0,roster-exact
+Dasilva,Brentford,MID,5.0,183656.0,roster-exact
+Coppola,Brighton,DEF,4.5,550090.0,roster-exact
+Dowell,Hull,MID,4.5,171270.0,roster-exact
+Gnonto,Leeds,MID,5.0,492859.0,roster-exact
+Kalimuendo,Nott'm Forest,FWD,5.5,465680.0,roster-exact
+Jocelin.T,Sunderland,MID,5.0,699989.0,roster-exact
+Andrews,Coventry,MID,4.5,629397.0,roster-exact
+Targett,Hull,DEF,4.0,169359.0,roster-exact
+Igor,Brighton,DEF,4.5,223434.0,roster-exact
+Matthews,Crystal Palace,GK,4.0,169593.0,roster-exact
+Doucouré,Crystal Palace,MID,5.0,438464.0,roster-exact
+Esse,Crystal Palace,MID,5.0,606921.0,roster-exact
+Travers,Everton,GK,5.0,229600.0,roster-exact
+Bogarde,Aston Villa,MID,5.0,515597.0,roster-exact
+Alysson,Aston Villa,MID,5.0,653481.0,roster-exact
+Kitching,Coventry,DEF,4.0,436761.0,roster-exact
+Adli,Bournemouth,MID,5.0,489888.0,roster-exact
+Mehmeti,Ipswich,MID,5.0,232457.0,roster-exact
+Cairney,Fulham,MID,5.0,76357.0,roster-exact
+Ogbene,Ipswich,MID,5.0,229164.0,roster-exact
+Shepherd,Coventry,MID,4.5,684268.0,roster-exact
+Gannon-Doak,Bournemouth,MID,5.0,496208.0,roster-exact
+J.Rak-Sakyi,Crystal Palace,MID,5.0,450542.0,roster-exact
+Rudoni,Coventry,MID,5.0,480457.0,roster-exact
+Lecomte,Fulham,GK,4.0,86873.0,roster-exact
+Drakes-Thomas,Crystal Palace,MID,4.5,672492.0,roster-exact
+Akpom,Ipswich,FWD,5.0,147675.0,roster-exact
+M.França,Crystal Palace,MID,5.0,536694.0,roster-exact
+Al-Hamadi,Ipswich,FWD,5.0,462387.0,roster-exact
+Odobert,Tottenham,MID,5.5,550839.0,roster-exact
+Bettinelli,Man City,GK,4.5,122074.0,roster-exact
+Rowswell,Tottenham,DEF,4.0,499716.0,roster-exact
+Diakité,Bournemouth,DEF,5.0,242882.0,roster-exact
+Woodman,Liverpool,GK,4.0,155503.0,roster-exact
+Borges Rodrigues,Coventry,MID,4.5,492498.0,roster-exact
+Tóth.A,Bournemouth,MID,5.0,614574.0,roster-exact
+Valdimarsson,Brentford,GK,4.5,507433.0,roster-exact
+Sanchez,Bournemouth,DEF,4.5,494928.0,roster-exact
+Tzolakis,Hull,GK,4.5,473284.0,roster-exact
+King,Everton,GK,4.5,138001.0,roster-exact
+Byfield,Tottenham,DEF,4.0,640419.0,roster-exact
+Yates,Nott'm Forest,MID,4.5,204968.0,roster-exact
+Hamer,Coventry,MID,5.5,196100.0,roster-exact
+Buonanotte,Brighton,MID,5.0,536916.0,roster-exact
+Patterson,Everton,DEF,4.5,243571.0,roster-exact
+Gomez,Liverpool,DEF,5.0,171287.0,roster-exact
+Adingra,Sunderland,MID,5.0,535818.0,roster-exact
+Woolfenden,Coventry,DEF,4.0,220583.0,roster-exact
+Eccles,Coventry,MID,5.0,439668.0,roster-exact
+Akintola,Hull,MID,5.0,213292.0,roster-exact
+McNally,Fulham,GK,4.0,505079.0,roster-exact
+Bidwell,Coventry,DEF,4.0,80178.0,roster-exact
+Benitez,Crystal Palace,GK,4.5,121709.0,roster-exact
+Doku,Man City,MID,7.5,248875.0,roster-exact
+Soler,Bournemouth,DEF,4.0,575901.0,roster-exact
+Jaouen,Newcastle,GK,4.5,554578.0,roster-exact
+Harrison,Leeds,MID,5.0,221399.0,roster-exact
+Kesler-Hayden,Coventry,DEF,4.0,465390.0,roster-exact
+Button,Ipswich,GK,4.0,50093.0,roster-exact
+Van Oevelen,Ipswich,GK,4.5,546600.0,roster-exact
+Davies,Liverpool,GK,4.0,464353.0,roster-exact
+Gillespie,Newcastle,GK,4.5,81441.0,roster-exact
+Mamardashvili,Liverpool,GK,5.0,449027.0,roster-exact
+Rodríguez,Bournemouth,FWD,6.0,561245.0,roster-exact
+Latibeaudiere,Coventry,DEF,4.0,204813.0,roster-exact
+P.M.Sarr,Tottenham,MID,5.0,482442.0,roster-exact
+Garner,Everton,MID,6.0,232928.0,roster-exact
+Christie,Bournemouth,MID,5.0,158499.0,roster-exact
+Penders,Chelsea,GK,4.5,549939.0,roster-exact
+Walton,Ipswich,GK,4.5,108813.0,roster-exact
+Kroupi.Jr,Bournemouth,MID,7.5,560262.0,roster-exact
+Bradley,Liverpool,DEF,5.0,492777.0,roster-exact
+Ekitiké,Liverpool,FWD,7.5,510663.0,roster-exact
+Brau,Coventry,DEF,4.0,577411.0,roster-exact
+Burns,Ipswich,MID,5.0,149929.0,roster-exact
+Ugarte,Man United,MID,5.0,232112.0,roster-exact
+Iroegbunam,Everton,MID,5.0,490094.0,roster-exact
+Szmodics,Ipswich,MID,5.0,172453.0,roster-exact
+John,Nott'm Forest,GK,4.5,221389.0,roster-exact
+Drameh,Hull,DEF,4.0,433590.0,roster-exact
+Forster,Bournemouth,GK,4.0,40383.0,roster-exact
+Austin,Tottenham,GK,4.0,214572.0,roster-exact
+Reijnders,Man City,MID,6.0,433036.0,roster-exact
+McNair,Hull,DEF,4.0,160817.0,roster-exact
+Dovin,Coventry,GK,4.0,484389.0,roster-exact
+McCarthy,Hull,DEF,4.0,661800.0,roster-exact
+Wilson,Coventry,GK,4.5,110690.0,roster-exact
+Xavi,Tottenham,MID,6.0,493362.0,roster-exact
+Baleba,Brighton,MID,5.0,535301.0,roster-exact
+Ellborg,Sunderland,GK,4.5,515046.0,roster-exact
+Dennis,Bournemouth,GK,4.0,444172.0,roster-exact
+Gruev,Leeds,MID,5.0,486520.0,roster-exact
+Morita,Hull,MID,5.0,445028.0,roster-exact
+Bornauw,Leeds,DEF,4.5,437738.0,roster-exact
+Mitoma,Brighton,MID,6.0,451340.0,roster-exact
+Minteh,Brighton,MID,6.0,592031.0,roster-exact
+Rodrigo,Man City,MID,6.5,220566.0,roster-exact
+Phillips,Man City,MID,5.0,155405.0,roster-exact
+Phillips,Hull,GK,4.0,167825.0,roster-exact
+Nørgaard,Everton,MID,5.0,128295.0,roster-exact
+Savona,Nott'm Forest,DEF,4.5,500151.0,roster-exact
+Digne,Aston Villa,DEF,4.5,101188.0,roster-exact
+Onana,Aston Villa,MID,5.0,449871.0,roster-exact
+Kulusevski,Tottenham,MID,6.5,445044.0,roster-exact
+Spence,Tottenham,DEF,4.5,232859.0,roster-exact
+Fofana,Chelsea,DEF,5.0,444463.0,roster-exact
+Joelinton,Newcastle,MID,5.5,180974.0,roster-exact
+Milosavljević,Bournemouth,DEF,5.0,620487.0,roster-exact
+De Ligt,Man United,DEF,5.0,209365.0,roster-exact
+Livramento,Newcastle,DEF,5.0,441191.0,roster-exact
+J.Timber,Arsenal,DEF,6.5,445122.0,roster-exact
+Romero,Tottenham,DEF,5.0,221632.0,roster-exact
+Chalobah,Chelsea,DEF,5.5,180736.0,roster-exact
+Gudmundsson,Leeds,DEF,4.5,243526.0,roster-exact
+Saliba,Arsenal,DEF,6.0,462424.0,roster-exact
+Gomes,Aston Villa,MID,5.5,448089.0,roster-exact
+Van den Berg,Brentford,DEF,5.0,444765.0,roster-exact
+Jörgensen,Chelsea,GK,5.0,508479.0,roster-exact
+Van de Ven,Tottenham,DEF,5.0,491279.0,roster-exact
+Andersen,Fulham,DEF,5.0,174874.0,roster-exact
+Ferguson,Brighton,FWD,5.0,487117.0,roster-exact
+Manzambi,Aston Villa,MID,6.0,614071.0,roster-exact
+Wright,Coventry,FWD,5.5,176412.0,roster-exact
+Phillips,Tottenham,DEF,4.5,548308.0,roster-exact
+Mateo Joseph,Leeds,FWD,4.5,565297.0,roster-exact
+Heaton,Man United,GK,4.0,21205.0,roster-exact
+Jaros,Liverpool,GK,4.0,432987.0,roster-exact
+Leoni,Liverpool,DEF,4.0,647681.0,roster-exact
+Bassette,Coventry,FWD,4.5,549653.0,roster-exact
+Masuaku,Sunderland,DEF,4.0,105717.0,roster-exact
+Danns,Liverpool,FWD,4.5,500058.0,roster-exact
+Milambo,Brentford,MID,5.0,543295.0,roster-exact
+Patterson,Sunderland,GK,4.0,232571.0,roster-exact
+Jacob,Hull,DEF,4.0,449428.0,roster-exact
+Hjelde,Sunderland,DEF,4.0,477547.0,roster-exact
+Piroe,Leeds,FWD,5.0,235826.0,roster-exact
+Lo-Tutala,Hull,GK,4.0,444307.0,roster-exact
+Watson,Brighton,MID,5.0,549074.0,roster-exact
+Destan,Hull,FWD,4.5,500957.0,roster-exact
+Howell,Brighton,MID,4.5,597320.0,roster-exact
+Gyabi,Hull,MID,4.5,470294.0,roster-exact
+Matazo,Hull,MID,4.5,465525.0,roster-exact
+Cardines,Crystal Palace,DEF,4.5,590014.0,roster-exact
+Hughes,Hull,DEF,4.0,501902.0,roster-exact
+Alleyne,Man City,DEF,5.0,494307.0,roster-exact
+Nedeljkovic,Aston Villa,DEF,4.0,578545.0,roster-exact
+Matusiwa,Ipswich,MID,5.0,241117.0,roster-exact
+Madjo,Aston Villa,FWD,5.5,690838.0,roster-exact
+Iling Jr,Aston Villa,MID,5.0,469247.0,roster-exact
+Gelhardt,Leeds,MID,5.0,,unresolved: absent from 2026-08-28 roster at this price
+J.Araujo,Bournemouth,DEF,4.5,436893.0,roster-exact
+Markelo,Coventry,FWD,5.0,551262.0,roster-exact
+Pecsi,Liverpool,GK,4.0,586268.0,roster-exact
+Vicario,Tottenham,GK,4.5,184254.0,roster-exact
+Bayindir,Man United,GK,4.5,451302.0,roster-exact
+Zambrano,Hull,MID,4.5,553783.0,roster-exact
+Bajcetic,Liverpool,MID,5.0,535928.0,roster-exact
+Burstow,Hull,FWD,4.5,534392.0,roster-exact
+Cartwright,Hull,GK,4.0,494950.0,roster-exact
+Tzimas,Brighton,FWD,5.5,608181.0,roster-exact
+Uche,Crystal Palace,FWD,5.0,660392.0,roster-exact
+Kamara,Hull,MID,5.0,490161.0,roster-exact
+A.Murphy,Newcastle,DEF,4.0,545477.0,roster-exact
+Fredricson,Man United,DEF,4.0,547676.0,roster-exact
+Butland,Hull,GK,4.5,105666.0,roster-exact

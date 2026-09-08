@@ -195,6 +195,27 @@ visible, so a club playing a Thursday Europa tie looks fully rested by Sunday. T
 error and it attenuates toward zero. The CI is nonetheless tight enough to exclude anything
 worth a model parameter.
 
+**[RESOLVED 1 Sep 2026]** That limit has been discharged, not left standing.
+`studies/fixture_congestion.py` rebuilds the treatment from the actual cup and European
+calendar. The attenuation was real and material — **14.3% of club-PL-matches sat in the
+wrong recovery bucket**, 105 of them looking like a full week's rest when they were three-
+or four-day turnarounds. Correcting it does not change the answer: for established
+starters, a three-day turnaround moves start probability by **+0.001, CI (−0.014, +0.019)**
+and team residual xG by **+0.122, CI (−0.046, +0.287)**, both the wrong sign for fatigue.
+
+Two things that study adds which this one could not reach:
+
+- **The risk set matters more than the instrument did.** `playermatchstats` has no zero-
+  minute rows, so a minutes panel built from it is conditioned on getting on the pitch and
+  cannot see rotation at all. The correct population is the matchday squad in
+  `lineups.csv`, unused substitutes included.
+- **The rotation is real, it just goes into the cup.** 84.3% of 60+ minute league
+  appearances go to established regulars, against 74.3% in the Champions League, 58.2% in
+  the Europa League and 46.9% in the EFL Cup. Clubs absorb congestion in the competition
+  they care least about, which is why the following league match is unaffected.
+
+See `docs/FIXTURE_CONGESTION_2026-09-01.md`. GW27+ remains untested.
+
 ---
 
 ## 3. `[CHECK]` Penalties — the declared order is the better signal, correcting an earlier claim

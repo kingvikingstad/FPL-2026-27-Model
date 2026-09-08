@@ -20,6 +20,7 @@ This replaces every stopgap the model was using:
   * ClubElo name-matching  -> Elo shipped in teams.csv, keyed by FPL team code
   * guessed promoted prior -> Elo-derived prior for Coventry/Hull/Ipswich
 """
+import os
 import numpy as np, pandas as pd
 
 POS = {"Goalkeeper": "GK", "Defender": "DEF", "Midfielder": "MID", "Forward": "FWD"}
@@ -33,12 +34,91 @@ def norm_team(n): return TEAM_NORM.get(str(n).strip(), str(n).strip())
 UPLOADS = config.repo("2026-2027")
 
 
+def _resolve_elo(t, verbose=True):
+    """Guarantee a populated `elo` column, or fail with a message that names the cause.
+
+    The data repo ships Elo in teams.csv and this project depends on it for the team
+    prior and for the promoted clubs, which have no 25/26 results at all. On 2026-08-21
+    upstream emptied the column while leaving it in place: every value became NaN, the
+    NaN propagated through the prior into `TeamModel.theta` and `TeamModel.cov`, and the
+    first thing that actually complained was `np.linalg.multivariate_normal` forty lines
+    later with "SVD did not converge" — a message with no path back to the cause.
+
+    So: detect it here, fall back to the pinned snapshot (config.TEAM_ELO), and SAY which
+    source was used. A silently-degraded team layer is the failure mode this project is
+    organised against; a stale-but-stated Elo is fine, a NaN one is not.
+    """
+    have = pd.to_numeric(t.get("elo"), errors="coerce") if "elo" in t.columns else None
+    if have is not None and have.notna().all():
+        return t.assign(elo=have)
+    n_missing = len(t) if have is None else int(have.isna().sum())
+    if not os.path.exists(config.TEAM_ELO):
+        raise RuntimeError(
+            f"teams.csv has no usable Elo ({n_missing}/{len(t)} missing) and the pinned "
+            f"fallback {config.TEAM_ELO} does not exist. The team prior cannot be built "
+            f"without it — promoted clubs have no other information at all.")
+    snap = pd.read_csv(config.TEAM_ELO)
+    filled = t.merge(snap[["code", "elo"]].rename(columns={"elo": "_elo_pinned"}),
+                     on="code", how="left")
+    merged = (have if have is not None
+              else pd.Series(np.nan, index=t.index)).fillna(filled["_elo_pinned"])
+    if merged.isna().any():
+        missing = t.loc[merged.isna(), "name"].tolist()
+        raise RuntimeError(
+            f"Elo missing upstream AND absent from {config.TEAM_ELO} for: {missing}")
+    if verbose:
+        as_of = snap["as_of"].iloc[0] if "as_of" in snap.columns else "unknown"
+        print(f"[core-insights] teams.csv Elo is empty upstream ({n_missing}/{len(t)}) "
+              f"— using the pinned snapshot from {as_of} (data/team_elo_2627.csv)")
+    return t.assign(elo=merged.values)
+
+
+def _latest_snapshot(s):
+    """One row per player from `playerstats.csv`, newest gameweek first.
+
+    Upstream turned this file from a single pre-season snapshot into a per-gameweek
+    PANEL at the 26/27 GW2 update — one row per player per `gw`. Merging it unfiltered
+    fans every player out into a row per gameweek, and nothing downstream raises:
+
+      - the roster doubles (626 players -> 1242 rows),
+      - the league's expected starters double with it, so `starter_prior.apply_xi_constraint`
+        does its job on a corrupt total and silently halves every start probability,
+      - `predicted_xi` resolves 0/220 names, because each of its three passes requires a
+        name to be UNIQUE inside its club and every player now appears twice.
+
+    A board built this way looks entirely plausible. [VERIFIED 2026-08-31] on the 26/27
+    file: 1242 rows, 626 unique ids, gw in {1, 2}, 616 ids duplicated.
+
+    The last row per player is taken rather than a global `gw == max` filter: ten players
+    carry a GW1 snapshot but no GW2 one, and a global filter would drop them from the
+    roster entirely.
+    """
+    if "gw" not in s.columns:
+        return s
+    g = pd.to_numeric(s["gw"], errors="coerce")
+    if g.nunique(dropna=True) > 1:
+        n0 = len(s)
+        s = (s.assign(_gw=g).sort_values("_gw", kind="mergesort")
+              .groupby("id", as_index=False).tail(1).drop(columns="_gw"))
+        print(f"[core-insights] playerstats.csv is a per-gameweek panel "
+              f"(gw {int(g.min())}-{int(g.max())}); kept the latest row per player, "
+              f"{n0} -> {len(s)}")
+    if s["id"].duplicated().any():
+        n = int(s["id"].duplicated().sum())
+        raise ValueError(
+            f"playerstats.csv still has {n} duplicate player ids after snapshot "
+            f"selection. Every downstream join fans out on this — fix the reader "
+            f"rather than deduplicating at the call site.")
+    return s
+
+
 def load(base=None):
     """Return (players, teams, gameweeks) with everything joined and normalised."""
     base = base or UPLOADS
     p = pd.read_csv(f"{base}/players.csv")
     s = pd.read_csv(f"{base}/playerstats.csv")
-    t = pd.read_csv(f"{base}/teams.csv")
+    s = _latest_snapshot(s)
+    t = _resolve_elo(pd.read_csv(f"{base}/teams.csv"))
     gw = pd.read_csv(f"{base}/gameweek_summaries.csv")
 
     s = s.drop(columns=[c for c in ["first_name", "second_name", "web_name"] if c in s.columns])

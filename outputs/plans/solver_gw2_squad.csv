@@ -1,0 +1,16 @@
+player_code,display_name,team,pos,price,ep,in_xi,is_captain
+141746,B.Fernandes,Man United,MID,12.0,6.547,True,True
+446008,Mbeumo,Man United,MID,8.0,5.347,True,False
+226597,Gabriel,Arsenal,DEF,8.0,4.681,True,False
+209036,Guéhi,Man City,DEF,6.0,4.647,True,False
+424876,Szoboszlai,Liverpool,MID,7.0,4.59,True,False
+439509,Tzolis,Arsenal,MID,6.5,4.234,True,False
+461102,Thomas,Coventry,DEF,4.0,4.171,True,False
+201658,Tavernier,Bournemouth,MID,6.0,4.076,True,False
+502500,Thiago,Brentford,FWD,8.0,4.018,True,False
+177815,Calvert-Lewin,Leeds,FWD,6.0,3.866,True,False
+204936,Donnarumma,Man City,GK,5.5,3.353,True,False
+97032,Virgil,Liverpool,DEF,6.5,4.488,False,False
+451284,van Ewijk,Coventry,DEF,4.0,4.303,False,False
+444102,Evanilson,Bournemouth,FWD,6.0,3.591,False,False
+154561,Raya,Arsenal,GK,6.0,3.347,False,False

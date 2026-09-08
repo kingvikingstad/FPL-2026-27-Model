@@ -111,6 +111,40 @@ def load_understat_shots(season="2025"):
 # =============================================================================
 # PRIOR-MODIFICATION LAYER  (runs anywhere; this is what the model consumes)
 # =============================================================================
+FPL_BOOTSTRAP = "https://fantasy.premierleague.com/api/bootstrap-static/"
+
+
+def fetch_live_signals(url=FPL_BOOTSTRAP, timeout=30):
+    """Availability straight from the live FPL endpoint, keyed on `player_code`.
+
+    WHY THIS EXISTS. The board is normally built from the data-repo snapshot, which is
+    refreshed on a cron and can trail team news by days. Measured 2026-08-19 against a
+    snapshot from 2026-08-14: 36 players the snapshot still treats as available were
+    projected a combined 356 points over GW1-6 while the live endpoint had them out —
+    and many were not injuries at all but completed transfers (Romero to Atletico,
+    Spence to Internazionale, Vicario to Juventus, Unal to Getafe). A departed player
+    cannot be priced by a rotation prior; he has to be removed.
+
+    Returns a signals-shaped frame [name, player_code, status, chance_play, news,
+    ep_next] usable directly by `apply_availability`. Raises on network failure so the
+    caller decides whether to fall back — silently returning a stale frame is how the
+    above happened in the first place.
+    """
+    import json, urllib.request
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        data = json.loads(r.read())
+    chance = lambda v: 1.0 if v is None else max(0.0, min(1.0, float(v) / 100.0))
+    return pd.DataFrame([{
+        "name": e.get("web_name"),
+        "player_code": e.get("code"),
+        "status": e.get("status", "a") or "a",
+        "chance_play": chance(e.get("chance_of_playing_next_round")),
+        "news": (e.get("news") or "").strip(),
+        "ep_next": pd.to_numeric(e.get("ep_next"), errors="coerce"),
+    } for e in data["elements"]])
+
+
 def apply_availability(players: pd.DataFrame, signals: pd.DataFrame,
                        lineups: dict | None = None, tighten=25.0) -> pd.DataFrame:
     """Rewrite the Beta start prior from current availability. This is the single
@@ -122,15 +156,26 @@ def apply_availability(players: pd.DataFrame, signals: pd.DataFrame,
     - status a: keep historical Beta (optionally nudged by chance_play)
     - `lineups` (optional): {team: {"start":[names], "bench":[names]}} collapses
       the prior to near-certainty once an XI is confirmed (~1h pre-KO).
+
+    Joins on `player_code` when BOTH frames carry it, falling back to lowercased
+    web_name otherwise. The name fallback is genuinely ambiguous — 15 web_names in the
+    26/27 squad belong to players at two different clubs (Palmer is at Chelsea and at
+    Ipswich), so a name-keyed availability lookup can rule out the wrong player.
     """
     p = players.copy()
-    sig = signals.set_index(signals.name.str.lower().str.strip())
+    use_code = ("player_code" in signals.columns and "player_code" in p.columns
+                and signals["player_code"].notna().any())
+    if use_code:
+        sig = signals.dropna(subset=["player_code"]).drop_duplicates("player_code")
+        sig = sig.set_index(sig["player_code"])
+    else:
+        sig = signals.set_index(signals.name.str.lower().str.strip())
     for i, r in p.iterrows():
-        key = str(r.web_name).lower().strip()
+        key = r.get("player_code") if use_code else str(r.web_name).lower().strip()
         # historical mean start prob from the existing Beta
         hist = r.start_a / (r.start_a + r.start_b)
         new_p, strength = hist, r.start_a + r.start_b
-        if key in sig.index:
+        if key is not None and key in sig.index:
             s = sig.loc[key]
             if isinstance(s, pd.DataFrame):
                 s = s.iloc[0]
