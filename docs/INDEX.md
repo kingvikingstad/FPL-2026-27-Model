@@ -1,6 +1,6 @@
 # docs/ — what to read, and what not to
 
-27 files, ~62,000 words. Reading them in order is not a strategy; most of what is
+28 files, ~63,000 words. Reading them in order is not a strategy; most of what is
 here is the *record* of how a claim was established, not the claim itself. This
 index routes by question, and marks what is stale so nobody spends context on it.
 
@@ -29,8 +29,8 @@ Everything below is the evidence behind those two.
 | Which external source contributes what, and what duplicates | `DATA_SOURCE_AUDIT_2026-08-19.md` |
 | The Solio market feed — what it actually publishes | `SOLIO_MARKET_FEED_2026-08-27.md` |
 | Live odds integration | `INTEGRATION.md` |
-| Has the model ever been scored against a real gameweek? | `GW1_SCORING_2026-08-26.md`, then `GW2_REVIEW_2026-09-06.md` |
-| What happened in a specific gameweek? | `GW1_REVIEW_2026-08-26.md`, `GW2_REVIEW_2026-09-06.md` |
+| Has the model ever been scored against a real gameweek? | `GW1_SCORING_2026-08-26.md`, then `GW2_REVIEW_2026-09-06.md`, then `GW3_REVIEW_2026-09-08.md`. The scored rows themselves are `predictions/scoring_ledger.csv` |
+| What happened in a specific gameweek? | `GW1_REVIEW_2026-08-26.md`, `GW2_REVIEW_2026-09-06.md`, `GW3_REVIEW_2026-09-08.md` |
 | Known correctness bugs and the tree cleanup | `CODE_AUDIT_2026-08-21.md`, `SIMULATION_FIXES_2026-08-24.md` |
 | A synthesis across the first build phase | `FINDINGS_SYNTHESIS.md` |
 | What a full pre-GW1 run looked like | `FULL_STACK_RUN_2026-08-19.md` |
@@ -42,7 +42,7 @@ reader does not re-raise them — and so the bound is re-checked if the setup ch
 
 | Concern | Measured | Evidence |
 |---|---|---|
-| `teams.csv` Elo is NULL upstream (verified on `origin/main`, will not self-heal), so the team layer runs on a pin dated 2026-08-14 containing no 26/27 result | Removing the Elo channel **entirely** — the upper bound on any error a stale pin can cause — moves net team strength by max **0.30 posterior SD**, Spearman **rho 0.9955**. It is a blend into the prior *means* at `bayes_model.py:166`, not a likelihood term, with 380 match rows on top. Re-check if `ELO_WEIGHT` rises above 0.45. | `studies/elo_pin_sensitivity.py` / `.csv` |
+| `teams.csv` Elo is NULL upstream (verified on `origin/main`, will not self-heal), so the team layer runs on a pin dated 2026-08-14 containing no 26/27 result | Removing the Elo channel **entirely** — the upper bound on any error a stale pin can cause — clears the pre-registered rule (**<0.5 posterior SD**, Spearman **rho > 0.98**) with room to spare; the current numbers are in the CSV, and they move a little each time the feed does. It is a blend into the prior *means* at `bayes_model.py:166`, not a likelihood term, with 380 match rows on top. Re-check if `ELO_WEIGHT` rises above 0.45. | `studies/elo_pin_sensitivity.py` / `.csv` |
 
 ## The nulls, in one place
 

@@ -108,14 +108,18 @@ def environment():
         pin = _elo_pin_stale(last_deadline)
         if pin:
             # A NOTE, not a PROBLEM. `studies/elo_pin_sensitivity.py` measured the
-            # bound on 2026-09-08: removing the Elo channel ENTIRELY — which is the
-            # most a wrong pin can cost, since a stale Elo cannot be worse than no Elo
-            # — moves net team strength by 0.30 posterior SD at the maximum and leaves
-            # the club ranking at Spearman rho 0.9955. Elo is a blend into the prior
-            # MEANS at bayes_model.py:166, not a likelihood term, and 380 match rows
-            # sit on top of it. Reporting this at PROBLEM severity made the gate
-            # permanently red over a documented non-issue, which is how a gate stops
-            # being read. Re-run the study if ELO_WEIGHT rises above 0.45.
+            # bound: removing the Elo channel ENTIRELY — the most a wrong pin can cost,
+            # since a stale Elo cannot be worse than no Elo — clears the pre-registered
+            # rule with room to spare. Elo is a blend into the prior MEANS at
+            # bayes_model.py:166, not a likelihood term, and 380 match rows sit on top
+            # of it. Reporting this at PROBLEM severity made the gate permanently red
+            # over a documented non-issue, which is how a gate stops being read.
+            #
+            # The message cites the RULE, not the measurement. It said "0.30 posterior
+            # SD" until 2026-09-09, when re-running the study against the pulled feed
+            # moved it to 0.3415 and the sentence became quietly false — a hardcoded
+            # number that drifts every re-run is the documentation-vs-code gap this
+            # tool exists to close, reproduced inside the tool itself.
             notes.append(pin)
 
         # The loop that is actually broken. PROJECT_KNOWLEDGE §6.6 asks for the model
@@ -186,9 +190,10 @@ def _elo_pin_stale(last_deadline):
                 f"{pin:%Y-%m-%d}, {days}d before the last deadline "
                 f"({last_deadline:%Y-%m-%d}), so it contains no 26/27 result. MEASURED "
                 f"and not urgent: removing the Elo channel entirely — the upper bound "
-                f"on a wrong pin — moves net team strength 0.30 posterior SD at most, "
-                f"Spearman rho 0.9955 (studies/elo_pin_sensitivity.py, 2026-09-08). "
-                f"Re-run that study if ELO_WEIGHT rises above 0.45.")
+                f"on a wrong pin — stays inside the pre-registered rule (<0.5 posterior "
+                f"SD, Spearman rho > 0.98). Current numbers: "
+                f"studies/elo_pin_sensitivity.csv. Re-run that study if ELO_WEIGHT "
+                f"rises above 0.45.")
     return None
 
 
