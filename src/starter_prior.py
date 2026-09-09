@@ -243,7 +243,7 @@ def _sigmoid(z):
 
 
 def apply_xi_constraint(players, target=XI_SIZE, group="team", verbose=True,
-                        max_iter=80, tol=1e-9):
+                        max_iter=80, tol=1e-9, hold=None):
     """Make each club's start probabilities sum to ELEVEN.
 
     THE DEFECT THIS FIXES  [VERIFIED 2026-08-24 against GW1]
@@ -276,8 +276,26 @@ def apply_xi_constraint(players, target=XI_SIZE, group="team", verbose=True,
     while fringe players at 0.3 take most of the correction. That is the right incidence:
     the extremes were already calibrated and the middle was not.
 
-    Applied AFTER the depth prior and any predicted XI, and BEFORE availability, so an
-    injury flag still overrides everything. Clubs are solved independently by bisection.
+    ORDER  [CORRECTED 2026-09-08]
+    -----------------------------
+    Applied AFTER availability, not before it. Running it first normalised each club to
+    eleven and then let availability zero players out of that eleven, so the mass assigned
+    to a player who was subsequently ruled out simply EVAPORATED instead of moving to the
+    team-mate who will actually start. Measured on the live board: league Sigma p_start
+    324.7 -> 220.0 under the constraint -> 184.9 after availability, with nineteen of
+    twenty clubs below 10.5 expected starters and Aston Villa at 8.06. That is a ~16%
+    structural under-count of appearance, attacking, DefCon and clean-sheet exposure,
+    biting hardest at the clubs with the most team news — precisely where the model is
+    supposed to be sharpest.
+
+    `hold` keeps the injury precedence that the old ordering bought accidentally. Pass a
+    boolean mask (typically `players["avail_ruled_out"]`) of players availability has
+    ruled out: they keep their probability exactly, their mass is subtracted from the
+    club's target, and the tilt is solved over the remaining players only. Without it the
+    upward tilt would lift a ruled-out player off 0.01 — sigmoid(logit(0.01) + 1.0) is
+    0.027 — which is the injury flag losing to the constraint, the wrong way round.
+
+    Clubs are solved independently by bisection.
     """
     p = players.copy()
     if "start_a" not in p.columns or group not in p.columns:
@@ -286,11 +304,21 @@ def apply_xi_constraint(players, target=XI_SIZE, group="team", verbose=True,
     b = p["start_b"].astype(float)
     strength = a + b
     p0 = a / strength
+    if hold is None:
+        held_mask = pd.Series(False, index=p.index)
+    else:
+        held_mask = pd.Series(hold, index=p.index).fillna(False).astype(bool)
     rows = []
-    for club, idx in p.groupby(group).groups.items():
-        idx = list(idx)
-        q = p0.loc[idx].values
-        tot = float(np.sum(q))
+    for club, idx_all in p.groupby(group).groups.items():
+        idx_all = list(idx_all)
+        tot = float(np.sum(p0.loc[idx_all].values))
+        # Held players keep their probability and their mass comes off the target; the
+        # tilt is solved over the free players only.
+        held = [i for i in idx_all if held_mask.loc[i]]
+        idx = [i for i in idx_all if not held_mask.loc[i]]
+        held_mass = float(np.sum(p0.loc[held].values)) if held else 0.0
+        target_free = target - held_mass
+        q = p0.loc[idx].values if idx else np.array([])
         # TWO-SIDED, because Sigma p = 11 is an equality, not a ceiling. A club whose
         # probabilities sum to 10 is also wrong: someone has to be the eleventh, and the
         # tilt spreads that mass in proportion to the odds already assigned, which is the
@@ -298,8 +326,12 @@ def apply_xi_constraint(players, target=XI_SIZE, group="team", verbose=True,
         # 26/27 board is OVER, so only the downward direction is exercised on real data;
         # the upward one is correct by the same argument but is not yet validated.
         # A club with fewer than eleven listed players cannot be solved and is skipped.
-        if len(idx) < int(target) or abs(tot - target) < 1e-9:
-            rows.append({"team": club, "before": tot, "after": tot, "shift": 0.0})
+        # A club with too few FREE players to reach the residual target cannot be solved
+        # (the tilt is bounded by the number of players it can move), and one already at
+        # target needs no shift.
+        if len(idx) < int(np.ceil(target_free)) or target_free <= 0                 or abs(tot - target) < 1e-9:
+            rows.append({"team": club, "before": tot, "after": tot, "shift": 0.0,
+                         "held": len(held)})
             continue
         z = _logit(q)
         lo, hi = -30.0, 30.0
@@ -307,9 +339,9 @@ def apply_xi_constraint(players, target=XI_SIZE, group="team", verbose=True,
         for _ in range(max_iter):
             c = 0.5 * (lo + hi)
             s_ = float(np.sum(_sigmoid(z + c)))
-            if abs(s_ - target) < tol:
+            if abs(s_ - target_free) < tol:
                 break
-            if s_ > target:
+            if s_ > target_free:
                 hi = c
             else:
                 lo = c
@@ -320,8 +352,9 @@ def apply_xi_constraint(players, target=XI_SIZE, group="team", verbose=True,
         # get right.
         p.loc[idx, "start_a"] = newp * strength.loc[idx].values
         p.loc[idx, "start_b"] = (1.0 - newp) * strength.loc[idx].values
-        rows.append({"team": club, "before": tot, "after": float(np.sum(newp)),
-                     "shift": float(c)})
+        rows.append({"team": club, "before": tot,
+                     "after": float(np.sum(newp)) + held_mass,
+                     "shift": float(c), "held": len(held)})
     rep = pd.DataFrame(rows)
     if verbose and len(rep):
         over = rep[rep.before > target + 1e-9]
@@ -332,3 +365,82 @@ def apply_xi_constraint(players, target=XI_SIZE, group="team", verbose=True,
             print(f"    {r['team']:16s} {r['before']:5.2f} -> {r['after']:5.2f}  "
                   f"(log-odds shift {r['shift']:+.2f})")
     return p, rep
+
+
+# ---------------------------------------------------------------------------
+def selftest():
+    """Offline, synthetic. Guards `apply_xi_constraint` — added 2026-09-08 when the
+    constraint moved to AFTER availability and grew a `hold` mask. The module shipped
+    without a selftest until then, so `test_all` discovered nothing here and the
+    estimator that sets every club's expected starter count was uncovered."""
+    def frame(ps, teams, strength=50.0, ruled=None):
+        d = pd.DataFrame({"team": teams,
+                          "start_a": [p * strength for p in ps],
+                          "start_b": [(1 - p) * strength for p in ps]})
+        if ruled is not None:
+            d["avail_ruled_out"] = ruled
+        return d
+
+    # 1. an OVER club is pulled down to exactly eleven
+    over = frame([0.9] * 15, ["A"] * 15)
+    out, rep = apply_xi_constraint(over, verbose=False)
+    got = (out["start_a"] / (out["start_a"] + out["start_b"])).sum()
+    assert abs(got - 11.0) < 1e-6, f"over club not normalised: {got}"
+
+    # 2. an UNDER club is pushed UP — Sigma p = 11 is an equality, not a ceiling
+    under = frame([0.4] * 15, ["A"] * 15)
+    out, _ = apply_xi_constraint(under, verbose=False)
+    got = (out["start_a"] / (out["start_a"] + out["start_b"])).sum()
+    assert abs(got - 11.0) < 1e-6, f"under club not normalised: {got}"
+
+    # 3. relative odds are preserved among the players that move (the tilt is a shift
+    #    in log-odds, so every pairwise odds RATIO is invariant)
+    mixed = frame([0.9, 0.6, 0.3] * 5, ["A"] * 15)
+    out, _ = apply_xi_constraint(mixed, verbose=False)
+    q0 = mixed["start_a"] / (mixed["start_a"] + mixed["start_b"])
+    q1 = out["start_a"] / (out["start_a"] + out["start_b"])
+    r0 = (q0 / (1 - q0)).values
+    r1 = (q1 / (1 - q1)).values
+    ratio = (r1 / r0)
+    assert np.allclose(ratio, ratio[0]), "log-odds shift is not uniform within the club"
+
+    # 4. THE POINT OF THE hold MASK. A ruled-out player sits at 0.01, not 0. Without the
+    #    mask an upward tilt lifts him off it — that is the injury flag losing to the
+    #    constraint. With it he is untouched and the club still sums to eleven.
+    ps = [0.01] * 4 + [0.5] * 11
+    ruled = [True] * 4 + [False] * 11
+    held = frame(ps, ["A"] * 15, ruled=ruled)
+    out, rep = apply_xi_constraint(held, hold=held["avail_ruled_out"], verbose=False)
+    q = out["start_a"] / (out["start_a"] + out["start_b"])
+    assert np.allclose(q.values[:4], 0.01, atol=1e-9), \
+        f"ruled-out players were tilted: {q.values[:4]}"
+    assert abs(q.sum() - 11.0) < 1e-6, f"club with held players does not sum to 11: {q.sum()}"
+    assert int(rep["held"].iloc[0]) == 4, rep
+
+    # 5. and WITHOUT the mask the same board does resurrect them — the regression this
+    #    test exists to catch, asserted in the failing direction so it cannot pass
+    #    vacuously if `hold` is ever silently ignored.
+    out_bad, _ = apply_xi_constraint(held, verbose=False)
+    q_bad = out_bad["start_a"] / (out_bad["start_a"] + out_bad["start_b"])
+    assert q_bad.values[0] > 0.01 + 1e-6, \
+        "unheld ruled-out player did not move; the mask test proves nothing"
+
+    # 6. clubs are independent — solving one must not touch another
+    two = frame([0.9] * 15 + [0.2] * 15, ["A"] * 15 + ["B"] * 15)
+    out, _ = apply_xi_constraint(two, verbose=False)
+    q = out["start_a"] / (out["start_a"] + out["start_b"])
+    assert abs(q[:15].sum() - 11.0) < 1e-6 and abs(q[15:].sum() - 11.0) < 1e-6
+
+    # 7. a club with fewer listed players than the target is skipped, not forced
+    tiny = frame([0.5] * 6, ["A"] * 6)
+    out, _ = apply_xi_constraint(tiny, verbose=False)
+    assert np.allclose(out["start_a"].values, tiny["start_a"].values), "tiny club forced"
+
+    print("starter_prior selftest ok — XI constraint normalises both directions, "
+          "preserves relative odds, holds ruled-out players fixed, and skips short squads")
+    return 0
+
+
+if __name__ == "__main__":
+    import sys as _sys2
+    _sys2.exit(selftest() if "--selftest" in _sys2.argv else 0)

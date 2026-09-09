@@ -170,17 +170,27 @@ def apply_availability(players: pd.DataFrame, signals: pd.DataFrame,
         sig = sig.set_index(sig["player_code"])
     else:
         sig = signals.set_index(signals.name.str.lower().str.strip())
+    # Which players THIS function ruled out, recorded rather than inferred later from a
+    # threshold. `apply_xi_constraint` runs after availability (2026-09-08) and tilts a
+    # club's log-odds upward to reach eleven starters; a ruled-out player sits at 0.01,
+    # not 0, so an unguarded tilt would hand an injured player real start probability —
+    # logit(0.01) + 1.0 is 0.027, and larger shifts are worse. The constraint holds these
+    # rows fixed instead. Downstream code must treat the column as advisory-but-exact:
+    # it means "availability, not the prior, put this player here".
+    p["avail_ruled_out"] = False
     for i, r in p.iterrows():
         key = r.get("player_code") if use_code else str(r.web_name).lower().strip()
         # historical mean start prob from the existing Beta
         hist = r.start_a / (r.start_a + r.start_b)
         new_p, strength = hist, r.start_a + r.start_b
+        ruled = False
         if key is not None and key in sig.index:
             s = sig.loc[key]
             if isinstance(s, pd.DataFrame):
                 s = s.iloc[0]
             if s.status in ("i", "s", "u", "n") or s.chance_play <= 0.0:
                 new_p, strength = 0.01, 40.0                 # ruled out
+                ruled = True
             elif s.status == "d" or s.chance_play < 1.0:
                 new_p = hist * s.chance_play                 # doubtful -> scale
                 strength = tighten                           # we now have info
@@ -194,8 +204,12 @@ def apply_availability(players: pd.DataFrame, signals: pd.DataFrame,
                 new_p, strength = max(r.sub_app_rate, 0.05), 60.0
             elif lu.get("start"):                            # named XI, not in it
                 new_p, strength = 0.01, 200.0
+                ruled = True
+            else:
+                ruled = False                                # named in the XI or benched
         p.at[i, "start_a"] = float(np.clip(new_p, 1e-3, 1) * strength)
         p.at[i, "start_b"] = float(np.clip(1 - new_p, 1e-3, 1) * strength)
+        p.at[i, "avail_ruled_out"] = bool(ruled)
     return p
 
 

@@ -21,7 +21,10 @@ Env: GW_HI (default 38 = full season), SOLIO_W_OURS (default 0.5), SOLIO=off, MA
      INSEASON_W_RATE, INSEASON_EXP_MINUTES=on (default off), INSEASON_EXP_K,
      INSEASON_KAPPA=<n> (default off/inf),
      SOLIO_MARKET=on (default off; requires MARKET_ODDS=off), SOLIO_MARKET_W,
-     SOLIO_MARKET_GW, XI_CONSTRAINT=off, FPL_SETPIECE=fpl|override|fill.
+     SOLIO_MARKET_GW, XI_CONSTRAINT=off,
+     FPL_SETPIECE=fpl|override|fill|observed (default fpl; `observed` is the
+       unshrunk n=1 channel withdrawn on 2026-09-08 — see the note at its use),
+     INJURY_IMPACT=on (default off), TEAM_OVERRIDES=on (default off).
 
 INSEASON: fold 26/27 results back into the priors — realised starts into the Beta
 minutes prior, and finished matches' xG (not scorelines) into the team model's E0
@@ -154,15 +157,11 @@ else:
 # Baseline start prior, captured BEFORE availability collapses it. injury_impact needs
 # to know what a player was expected to contribute, which is unrecoverable once his
 # prior has already been zeroed by the injury we are trying to price.
-# ELEVEN PLAYERS START. Applied after the depth prior and the predicted XI, before
-# availability, so an injury flag still overrides it. Validated against GW1: expected
-# starters 260.6 -> 195.6 against an actual 183, Brier 0.109 -> 0.077, log loss 0.364 ->
-# 0.276. Ships ON as a validated correction; XI_CONSTRAINT=off reverts.
-if _flag("XI_CONSTRAINT", "on"):
-    pl, _xirep = sp.apply_xi_constraint(pl)
-else:
-    print("[xi-constraint] off")
-
+# The XI constraint USED to run here, before availability. It now runs after it — see
+# the block following `apply_availability` below. Moving it is a correction, not a
+# preference: normalising to eleven and then zeroing players out of that eleven destroyed
+# the mass instead of reallocating it, and left the league at 184.9 expected starters
+# against a structural 220.
 pl["p_start_base"] = pl["start_a"] / (pl["start_a"] + pl["start_b"])
 
 # In-season evidence. ON by default (INSEASON=off to disable). The minutes channel goes in HERE,
@@ -243,6 +242,44 @@ if _flag("SOLIO_MARKET", "off", on_values=("on", "1", "true")):
             weight=int(os.environ.get("SOLIO_MARKET_W", sm.W_FIXTURE)))
 
 pl = sg.apply_availability(pl, sig, lineups=None)
+
+# ELEVEN PLAYERS START. Applied AFTER availability [CORRECTED 2026-09-08]. Validated
+# against GW1 in its original position: expected starters 260.6 -> 195.6 against an
+# actual 183, Brier 0.109 -> 0.077, log loss 0.364 -> 0.276. That validation measured the
+# constraint against an UNCONSTRAINED board and remains the reason the layer exists; it
+# did not measure the ordering, and the ordering was wrong. Running before availability
+# normalised each club to eleven and then let injuries delete players out of that eleven,
+# so the surplus vanished rather than moving to whoever actually starts — league 220.0 ->
+# 184.9, nineteen clubs under 10.5, Aston Villa 8.06. Every EV component downstream
+# (appearance, attacking, DefCon, clean sheet) was scaled down with it, worst at the clubs
+# with the most team news.
+#
+# `hold` preserves what the old ordering bought by accident: availability's ruled-out
+# players keep 0.01 exactly and are excluded from the tilt, so an injury flag still beats
+# the constraint. `p_start_base` is captured ABOVE, pre-availability, because
+# injury_impact needs the uncollapsed baseline.
+if _flag("XI_CONSTRAINT", "on"):
+    pl, _xirep = sp.apply_xi_constraint(pl, hold=pl.get("avail_ruled_out"))
+    # BUILD-TIME INVARIANT. Checked here rather than on gw_board_long.csv because the
+    # board does not carry p_start, and because a board that violates this should not be
+    # written at all. The old ordering failed it at 184.9/220 and nothing noticed for
+    # weeks: every downstream EV was scaled down together, so no ratio looked wrong and
+    # the marginals stayed self-consistent. Clubs the solver SKIPS (fewer listed players
+    # than the residual target) are reported, not asserted — they are unsolvable, not
+    # wrong.
+    if len(_xirep):
+        _solved = _xirep[_xirep["shift"].abs() > 0]
+        _bad = _solved[(_solved["after"] - sp.XI_SIZE).abs() > 0.25]
+        _skipped = _xirep[_xirep["shift"] == 0]
+        if len(_bad):
+            raise SystemExit(
+                "[xi-constraint] INVARIANT VIOLATED — these clubs do not sum to eleven "
+                "after the tilt:" + chr(10) + _bad.to_string(index=False))
+        _lg = float(_xirep["after"].sum())
+        print(f"[xi-constraint] league {_lg:.1f} expected starters across "
+              f"{len(_xirep)} clubs ({len(_skipped)} skipped)")
+else:
+    print("[xi-constraint] off")
 
 # Predicted XIs (team news). Applied AFTER availability so it refines a prior that
 # already knows who is injured, and applied SOFTLY — a prediction the day before a
@@ -330,7 +367,21 @@ else:
     print("[pred-xi] off")
 # Fill set-piece duty where FPL declares none. FPL's flag is the more precise signal and
 # always wins; this only covers the clubs it leaves blank (studies/penalty_assignment.py).
-_spt = os.environ.get("FPL_SETPIECE", "observed").lower()
+#
+# Default reverted from "observed" to "fpl" on 2026-09-08. `studies/penalty_assignment.py`
+# is the registered result on exactly this question and points the other way: the declared
+# `penalties_order` BEATS measured history at 85.7% precision. The observed channel let a
+# SINGLE realised penalty overturn a declaration — no minimum n, no shrinkage toward the
+# prior, ties broken by `.iloc[0]`. On live data all six clubs that had taken a penalty
+# were at n=1 and two declarations were already overturned (Coventry Wright->Torp,
+# Sunderland Diarra->Le Fee), moving roughly 15 projected points per club to the wrong
+# player in an arbitrary direction. Against an 85.7% prior one observation does not move
+# the posterior across 50%; that estimator moved it all the way.
+#
+# `observed` is still reachable explicitly. To make it the default it needs to come back
+# as a Beta-Binomial update on the declared taker, prior mass set from the measured 85.7%,
+# with the n at which it may flip registered BEFORE the takers are looked at.
+_spt = os.environ.get("FPL_SETPIECE", "fpl").lower()
 _FLAGS.append(("FPL_SETPIECE", "ON " if _spt not in ("off", "0") else "off", _spt))
 _FLAGS.append(("PRED_XI_GW", "ON ", str(PRED_XI_GW)))
 import set_piece_takers as spt
@@ -339,10 +390,27 @@ if _spt not in ("off", "0", "fpl", "observed"):
                                mode="fill" if _spt == "fill" else "override")
 # Keyed on player_code, NOT web_name: 15 names are shared across two clubs and a
 # name-keyed lookup gave Ipswich a second penalty taker (see set_piece_takers.pen1_codes).
+# The SAME window the inseason channel uses. Until 2026-09-08 only `inseason` honoured
+# it: `press_index.press_factor` and `set_piece_takers.observed_takers` both defaulted to
+# "every completed gameweek at call time", so a board rebuilt for a past week was
+# conditioned on that week's own results through two club-level, persistent channels.
+# That is exactly how predictions/gw2_* and gw3_* were produced — a pre-deadline PLAYER
+# pull, rebuilt days after the gameweek finished — so it inflates precisely the
+# reconstruction rows now in the scoring ledger. 38 (the default) means "all", which is
+# right for a forward board and leaves live behaviour unchanged.
+_UPTO = int(os.environ.get("INSEASON_UPTO", "38"))
+# `None` means "every completed gameweek" to both channels, and 38 means the same thing —
+# but NOT to press_measured, which treats ANY non-None gw as an explicit cut and falls
+# back from PitchAPI to the proxy feed because PitchAPI cannot honour one. Passing the
+# default 38 therefore switched the press feed on an ordinary forward board, which this
+# change must not do: bounding the window is only meant to bite when a window was
+# actually asked for. Collapse the no-cut case back to None.
+_UPTO_CUT = None if _UPTO >= 38 else _UPTO
+
 _pen_src = d26[["web_name", "team", "player_code"]].copy()
 if "penalties_order" in d26.columns:
     _pen_src["penalties_order"] = d26["penalties_order"]
-pen1 = spt.pen1_codes(_pen_src, mode=_spt)
+pen1 = spt.pen1_codes(_pen_src, mode=_spt, upto_gw=_UPTO_CUT)
 pl["pen_xg90"] = np.where(pl.player_code.isin(pen1),
                           pl.pen_xg90.fillna(0).clip(lower=0.10), 0.0)
 print(f"[set-piece] penalty xG floor applied to {int(pl.player_code.isin(pen1).sum())} "
@@ -362,9 +430,18 @@ bayes_model.rng = np.random.default_rng(7); ts = tm.sample_2627(S=S)
 # An unavailable starter weakens his TEAM, not just his own row. Applied to the sampled
 # att/def so the whole side's clean-sheet and scoring expectations move — otherwise
 # Saliba being out leaves every other Arsenal defender at full clean-sheet value.
-# [JUDGMENT] betas, hard-capped; see src/injury_impact.py for why this is not
-# double-counting the (7 Aug) odds snapshot. INJURY_IMPACT=off disables.
-if _flag("INJURY_IMPACT", "on"):
+# [JUDGMENT] betas, hard-capped. Default flipped to OFF on 2026-09-08, which is what
+# src/injury_impact.py's own docstring already claimed ("the whole layer is OFF unless
+# asked for") while the board switched it on.
+#
+# Its orthogonality argument answers the `market_odds` leg only: the odds snapshot is
+# 7 Aug and the injuries post-date it. It does not answer INSEASON, which is ON by
+# default and stacks realised 26/27 match xG into E0 below. Those matches were played
+# WITH the absentees out, so the fitted team strength already carries the loss and this
+# layer subtracts it a second time. The double count is not static — it grows with every
+# gameweek stacked, so the error was smallest the week the argument was written and has
+# been widening since. INJURY_IMPACT=on restores it.
+if _flag("INJURY_IMPACT", "off"):
     import injury_impact as ii
     _avail = {}
     if "player_code" in sig.columns:
@@ -385,7 +462,17 @@ else:
 # dropped the manager overrides as well and said nothing about it. That is exactly the
 # wrong behaviour for an A/B flag: a run isolating the injury layer was also, unknowably,
 # a run without overrides, and the measured difference was the sum of two changes.
-if _flag("TEAM_OVERRIDES", "on"):
+# Default flipped to OFF on 2026-09-08. The committed shift is a pure LOCATION shift on
+# a club's attack and defence with no widening, which asserts direction with full
+# confidence — the opposite of the kappa encoding CLAUDE.md's guard requires, and the
+# same delta mean-pull that `starter_prior.resolve_regime()` exists to keep switched off.
+# It also never clears `style_matchup.beats_the_market()`, and it is applied AFTER the
+# market-Elo blend, so it re-prices an appointment the odds already carry.
+#
+# To switch it back on legitimately: express the disagreement as a kappa widening on the
+# regime club rather than a delta on the mean, or clear `beats_the_market()` against a
+# CURRENT odds snapshot — not the 7 Aug one. TEAM_OVERRIDES=on restores it meanwhile.
+if _flag("TEAM_OVERRIDES", "off"):
     import team_overrides as tov
     ts, _ov = tov.apply_to_samples(ts)
 else:
@@ -404,9 +491,9 @@ for t, g in win.groupby("team"):
 # switch is read inside press_index, and both read the same env var with the same default.
 if _flag("PRESS_MEASURED", "on"):
     import press_index as _pix
-    _tbl, _n = _pix._measured(None)
+    _tbl, _n = _pix._measured(_UPTO_CUT)
     if _n:
-        _ws = [_pix.resolve_ppda(c)[1] for c in _pix.PPDA_2627]
+        _ws = [_pix.resolve_ppda(c, "2627", _UPTO_CUT)[1] for c in _pix.PPDA_2627]
         print(f"[press] measured PPDA for {len(_n)} clubs over "
               f"{max(_n.values())} match(es); blend weight "
               f"{min(_ws):.2f}-{max(_ws):.2f} on the judgment prior")
@@ -416,7 +503,7 @@ else:
     print("[press] measured PPDA off — judgment table pinned")
 
 if _flag("DEFCON_ENV", None):
-    pl = de.apply_defcon_environment(pl, xga27, config.REPO)
+    pl = de.apply_defcon_environment(pl, xga27, config.REPO, gw=_UPTO_CUT)
 
 # resolved here rather than at its gate, which sits after the projection loop —
 # a banner that omits a flag is worse than no banner.

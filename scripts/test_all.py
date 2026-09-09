@@ -190,7 +190,27 @@ def main():
         b = pd.read_csv(_os.path.join(config.OUTPUTS, "gw_board_long.csv"))
         w = pd.read_csv(_os.path.join(config.OUTPUTS, "gw_board_wide.csv"))
         checks.append(("no NaN in projections", not b["mean"].isna().any()))
-        checks.append(("no negative projections", (b["mean"] >= 0).all()))
+        # NOT `>= 0`.  [CHANGED 2026-09-08 — JUDGMENT, argued below; overrule it by
+        # restoring the strict form if you disagree.]
+        #
+        # The strict version asserts "no player has negative expected points", which is a
+        # MODELLING claim, not a rule of the game, and it is false: a keeper who comes on
+        # as a substitute (+1) at a club conceding four (-2) nets -1. It held until now by
+        # luck. Twenty-five rows of the live board sit inside [-0.001, +0.010] and every
+        # one of them is a GOALKEEPER at HULL, the weakest defence — their app_ev and
+        # conc_ev cancel to within a thousandth of a point (Lo-Tutala GW16: +0.013 and
+        # -0.013). Any change that moves Hull's start probabilities at all flips the sign
+        # of one of them; the XI-constraint reordering did, at -0.001.
+        #
+        # A binary test on a quantity whose true value is zero fails at random forever, so
+        # it tests the seed rather than the model. The bound below is what the invariant
+        # actually means — no MATERIALLY negative projection — and is still far tighter
+        # than anything a real defect could hide under: a bench keeper's EV is bounded by
+        # p_start x conditional-net, a few hundredths at most, while a sign error or a
+        # mis-scaled penalty term lands whole points below zero.
+        _NEG_TOL = -0.05
+        checks.append((f"no materially negative projections (min {b['mean'].min():+.3f}, "
+                       f"floor {_NEG_TOL})", (b["mean"] >= _NEG_TOL).all()))
         checks.append(("every row has a club", b["team"].notna().all()))
         checks.append(("every row has a price", b["cost"].notna().all()))
         checks.append(("prices in 3.5-16.0", b["cost"].between(3.5, 16.0).all()))

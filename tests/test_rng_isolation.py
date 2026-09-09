@@ -125,6 +125,35 @@ def main():
           f"|delta mean| {shift:.4f} (tol 0.25, MC at S={S})")
     ok &= good
 
+    # 5. ACROSS GAMEWEEKS the streams must DIFFER.  [ADDED 2026-09-08]
+    # Isolation across players is property 1; this is its counterpart in the other
+    # dimension, and it failed silently until the stream was keyed on the window.
+    # `_player_rng` was (seed, player_code) only, so gw_board's per-gameweek
+    # `project(gw, gw, ...)` calls handed a player identical draws every week — in path s
+    # he started all 38 or none. Per-gameweek marginals were right, so neither this test
+    # nor the board invariants noticed; only a sum ACROSS gameweeks does, and it comes
+    # out over-dispersed by roughly H instead of sqrt(H).
+    import numpy as _np
+    from bayes_model import _player_rng as _prng
+    _p = {"web_name": "Tester", "team": "Arsenal", "player_code": 123456}
+    same_gw = bool(_np.array_equal(_prng(_p, 7, 1).random(64),
+                                   _prng(_p, 7, 1).random(64)))
+    diff_gw = not bool(_np.array_equal(_prng(_p, 7, 1).random(64),
+                                       _prng(_p, 7, 2).random(64)))
+    print(f"  {'ok  ' if same_gw else 'FAIL'} "
+          f"{'same (seed, player, gw) reproduces the stream':52s}")
+    print(f"  {'ok  ' if diff_gw else 'FAIL'} "
+          f"{'different gameweeks draw different streams':52s}")
+    ok &= same_gw and diff_gw
+
+    # the property that actually bites downstream: two windows must not repeat a draw set
+    _a2 = project(pl, tm, ts, 2, 2, S=S).set_index("id")["mean"]
+    _a3 = project(pl, tm, ts, 3, 3, S=S).set_index("id")["mean"]
+    distinct = bool((_a2 - _a3).abs().max() > 0)
+    print(f"  {'ok  ' if distinct else 'FAIL'} "
+          f"{'projecting GW2 and GW3 does not repeat one draw set':52s}")
+    ok &= distinct
+
     print("\n" + ("ALL RNG ISOLATION PROPERTIES HOLD" if ok else "FAILURES ABOVE"))
     return 0 if ok else 1
 

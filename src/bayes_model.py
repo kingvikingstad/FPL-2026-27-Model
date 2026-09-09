@@ -57,8 +57,8 @@ def _player_key(p):
     return int(zlib.crc32(f"{p.get('web_name')}|{p.get('team')}".encode("utf-8")))
 
 
-def _player_rng(p, seed=None):
-    """An independent, reproducible generator for one player.
+def _player_rng(p, seed=None, gw=0):
+    """An independent, reproducible generator for one player IN ONE GAMEWEEK WINDOW.
 
     THE POINT. project() used to draw every player from one shared sequential stream, so
     the draws a player received depended on every player simulated before him. That is not
@@ -75,9 +75,29 @@ def _player_rng(p, seed=None):
     function and indexed identically for every player, so draw s still means the same
     team-strength world for everyone. What becomes independent across players is exactly
     what the model already assumes is conditionally independent given team strength.
+
+    THE `gw` ARGUMENT  [ADDED 2026-09-08]
+    -------------------------------------
+    The stream was keyed on (seed, player_code) alone. `gw_board` calls
+    `project(gw, gw, ...)` once per gameweek, so every one of those 38 calls handed a
+    player the IDENTICAL stream and therefore the identical draws: measured, the start
+    indicator vector for draw s was bitwise the same across gameweek calls, agreement
+    1.0000. In path s a player started every week of the season or none of them.
+
+    Per-gameweek marginals were unaffected, which is why the board invariants and the
+    determinism check both passed. What was wrong is any aggregation ACROSS gameweeks
+    built from these draws: perfect comonotonicity in the start dimension inflates a
+    multi-week variance by roughly H instead of sqrt(H). That is latent while DUMP_DRAWS
+    covers one gameweek and becomes load-bearing for the transfer/chip solver, which is
+    the first consumer that sums draws over a horizon.
+
+    Keying on the window restores independence across gameweeks while keeping the
+    property the per-player streams were introduced for: the stream is still a pure
+    function of (seed, player_code, gw), so a board is still reproducible and an A/B is
+    still free of the re-randomisation term.
     """
     return np.random.default_rng([int(PROJECT_SEED if seed is None else seed),
-                                  _player_key(p)])
+                                  _player_key(p), int(gw)])
 LEAGUE_MU = 1.40
 BET_NAME = {"Man Utd": "Man United", "Spurs": "Tottenham"}
 # per-position bonus that rides along with a goal (recovered in the earlier
@@ -429,7 +449,7 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, seed=None, return_draws=Fa
             continue
         pos = p.pos
         # this player's own stream — see _player_rng
-        prng = _player_rng(p, seed)
+        prng = _player_rng(p, seed, gw_lo)
         # availability draws (shared across the window -> nailed/rotation risk)
         p_start = prng.beta(p.start_a, p.start_b, S)         # (S,)
         # attacking involvement rate (per 90) and defcon rate draws

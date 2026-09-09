@@ -47,7 +47,7 @@ def _panel_code_club(repo, season="2025-2026"):
 
 def apply_defcon_environment(players: pd.DataFrame, xga_2627: dict, repo: str,
                              xga_2526: dict = None, clip=(0.6, 1.6),
-                             xga_beta=None, press_beta=None):
+                             xga_beta=None, press_beta=None, gw=None):
     """Scale defcon_alpha by the position-aware environment factor: DEF on the team
     xGA ratio (CBIT), MID/FWD on the press-intensity ratio (CBIRT). Requires a
     'player_code' column. xga_2627: {team: projected mean xGA}. Returns a copy."""
@@ -77,7 +77,13 @@ def apply_defcon_environment(players: pd.DataFrame, xga_2627: dict, repo: str,
                 ref = ref if ref and ref > 0 else league_ref
                 factor *= (tgt / ref) ** bx
         if bp > 0 and pix is not None:                          # CBIRT / press channel
-            tgt_p = pix.press_factor(r.team, "2627")            # league/ppda (higher=more press)
+            # `gw` bounds the measured-press revision to gameweeks completed by then.
+            # Without it `press_factor` reads EVERY completed gameweek at call time, so a
+            # board rebuilt for a past week is conditioned on results from that week and
+            # after — look-ahead that inflates any backtest through a club-level,
+            # persistent channel. None keeps the old behaviour (all completed), which is
+            # correct for a forward board.
+            tgt_p = pix.press_factor(r.team, "2627", gw)        # league/ppda (higher=more press)
             ref_p = pix.press_factor(ref_club, "2526") if ref_club else 1.0
             if ref_p and ref_p > 0:
                 factor *= (tgt_p / ref_p) ** bp

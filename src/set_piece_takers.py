@@ -170,7 +170,7 @@ def resolve(players: pd.DataFrame, path=None, verbose=True) -> pd.DataFrame:
 
 
 def pen1_codes(players: pd.DataFrame, path=None, mode="override", verbose=False,
-               observed=None):
+               observed=None, upto_gw=None):
     """`player_code`s of the FIRST-CHOICE penalty taker at each club.
 
     Use this instead of reading `pen_order == 1` off the name-keyed signals frame. 15
@@ -200,7 +200,10 @@ def pen1_codes(players: pd.DataFrame, path=None, mode="override", verbose=False,
             obs = observed
         else:
             try:
-                obs = observed_takers(verbose=False)
+                # Bounded by `upto_gw` for the same reason press_factor is: unbounded,
+                # this reads penalties taken in the very gameweek a rebuilt board is
+                # meant to be forecasting.
+                obs = observed_takers(upto_gw=upto_gw, verbose=False)
             except Exception as e:
                 if verbose:
                     print(f"[set-piece] observed takers unavailable ({type(e).__name__}); "
