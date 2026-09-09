@@ -162,6 +162,15 @@ after seeing the outcome, which is the one thing this project's register forbids
 
 ## Open items, ranked (see PROJECT_KNOWLEDGE §6)
 
+0. **Goalkeeper save points are not modelled at all** (§6.11, [VERIFIED 2026-09-09]).
+   Not a missing refinement — a missing term. `bayes_model.project()` credits a keeper
+   nothing for saves, worth ~+1.0 pt/gw against a 2.295 pt/gw starting-GK projection:
+   **~44%, biased DOWN for all 71 keepers and steepest at the weakest clubs.** The
+   `no negative projections` board invariant is RED because of it and must stay red
+   until it lands. Ranked 0 because it is larger than anything below it and blocks a
+   green harness; numbered outside the list only so existing §6.N cross-references
+   elsewhere in the repo keep resolving.
+
 1. Attack/defence **split** from match/supremacy odds (`oddsapi_feed`) — the outright
    markets give overall strength only.
 2. Live lineups/injuries feed (`lineups.py` needs an API-Football key or team news).

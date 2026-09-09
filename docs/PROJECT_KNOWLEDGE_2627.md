@@ -432,7 +432,40 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
    that week, so a mid-season mover stays ONE row; and `club_matches` is summed per
    gameweek over the club he was at that week.
 10. BPS/DEF refinement: concentrate the −10% haircut on `BONUS_PER_CS[DEF]`; full-back vs
-   centre-back CBI split. GK save-metric recompute (low priority).
+   centre-back CBI split. ~~GK save-metric recompute (low priority)~~ — **that "low
+   priority" was wrong; superseded by §6.11 below.**
+11. **GOALKEEPER SAVE POINTS ARE NOT MODELLED AT ALL.** [VERIFIED 2026-09-09] Not a
+   refinement of an existing term — the term is absent. `bayes_model.project()` composes a
+   keeper's match as `+2` for appearing and `−floor(conceded/2)`, and credits nothing for
+   the saves he necessarily made to concede that many. `SAVES_PER_POINT = 3` and
+   `PEN_SAVE_PTS = 5` exist only in `src/fpl_xp_model.py`, which `gw_board.py` never calls.
+
+   **Size.** 71 keepers, 2,698 board rows. A starting GK (`app_ev > 1.0`, n=836 rows)
+   projects 2.295 pts/gw against a mean `conc_ev` of −0.411. At ~3 saves per match the
+   missing term is ~+1.0 pt/gw — **roughly 44% of a starting keeper's projection.** That is
+   larger than any single finding in the 2026-09-08 referee pass.
+
+   **Bias direction.** Systematically DOWN for every goalkeeper, and steepest where
+   `lam_against` is highest, because save volume rises with shots faced while this
+   composition only subtracts the goals. So the model most under-rates keepers at weak
+   clubs — precisely the cheap-enabler pocket managers actually buy from. It also means
+   GK-vs-GK comparisons are not merely noisy but ordered wrongly: a keeper behind a good
+   defence is over-rated RELATIVE to one facing volume.
+
+   **How it surfaced.** The `test_all` board invariant "no negative projections" went red
+   on 2026-09-09 for exactly one row — Lo-Tutala (Hull, 3rd-choice GK, GW16), `mean`
+   −0.001. Flipping `INJURY_IMPACT` to off moved Hull's strength enough to drop his
+   `app_ev` 0.015 → 0.013 against an unchanged `conc_ev` of −0.013, pushing the sum below
+   zero. The invariant is a TRUE POSITIVE and must stay red until the save term lands: a
+   projection that can go negative for a keeper is the visible edge of a term missing for
+   all 71. Do not clamp `mean` at zero to clear it — that hides the cause and keeps the 44%.
+
+   **What it needs.** A saves-per-match rate conditioned on `lam_against` (saves and goals
+   conceded are both driven by shots faced, so they are not independent and a constant
+   rate misprices exactly the tail that matters), then `floor(saves/3)` added to the
+   per-match composition beside `concp` and drawn from the SAME shot realisation. Then a
+   board A/B, same seed, and a `stats-referee` pass — this moves the GK layer's mean AND
+   its variance, and the CS engine beside it is market-validated at CS r=0.93.
 
 ---
 
