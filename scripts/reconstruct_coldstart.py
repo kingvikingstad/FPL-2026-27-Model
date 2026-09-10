@@ -12,6 +12,7 @@ exact schema so it runs unchanged.
 Requires /tmp/pms_panel.pkl (build_pms.build()). Edit REPO / paths as needed.
 """
 import numpy as np, pandas as pd
+import defcon_series as dcs
 
 REPO = config.REPO
 PANEL = config.PMS_PANEL
@@ -20,9 +21,12 @@ OUT = config.COLDSTART_HIST
 
 def build():
     panel = pd.read_pickle(PANEL)
+    # DefCon exposure: only minutes whose DefCon was measured (defcon_series.exposure).
+    panel["minutes_dc"] = dcs.exposure(panel["mins"], panel["defcon_fpl"])
     agg = panel.groupby("player_id").agg(
         minutes=("mins", "sum"), npxg=("npxg", "sum"), xa=("xa_", "sum"),
-        defensive_contribution=("defcon_fpl", "sum"), pos=("pos", "last")).reset_index()
+        defensive_contribution=("defcon_fpl", "sum"), minutes_dc=("minutes_dc", "sum"),
+        pos=("pos", "last")).reset_index()
     agg["non_penalty_expected_goal_involvements"] = agg.npxg + agg.xa
     agg["expected_assists"] = agg.xa
     agg["element_type"] = agg.pos.map({"GK": 1, "DEF": 2, "MID": 3, "FWD": 4})
@@ -33,7 +37,8 @@ def build():
     agg["now_cost"] = np.where(agg.now_cost > 30, agg.now_cost / 10, agg.now_cost)  # millions guard
     out = agg[["id", "element_type", "minutes",
                "non_penalty_expected_goal_involvements", "expected_assists",
-               "defensive_contribution", "now_cost"]].dropna(subset=["now_cost", "element_type"])
+               "defensive_contribution", "minutes_dc", "now_cost"]].dropna(
+                   subset=["now_cost", "element_type"])
     out.to_csv(OUT, index=False)
     print(f"wrote {OUT}: {len(out)} players, {(out.minutes >= 450).sum()} with >=450 min")
     return out

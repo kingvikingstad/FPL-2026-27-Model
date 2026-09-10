@@ -48,10 +48,15 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
     p25["defcon_scored"] = dcs.fpl_defcon(p25, p25["pos"], "2025-2026",
                                           score_pos=p25["pos_scored"])
     dcs.assert_no_recoveries(p25, p25["defcon_scored"], p25["pos_scored"])
+    # Exposure for DefCon: minutes whose count was MEASURED. 2.4% of 25/26 league minutes
+    # (up to 16% of appearances in a late gameweek) carry every other stat but a null
+    # defensive block; counting them as minutes with no actions is fillna(0) by another
+    # route, and it dilutes exactly the players who played late in the season.
+    p25["mins_dc"] = dcs.exposure(p25["mins"], p25["defcon_scored"])
     a25 = p25.groupby(["player_code", "pos"], dropna=False).agg(
         pos_scored=("pos_scored", "first"),
         mins=("mins", "sum"), npxg=("npxg", "sum"), xa=("xa_", "sum"),
-        defcon=("defcon_scored", "sum"),
+        defcon=("defcon_scored", "sum"), mins_dc=("mins_dc", "sum"),
         # chances created = the repo's key-pass equivalent, and the EXPOSURE for the
         # assist-quality term. See to_priors and studies/rate_components.py.
         kp=("chances_created", "sum"),
@@ -87,8 +92,8 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
     # series it was measured on carried recoveries in GW2-10 (corrected 2026-09-10, see
     # defcon_series; FPL's official DEF rate for 900+ minute defenders is 7.66).
     # The other Gamma channels (npxg, xa) are genuinely present in both seasons and keep
-    # the pooled denominator.
-    a25["mins_dc"] = a25["mins"]
+    # the pooled denominator. a25's `mins_dc` is aggregated above and excludes the 25/26
+    # appearances whose defensive block is null, for the same reason.
     a24["mins_dc"] = 0.0
     a24["pos_scored"] = a24["player_code"].map(pos27).fillna(a24["pos"])
     both = pd.concat([a25, a24], ignore_index=True)

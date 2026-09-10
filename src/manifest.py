@@ -144,7 +144,8 @@ _NODES = [
     Node("coldstart_hist.csv", config.COLDSTART_HIST, "derived",
          producer="scripts/reconstruct_coldstart.py",
          inputs=("players.csv", "playerstats.csv", "pms_panel.pkl"), min_rows=400,
-         columns=("id", "element_type", "minutes", "now_cost", "defensive_contribution"),
+         columns=("id", "element_type", "minutes", "now_cost", "defensive_contribution",
+                  "minutes_dc"),
          note="cold-start calibration input"),
 
     # --- derived: priors (pickles in SCRATCH, gitignored) --------------------
