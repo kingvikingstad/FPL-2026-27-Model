@@ -84,9 +84,14 @@ to answer them is how the answer goes stale:
 - **"What must I rebuild after changing X?"** → `python src/manifest.py --downstream X`
 - **"Does anything still work?"** → `.\fpl.ps1 test --quick`
 - **"Where does this path resolve?"** → `.\fpl.ps1 paths`
+- **"What is actually in this artifact?"** → `.\fpl.ps1 run scripts/peek.py <name>`
+  shape, schema and a few rows, bounded in output no matter how large the file is.
 - **"Where is the time going?"** → `.\fpl.ps1 run scripts/profile_pipeline.py`
   (`--full` also times each pipeline stage). Measured 2026-09-08: the 56-module import
-  section costs ~216s, of which **163s is the unavoidable per-process pandas baseline**
-  and only 53s is this project's code. The expensive item is process spawning, not any
-  module — `captaincy`, the slowest, is 7.9s net and optimising it away would save under
-  4% of that section.
+  section cost ~216s, of which **163s was the per-process pandas baseline** and only 53s
+  this project's code -- the expensive item was process spawning, not any module.
+  **Fixed 2026-09-10.** `test_all` section 1 now imports all 56 in ONE interpreter,
+  dropping every module whose file lives under `src/` from `sys.modules` after each one,
+  so project code is still imported fresh while numpy/pandas stay loaded. Anything that
+  fails there is re-run in its own process, so the verdict and traceback are unchanged.
+  Re-measured on an idle machine: **290.6s → 13s**.

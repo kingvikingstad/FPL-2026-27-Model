@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "permissions": {
+    "deny": [
+      "Read(./outputs/projection_detail_*.csv)",
+      "Read(./outputs/gw_explorer.*)",
+      "Read(./outputs/gw_board_long*.csv)",
+      "Read(./outputs/*solver_inputs*.csv)",
+      "Read(./outputs/*.xlsx)",
+      "Read(./.cache/**)"
+    ]
+  }
+}

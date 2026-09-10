@@ -21,6 +21,7 @@ Then two properties that no individual test covers:
 Run:  python scripts/test_all.py            (full)
       python scripts/test_all.py --quick    (skip pipeline and studies)
 """
+import ast
 import glob
 import subprocess
 import time
@@ -127,7 +128,106 @@ def report(rows):
     return all(r[1] is not False for r in rows)
 
 
+
+IMPORT_SENTINEL = "__IMPORTCHECK__"
+
+
+def _src_modules():
+    return sorted(_os.path.splitext(_os.path.basename(f))[0]
+                  for f in glob.glob(_os.path.join(ROOT, "src", "*.py")))
+
+
+def _import_check_child():
+    """Import every src module in ONE interpreter, purging project modules between each.
+
+    Section 1 used to spawn one interpreter per module: 56 processes, each paying the
+    full numpy/pandas import baseline, to answer 56 independent yes/no questions. The
+    measurement in docs/INDEX.md puts that section at ~216s of which ~163s is startup
+    this project does not control -- so the expensive thing was never any module, it was
+    the spawning.
+
+    Isolation is not thrown away to get that back. What section 1 exists to catch is a
+    module that does not import at all, and, second, one that imports only because
+    something else already populated sys.modules. So third-party packages stay loaded
+    (that is the whole saving) while every module whose __file__ lives under src/ is
+    dropped from sys.modules after each import -- project code is therefore imported
+    genuinely fresh each time. What survives is only non-sys.modules state: env vars,
+    warnings filters, C-extension registration. That residue is why the parent re-runs
+    any module that fails here in its own interpreter before reporting it, and why a
+    module that fails batched but passes alone is surfaced rather than quietly passed.
+    """
+    import importlib
+    import traceback
+    src_dir = _os.path.abspath(_os.path.join(ROOT, "src"))
+    for mod in _src_modules():
+        before = set(_sys.modules)
+        t0 = time.time()
+        try:
+            importlib.import_module(mod)
+            status, detail = "ok", ""
+        except BaseException:
+            # BaseException, not Exception: a module calling sys.exit() at import time is
+            # an import failure, and SystemExit would otherwise sail past and take the
+            # whole batch with it.
+            status, detail = "fail", traceback.format_exc()
+        secs = time.time() - t0
+        for name in set(_sys.modules) - before:
+            fp = getattr(_sys.modules.get(name), "__file__", None) or ""
+            if fp and _os.path.abspath(fp).startswith(src_dir):
+                _sys.modules.pop(name, None)
+        print(f"{IMPORT_SENTINEL}\t{mod}\t{status}\t{secs:.3f}\t{detail!r}", flush=True)
+
+
+def _import_rows():
+    """Rows for section 1. Batched first, then anything unproven re-run in isolation.
+
+    Deliberately does NOT go through run(): that helper truncates output to the last 400
+    characters and reinterprets a FileNotFoundError on an optional input as a skip, and
+    both would destroy the per-module protocol lines this parses.
+    """
+    mods = _src_modules()
+    t0 = time.time()
+    try:
+        r = subprocess.run([PY, _os.path.abspath(__file__), "--import-check"],
+                           cwd=ROOT, capture_output=True, text=True, timeout=900,
+                           env=CHILD_ENV, encoding="utf-8", errors="replace")
+        out = (r.stderr or "") + (r.stdout or "")
+    except subprocess.TimeoutExpired:
+        out = ""
+    batch_secs = time.time() - t0
+
+    seen = {}
+    for line in out.splitlines():
+        if line.startswith(IMPORT_SENTINEL + "\t"):
+            _, mod, status, secs, detail = line.split("\t", 4)
+            seen[mod] = (status == "ok", float(secs), ast.literal_eval(detail))
+
+    rows, notes = [], []
+    for mod in mods:
+        batched = seen.get(mod)
+        if batched and batched[0]:
+            rows.append((mod, True, batched[1], ""))
+            continue
+        # Unproven: it failed batched, or the batch never reached it because an earlier
+        # module killed the interpreter. Either way the verdict comes from its own
+        # process, so this section reports exactly what it reported before.
+        good, secs, err = run(
+            [PY, "-c", f"import sys; sys.path.insert(0,'src'); import {mod}"], 300)
+        rows.append((mod, good, secs, err))
+        if batched is None:
+            notes.append(f"{mod}: batch never reached it (an earlier module ended the "
+                         f"interpreter); verdict from its own process")
+        elif good:
+            notes.append(f"{mod}: FAILS after other src modules import but PASSES alone "
+                         f"-- a cross-module side effect, not an import error. Reported "
+                         f"as its isolated result; worth a look.")
+    return rows, notes, batch_secs
+
+
 def main():
+    if "--import-check" in _sys.argv:      # re-entrant child of _import_rows()
+        _import_check_child()
+        return True
     quick = "--quick" in _sys.argv
     allok = True
 
@@ -151,12 +251,12 @@ def main():
               f"({', '.join(stale[:3])}...) — section 4 rebuilds them")
 
     section("1. IMPORTS")
-    rows = []
-    for f in sorted(glob.glob(_os.path.join(ROOT, "src", "*.py"))):
-        mod = _os.path.splitext(_os.path.basename(f))[0]
-        good, secs, err = run([PY, "-c", f"import sys; sys.path.insert(0,'src'); import {mod}"], 300)
-        rows.append((mod, good, secs, err))
+    rows, notes, batch_secs = _import_rows()
     allok &= report(rows)
+    print(f"  ({len(rows)} modules in one interpreter, {batch_secs:.1f}s wall; the times "
+          f"above are per-module import cost with process startup excluded)")
+    for n in notes:
+        print(f"  note: {n}")
 
     section("2. MODULE SELFTESTS")
     rows = [(label,) + run([PY, path, "--selftest"], 900)

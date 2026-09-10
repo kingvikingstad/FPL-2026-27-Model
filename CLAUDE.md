@@ -72,6 +72,15 @@ recorded as a null with the code path deleted. **Nulls are deliverables.**
   `scripts/test_all.py` discovers them automatically — do not add a list to maintain.
 - Bracket indexing `d['col']`, never attribute access `d.col`, on frames that cross a
   module boundary.
+- **Never read a whole artifact to find out what is in it.** `projection_detail_gw1_10.csv`
+  is 13.8 MB, `gw_explorer.csv` 3.9 MB, and nothing about either announces its size. The
+  question actually asked of them is shape, columns and a few rows, which has a bounded
+  answer: `.\fpl.ps1 run scripts/peek.py <name>` gives it in ~70 lines whatever the file
+  weighs, resolves a bare name against the `config.py` directories, and labels its null
+  counts as the SAMPLE statistics they are. `doctor` stays the authority on whether an
+  artifact is complete, schema-correct and current. `.claude/settings.json` denies
+  `Read` on the oversized ones outright, so this is enforced rather than remembered;
+  that file is JSON and cannot explain itself, which is why the reason lives here.
 - New components ship off-by-default or as validated corrections.
 
 ---
@@ -111,7 +120,8 @@ Python 3.13 path, which otherwise have to be retyped into every invocation:
 the four acceptance tests, the pipeline end to end, every study, board invariants, and
 a determinism re-run. Run at least `--quick` before claiming anything works.
 
-**Run it alone.** It spawns one interpreter per module and enforces a 900s cap per
+**Run it alone.** It spawns one interpreter per SELFTEST (imports share one, since
+2026-09-10) and enforces a 900s cap per
 selftest. Under concurrent load those caps fire on tests that take seconds in
 isolation — `defcon_roles` (15s standalone) was reported as a 2000s TIMEOUT on
 2026-09-08 purely because a profiler run was competing for the machine. A red harness
