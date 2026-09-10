@@ -44,6 +44,14 @@ Both are correct in expectation. Components win on three counts that matter here
     drift from the prior it updates.
   * NO NEW DEPENDENCY. The prior build does not need FPL_HISTORY.
 
+WHOSE RULE: THE POSITION HE IS SCORED AT
+----------------------------------------
+Evidence from 25/26 projects a 26/27 score, and FPL re-lists players between seasons
+(Wieffer and Sessegnon MID->DEF, Lewis-Skelly and Dorgu DEF->MID). A re-listed player's
+history must be counted under the rule he will be PAID on, or a 26/27 defender carries
+his midfield recoveries into a CBIT threshold. `fpl_defcon(..., score_pos=)` takes that
+position; the prior build passes the 26/27 listing.
+
 NULLS STAY NULL
 ---------------
 A missing component makes the DEF count NaN, never 0, and a missing upstream value stays
@@ -73,6 +81,7 @@ RECOVERIES = "recoveries"
 UPSTREAM = ("defensive_contributions", "defensive_contribution")
 
 _DEF_LABELS = ("DEF", "Defender", 2)
+_MF_LABELS = ("MID", "FWD", "Midfielder", "Forward", 3, 4)
 
 
 def _season_start(season):
@@ -102,23 +111,42 @@ def is_defender(pos):
     return pd.Series(pos).isin(_DEF_LABELS).to_numpy()
 
 
-def fpl_defcon(d, pos, season):
+def is_midfwd(pos):
+    return pd.Series(pos).isin(_MF_LABELS).to_numpy()
+
+
+def fpl_defcon(d, pos, season, score_pos=None):
     """DefCon count under FPL's scoring rule, one value per row of `d`.
 
-    `pos` is a per-row position label ('DEF'/'MID'/... or 'Defender'/'Midfielder'/...).
-    DEF rows are summed from components; every other row takes the upstream column as
-    published. NaN is preserved everywhere.
+    `pos` is the position each row was PUBLISHED under (the evidence season's).
+    `score_pos` is the position the count will be SCORED under, when that differs — a
+    25/26 defender who is a 26/27 midfielder is paid on CBIRT, and a 25/26 midfielder
+    who is a 26/27 defender on CBIT. Defaults to `pos`. Labels may be 'DEF'/'MID'/...
+    or 'Defender'/'Midfielder'/....
+
+      scored DEF      CBIT from components, whatever the row was published under
+      scored MID/FWD  the published value if published under MID/FWD (exact there),
+                      else CBIT + recoveries from components
+      scored GK       the published value (GK cannot score DefCon)
+
+    The published column is never used for a row published as a defender. NaN is
+    preserved everywhere.
     """
     if _season_start(season) < FIRST_SEASON:
         raise ValueError(
             f"season {season}: DefCon did not exist before {FIRST_SEASON}-"
             f"{(FIRST_SEASON + 1) % 100:02d}. Summing components there would invent DEF "
             f"evidence the priors do not account for; leave the column NaN instead.")
+    rule = pos if score_pos is None else score_pos
     up = next((c for c in UPSTREAM if c in d.columns), None)
     out = _num(d, up) if up else pd.Series(np.nan, index=d.index, dtype=float)
-    dmask = is_defender(pos)
-    if dmask.any():
-        out = out.where(~dmask, cbit(d))
+    to_def, to_mf = is_defender(rule), is_midfwd(rule)
+    rebuilt = to_mf & ~is_midfwd(pos)          # scored on CBIRT, not published on it
+    if to_def.any() or rebuilt.any():
+        c = cbit(d)
+        out = out.where(~to_def, c)
+        if rebuilt.any():
+            out = out.where(~rebuilt, c + _num(d, RECOVERIES))
     return out
 
 
@@ -201,7 +229,17 @@ def selftest():
                       "defensive_contribution": [17.0, 9.0, 15.0]})
     gdc = fpl_defcon(g, ["Defender", "Midfielder", "Defender"], 2026)
     assert list(gdc) == [11.0, 9.0, 6.0], list(gdc)
-    # 7. Pre-DefCon seasons are refused, not silently summed.
+    # 7. Scored position wins over published position. A 25/26 MIDFIELDER re-listed as
+    #    a 26/27 DEFENDER is paid on CBIT: his published CBIRT must not reach a DEF count.
+    #    A 25/26 defender re-listed as a midfielder is paid on CBIRT, rebuilt from parts.
+    moved = np.where(pos == "MID", "DEF", np.where(pos == "DEF", "MID", pos))
+    mdc = fpl_defcon(d, pos, "2025-2026", score_pos=moved)
+    to_def, to_mid = pos == "MID", pos == "DEF"
+    assert (mdc[to_def] == base[to_def]).all(), "a re-listed defender kept his recoveries"
+    assert (mdc[to_mid] == base[to_mid] + d.loc[to_mid, RECOVERIES]).all()
+    assert (mdc[pos == "FWD"] == dc[pos == "FWD"]).all()
+    assert assert_no_recoveries(d, mdc, moved)
+    # 8. Pre-DefCon seasons are refused, not silently summed.
     try:
         fpl_defcon(d, pos, "2024-2025")
         raise RuntimeError("24/25 must be refused")
@@ -210,7 +248,8 @@ def selftest():
     print("SELFTEST OK: DEF DefCon is CBIT from components and never includes recoveries "
           "(perturbing recoveries moves no DEF count; the postcondition fires on a CBIRT "
           "series); MID/FWD keep the upstream value; nulls stay null and leave exposure; "
-          "per-gameweek schema handled; pre-25/26 seasons refused.")
+          "per-gameweek schema handled; the SCORED position picks the rule, so a "
+          "re-listed MID->DEF loses his recoveries; pre-25/26 seasons refused.")
 
 
 if __name__ == "__main__":

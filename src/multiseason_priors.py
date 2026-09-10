@@ -27,6 +27,7 @@ import numpy as np, pandas as pd
 import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
 from multiseason import build_2425_panel
 import defcon_roles as dcr
+import defcon_series as dcs
 
 BASE = config.REPO
 
@@ -38,9 +39,19 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
     p25 = pd.read_pickle(config.PMS_PANEL)
     codes25 = pd.read_csv(f"{BASE}/2025-2026/players.csv")[["player_id", "player_code"]]
     p25 = p25.merge(codes25, on="player_id", how="left")
+    # DefCon evidence under the rule of the position the player is SCORED at in 26/27,
+    # not the one he was listed at in 25/26. Six players are re-listed across the two
+    # rules; without this a 26/27 defender who was a 25/26 midfielder carries CBIRT
+    # (recoveries) into a CBIT threshold — see defcon_series.
+    pos27 = _scoring_positions()
+    p25["pos_scored"] = p25["player_code"].map(pos27).fillna(p25["pos"])
+    p25["defcon_scored"] = dcs.fpl_defcon(p25, p25["pos"], "2025-2026",
+                                          score_pos=p25["pos_scored"])
+    dcs.assert_no_recoveries(p25, p25["defcon_scored"], p25["pos_scored"])
     a25 = p25.groupby(["player_code", "pos"], dropna=False).agg(
+        pos_scored=("pos_scored", "first"),
         mins=("mins", "sum"), npxg=("npxg", "sum"), xa=("xa_", "sum"),
-        defcon=("defcon_fpl", "sum"),
+        defcon=("defcon_scored", "sum"),
         # chances created = the repo's key-pass equivalent, and the EXPOSURE for the
         # assist-quality term. See to_priors and studies/rate_components.py.
         kp=("chances_created", "sum"),
@@ -79,9 +90,10 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
     # the pooled denominator.
     a25["mins_dc"] = a25["mins"]
     a24["mins_dc"] = 0.0
+    a24["pos_scored"] = a24["player_code"].map(pos27).fillna(a24["pos"])
     both = pd.concat([a25, a24], ignore_index=True)
     ev = both.groupby("player_code", dropna=False).agg(
-        pos=("pos", "first"),
+        pos=("pos", "first"), pos_scored=("pos_scored", "first"),
         mins=("mins", "sum"), npxg=("npxg", "sum"), xa=("xa", "sum"),
         defcon=("defcon", "sum"), mins_dc=("mins_dc", "sum"), kp=("kp", "sum"),
         starts=("starts", "sum"),
@@ -93,6 +105,16 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
     ev["n_seasons"] = ev.player_code.map(
         both.groupby("player_code").size())
     return ev
+
+
+_POS = {"Goalkeeper": "GK", "Defender": "DEF", "Midfielder": "MID", "Forward": "FWD"}
+
+
+def _scoring_positions():
+    """player_code -> the 26/27 FPL position, i.e. the rule a DefCon count is paid on."""
+    p = pd.read_csv(f"{BASE}/2026-2027/players.csv")[["player_code", "position"]]
+    p = p.dropna(subset=["player_code"]).drop_duplicates("player_code")
+    return dict(zip(p["player_code"], p["position"].map(_POS)))
 
 
 # Seasons already represented in `two_season_evidence`. Deep history must not
@@ -284,6 +306,13 @@ def to_priors(ev, revert=0.70, k0=3.0, pen_xg=0.79, deep_starts=None):
     for _, r in ev.iterrows():
         n90 = r.mins / 90.0
         pos = r.pos if r.pos in PRIOR_INV else "MID"
+        # The DefCon prior mean must be on the scale of the rule the evidence was counted
+        # under — CBIT for a 26/27 defender, CBIRT otherwise (two_season_evidence). So it
+        # follows the 26/27 position only when that changes the RULE: DEF <-> MID/FWD.
+        # A MID re-listed FWD is CBIRT either way and keeps his own position's prior; the
+        # FWD pool's 4.7 is a statement about forwards, not about him.
+        ps = getattr(r, "pos_scored", pos)
+        pos_dc = ps if (ps in PRIOR_INV and (ps == "DEF") != (pos == "DEF")) else pos
         # deep history extends the minutes Beta only; the Gamma priors keep the
         # repo's Opta-sourced two-season evidence untouched
         d_st = hs.get(r.player_code, 0.0) if hs else 0.0
@@ -299,8 +328,8 @@ def to_priors(ev, revert=0.70, k0=3.0, pen_xg=0.79, deep_starts=None):
             # pooled n90 here halved the implied hit rate for every player who featured
             # in 24/25, and inverted the ordering so cold-start defenders (on the 7.6
             # prior) out-rated established ones (diluted to 6.31).
-            "defcon_alpha": (dcr.prior_rate(pos, _roles.get(r.player_code))
-                             or PRIOR_DC[pos]) * k0 + revert * r.defcon,
+            "defcon_alpha": (dcr.prior_rate(pos_dc, _roles.get(r.player_code))
+                             or PRIOR_DC[pos_dc]) * k0 + revert * r.defcon,
             "defcon_beta": k0 + revert * (getattr(r, "mins_dc", r.mins) / 90.0),
             "start_a": 2.0 + revert * (r.starts + d_st),
             "start_b": 2.0 + revert * (max(r.games - r.starts, 0)
