@@ -57,6 +57,10 @@ D3  Do NOT adopt any own-team term from this design, whatever it looks like — 
 Sample: 25/26, the only season carrying `defensive_contributions` (100% null before it;
 never fill those with zero).
 
+CORRECTED 2026-09-10. The DEF count is now CBIT summed from components
+(`defcon_team.build_panel` -> `defcon_series`); the published column this study first ran
+on is CBIRT for defenders in GW2-10. Section 5 re-runs the headline under both series.
+
 Run:  python studies/defcon_team_matchups.py
       python studies/defcon_team_matchups.py --selftest
 """
@@ -260,9 +264,83 @@ def main():
         print("  The structural route (condition on xGA/press, as `defcon_env` does)")
         print("  stays the right one because it uses a mechanism, not a club label.")
 
+    print("\n" + "=" * 78)
+    print("5. WHAT THE UPSTREAM DEFECT DID  (corrected 2026-09-10)")
+    print("=" * 78)
+    print("  Until 2026-09-10 the panel counted the PUBLISHED column, which for defenders in")
+    print("  GW2-10 is CBIRT (recoveries included). Same design, both series:")
+    pub = _published(panel)
+    for pos in ("Defender", "Midfielder"):
+        a = dt.opponent_defcon_ratings(panel, pos)
+        b = dt.opponent_defcon_ratings(pub, pos)
+        if a.empty or b.empty:
+            continue
+        j = a.set_index("team")[["shrunk", "hit_shrunk", "category"]].join(
+            b.set_index("team")[["shrunk", "hit_shrunk", "category"]], rsuffix="_pub")
+        sw = lambda r: r["hit_shrunk"].max() - r["hit_shrunk"].min()
+        print(f"\n  {pos}:  {'':12s} {'published':>10s} {'corrected':>10s}")
+        print(f"    split-half r   {b['reliability'].iloc[0]:+10.3f} {a['reliability'].iloc[0]:+10.3f}")
+        print(f"    EB shrink      {b['shrink_factor'].iloc[0]:10.2f} {a['shrink_factor'].iloc[0]:10.2f}")
+        print(f"    hit swing      {sw(b):10.3f} {sw(a):10.3f}")
+        print(f"    D1 verdict     {'SHIP' if b['usable'].iloc[0] else 'NO':>10s} "
+              f"{'SHIP' if a['usable'].iloc[0] else 'NO':>10s}")
+        print(f"    rank corr of shrunk effects, published vs corrected: "
+              f"{j['shrunk'].corr(j['shrunk_pub'], method='spearman'):+.3f}; "
+              f"categories unchanged for {int((j['category'].astype(str) == j['category_pub'].astype(str)).sum())}/{len(j)} clubs")
+        moved = j[j["category"].astype(str) != j["category_pub"].astype(str)]
+        if len(moved):
+            print("    moved: " + ", ".join(f"{t} {r.category_pub}->{r.category}"
+                                         for t, r in moved.iterrows()))
+        mb, ma = _matchup_legs(pub, pos), _matchup_legs(panel, pos)
+        print(f"    D2 legs        club x opp R2 / match-identity R2 / repeatability r")
+        print(f"      published    {mb[0]:.3f} / {mb[1]:.3f} / {mb[2]:+.3f}")
+        print(f"      corrected    {ma[0]:.3f} / {ma[1]:.3f} / {ma[2]:+.3f}")
+
+    print("\n  A defect confined to GW2-10 is a TIME effect. Match identity partly encodes the")
+    print("  gameweek, so under the published series it absorbs the inflated block; and a")
+    print("  club-opponent pair met once inside GW2-10 and once outside it shows opposite")
+    print("  residuals in its two meetings. Both legs of the old matchup null were")
+    print("  exposed to the defect — compare the two rows above.")
+
     if keep:
         pd.concat(keep, ignore_index=True).to_csv(OUT, index=False)
         print(f"\n-> {OUT}")
+
+
+def _matchup_legs(panel, pos):
+    """(club x opponent R2, match-identity R2, two-meeting repeatability) on additive
+    residuals — the three numbers behind the D2 verdict in section 1."""
+    s = panel[panel["position"] == pos].copy()
+    s["dc_dm"] = s["dc"] - s.groupby("player_code")["dc"].transform("mean")
+    s["resid_add"] = s["dc_dm"] - s.groupby("opp")["dc_dm"].transform("mean")
+    real = perm_r2(s, ["club", "opp"], "resid_add", n=20)[0]
+    rm = perm_r2(s, ["match_id"], "resid_add", n=20)[0]
+    s["_pair"] = s["club"].astype(str) + " v " + s["opp"].astype(str)
+    cell = s.groupby(["_pair", "match_id"])["resid_add"].mean().reset_index()
+    cell["k"] = cell.groupby("_pair").cumcount()
+    wide = cell[cell["k"] < 2].pivot(index="_pair", columns="k", values="resid_add").dropna()
+    return real, rm, float(wide[0].corr(wide[1]))
+
+
+def _published(panel):
+    """The same panel with `dc`/`hit` rebuilt from the PUBLISHED upstream column — the
+    series the study used before 2026-09-10. For the comparison in section 5 only."""
+    import glob as _glob
+    root = config.repo(SEASON)
+    raw = []
+    for f in sorted(_glob.glob(_os.path.join(root, "By Gameweek", "GW*", "playermatchstats.csv"))):
+        d = pd.read_csv(f, usecols=["player_id", "match_id", "defensive_contributions"])
+        p = pd.read_csv(_os.path.join(_os.path.dirname(f), "players.csv"),
+                        usecols=["player_id", "player_code"])
+        raw.append(d.merge(p, on="player_id", how="left"))
+    raw = pd.concat(raw, ignore_index=True).drop_duplicates(["player_code", "match_id"])
+    out = panel.drop(columns=["dc", "hit"]).merge(
+        raw[["player_code", "match_id", "defensive_contributions"]],
+        on=["player_code", "match_id"], how="left")
+    out["dc"] = pd.to_numeric(out["defensive_contributions"], errors="coerce")
+    out = out[out["dc"].notna()].copy()
+    out["hit"] = (out["dc"] >= out["thr"]).astype(float)
+    return out
 
 
 def selftest():

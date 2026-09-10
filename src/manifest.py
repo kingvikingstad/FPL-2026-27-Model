@@ -137,16 +137,20 @@ _NODES = [
          inputs=("teams.csv",), min_rows=300,
          columns=("Date", "HomeTeam", "AwayTeam", "FTHG", "FTAG", "AvgH", "AvgD", "AvgA"),
          note="team-model input rebuilt from repo Opta xG"),
+    # pms_panel.pkl added 2026-09-10: reconstruct_coldstart aggregates the per-match panel
+    # (its DefCon, npxG and xA), so a rebuilt panel left this file silently on the old
+    # series while doctor called it current — and without the edge the PLAN ordered its
+    # producer BEFORE build_all, i.e. before the panel it reads existed.
     Node("coldstart_hist.csv", config.COLDSTART_HIST, "derived",
          producer="scripts/reconstruct_coldstart.py",
-         inputs=("players.csv", "playerstats.csv"), min_rows=400,
-         columns=("id", "element_type", "minutes", "now_cost"),
+         inputs=("players.csv", "playerstats.csv", "pms_panel.pkl"), min_rows=400,
+         columns=("id", "element_type", "minutes", "now_cost", "defensive_contribution"),
          note="cold-start calibration input"),
 
     # --- derived: priors (pickles in SCRATCH, gitignored) --------------------
     Node("pms_panel.pkl", config.PMS_PANEL, "derived", producer="scripts/build_all.py",
          inputs=("players.csv", "playerstats.csv", "team_history.csv"),
-         note="25/26 per-match panel (build_pms)"),
+         note="25/26 per-match panel (build_pms); DefCon is `defcon_fpl`, CBIT for DEF"),
     Node("ms_priors.pkl", config.MS_PRIORS, "derived", producer="scripts/build_all.py",
          inputs=("pms_panel.pkl",),
          note="two-season pooled priors, older_weight=0.5"),

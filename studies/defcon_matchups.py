@@ -7,7 +7,7 @@ import config
 defcon_matchups.py — when do defenders actually hit the DefCon threshold?
 =========================================================================
 DefCon pays a defender 2 points for 10+ defensive actions (clearances, blocks,
-interceptions, tackles, recoveries). It drives the cheap-defender strategy the board
+interceptions, tackles — NOT recoveries, which count only for MID/FWD). It drives the cheap-defender strategy the board
 surfaces, and `defcon_env` currently conditions it on PPDA alone.
 
 The obvious question the model does not ask: **defensive actions are supply-driven.** You
@@ -34,13 +34,20 @@ centre-back, crosses mark a full-back. The split is validated by checking the re
 groups look like what they claim to be, and the classification is per player-season, so a
 player who changes role is allowed to change group.
 
-Data: repo playermatchstats, 24/25 + 25/26 (the seasons carrying defensive_contributions).
+Data: repo playermatchstats, 24/25 + 25/26. Role classification uses both; the DefCon
+analysis uses 25/26 only, the one season with DefCon.
+
+CORRECTED 2026-09-10. Until then the DefCon count was the published
+`defensive_contributions` column, which for defenders in GW2-10 of 25/26 is CBIRT
+(recoveries included) rather than FPL's CBIT — see src/defcon_series.py. Section 4
+reports every headline under both series so the change is auditable.
 
 Run:  python studies/defcon_matchups.py
 """
 import warnings; warnings.filterwarnings("ignore")
 import numpy as np, pandas as pd
 import late_form_carryover as lfc
+import defcon_series as dcs
 
 OUT = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "defcon_matchups.csv")
 DEF_THRESHOLD = 10          # defenders need 10 defensive contributions
@@ -57,7 +64,8 @@ def load():
         files = sorted(_glob.glob(_os.path.join(config.repo(season), gwglob)))
         if not files:
             continue
-        d = pd.concat([pd.read_csv(f) for f in files], ignore_index=True)
+        d = pd.concat([pd.read_csv(f).assign(gameweek=int(_os.path.basename(
+            _os.path.dirname(f))[2:])) for f in files], ignore_index=True)
         d = d[d["match_id"].astype(str).str.contains("-prem-", na=False)]
         p = pd.read_csv(_os.path.join(config.repo(season), pfile))
         d = d.merge(p[[c for c in ("player_id", "player_code", "position", "team_code")
@@ -79,7 +87,7 @@ def classify_defenders(d):
     """CB vs FB from the action profile, per player-season."""
     dd = d[d["position"] == "Defender"].copy()
     for c in ("headed_clearances", "accurate_crosses", "aerial_duels_won", "clearances",
-              "minutes_played", "defensive_contributions"):
+              "minutes_played"):
         dd[c] = pd.to_numeric(dd.get(c), errors="coerce").fillna(0.0)
     g = dd.groupby(["player_code", "season"], as_index=False).agg(
         mins=("minutes_played", "sum"), hc=("headed_clearances", "sum"),
@@ -116,16 +124,28 @@ def main():
     # this study did) silently makes half the sample look like defenders who never touch
     # the ball, and it produced a non-monotone opponent-strength curve that looked like a
     # finding. DROP the nulls and say which seasons survive.
-    D["dc"] = pd.to_numeric(D.get("defensive_contributions"), errors="coerce")
+    #
+    # The count is FPL's DEF rule, CBIT, summed from components (defcon_series). The
+    # published column is CBIRT for defenders in GW2-10 of 25/26; it is kept alongside
+    # as `dc_published` ONLY so the comparison at the end can say what the defect did.
+    D["dc"] = np.nan
+    D["dc_published"] = np.nan
+    for season in D["season"].unique():
+        m = D["season"] == season
+        if int(str(season)[:4]) >= dcs.FIRST_SEASON:
+            D.loc[m, "dc"] = dcs.fpl_defcon(D[m], D.loc[m, "position"], season)
+            D.loc[m, "dc_published"] = pd.to_numeric(
+                D.loc[m, "defensive_contributions"], errors="coerce")
     have = D.groupby("season")["dc"].apply(lambda s: s.notna().mean())
-    print("\n  defensive_contributions coverage by season: "
+    print("\n  DefCon coverage by season: "
           + ", ".join(f"{s} {v:.0%}" for s, v in have.items()))
     D = D[D["dc"].notna()].copy()
     if D.empty:
-        raise RuntimeError("no season carries defensive_contributions")
+        raise RuntimeError("no season carries DefCon")
     D["mins"] = pd.to_numeric(D["minutes_played"], errors="coerce").fillna(0.0)
     D = D[D["mins"] >= 60]
     D["hit"] = (D["dc"] >= DEF_THRESHOLD).astype(float)
+    D["hit_published"] = (D["dc_published"] >= DEF_THRESHOLD).astype(float)
     D["conceded"] = np.where(D["team_code"] == D.get("home_team"),
                              D.get("away_score"), D.get("home_score"))
 
@@ -201,22 +221,75 @@ def main():
                         aggfunc="mean").round(2).to_string())
 
     # is the role difference significant, clustered by player?
-    rng = np.random.default_rng(0)
-    codes = D["player_code"].dropna().unique()
-    obs = D[D.role == "CB"]["hit"].mean() - D[D.role == "FB"]["hit"].mean()
-    bs = []
-    for _ in range(2000):
-        pick = rng.choice(codes, len(codes), replace=True)
-        s = D[D["player_code"].isin(pick)]
-        if s.role.nunique() == 2:
-            bs.append(s[s.role == "CB"]["hit"].mean() - s[s.role == "FB"]["hit"].mean())
-    lo, hi = np.percentile(bs, [2.5, 97.5])
-    print(f"\n  CB minus FB DefCon rate: {obs:+.3f}  95% CI ({lo:+.3f}, {hi:+.3f})"
-          f"{'  *' if not (lo <= 0 <= hi) else '  (not significant)'}")
+    # A CLUSTER bootstrap: players drawn with replacement and a player drawn twice counts
+    # twice. The first version filtered on `isin(pick)`, which collapses duplicates, so each
+    # replicate was a ~63% subsample WITHOUT replacement — a CI ~24% too narrow.
+    cb = _cluster_boot(D, "hit", lambda s: s["CB"] - s["FB"])
+    cr = _cluster_boot(D, "hit", lambda s: s["CB"] / s["FB"])
+    print(f"\n  CB minus FB DefCon rate: {cb[0]:+.3f}  95% CI ({cb[1]:+.3f}, {cb[2]:+.3f})"
+          f"{'  *' if not (cb[1] <= 0 <= cb[2]) else '  (not significant)'}")
+    print(f"  CB / FB ratio:           {cr[0]:.2f}x  95% CI ({cr[1]:.2f}, {cr[2]:.2f})")
+
+    # ------------------------------------------------------------------ Q4
+    print("\n" + "=" * 74)
+    print("4. WHAT THE UPSTREAM DEFECT DID TO EACH CONCLUSION  (corrected 2026-09-10)")
+    print("=" * 74)
+    print("  `published` is the column as FPL-Core-Insights ships it: CBIRT for defenders in")
+    print("  GW2-10 of 25/26, CBIT elsewhere. `corrected` is FPL's rule, CBIT throughout.")
+    wk = D.assign(blk=np.where(D["gameweek"].between(2, 10), "GW2-10", "other GWs"))
+    print("\n  hit rate by gameweek block (the defect is confined to GW2-10):")
+    print(wk.groupby("blk")[["hit_published", "hit"]].mean().round(3)
+          .rename(columns={"hit_published": "published", "hit": "corrected"}).to_string())
+    n90 = D["mins"].sum() / 90.0
+    print(f"\n  DEF DefCon per 90: published {D['dc_published'].sum() / n90:.3f}  "
+          f"corrected {D['dc'].sum() / n90:.3f}")
+    rows = []
+    for lab, col in (("published", "hit_published"), ("corrected", "hit")):
+        q = D.groupby("opp_q", observed=True)[col].mean()
+        cbfb = D.groupby("role")[col].mean()
+        rows.append({"series": lab, "overall": D[col].mean(),
+                     **{str(k): v for k, v in q.items()},
+                     "CB": cbfb["CB"], "FB": cbfb["FB"], "CB/FB": cbfb["CB"] / cbfb["FB"]})
+    print("\n" + pd.DataFrame(rows).set_index("series").round(3).to_string())
+    print("\n  opponent-quartile hit rates, corrected, player-clustered 95% CIs:")
+    for q in ["weakest opp", "Q2", "Q3", "strongest opp"]:
+        est = _cluster_boot(D[D["opp_q"] == q], "hit", lambda s: s["ALL"], by_role=False)
+        print(f"    {q:14s} {est[0]:.3f}  ({est[1]:.3f}, {est[2]:.3f})")
+    bump = _cluster_boot(D.assign(_q3=(D["opp_q"] == "Q3")), "hit",
+                         lambda s: s["Q3"] - s["rest"], by="_q3",
+                         labels={True: "Q3", False: "rest"})
+    print(f"    Q3 minus the other three: {bump[0]:+.3f}  ({bump[1]:+.3f}, {bump[2]:+.3f})"
+          f"{'' if bump[1] <= 0 <= bump[2] else '  * excludes zero'}")
 
     D[["season", "player_code", "role", "dc", "hit", "mins", "opp_str", "own_str",
        "conceded", "is_home"]].to_csv(OUT, index=False)
     print(f"\n-> {OUT}")
+
+
+def _cluster_boot(D, value, stat, by="role", labels=None, by_role=True, n=2000, seed=0):
+    """(estimate, lo, hi) of `stat` over per-group means of `value`, resampling PLAYERS
+    with replacement. `stat` receives {group: mean}; with by_role=False it gets {'ALL'}."""
+    if not by_role:
+        g = D.groupby("player_code")[value].agg(["sum", "count"])
+        S, N = g["sum"].to_numpy()[:, None], g["count"].to_numpy()[:, None]
+        keys = ["ALL"]
+    else:
+        g = D.groupby(["player_code", by])[value].agg(["sum", "count"]).unstack(by, fill_value=0)
+        keys = list(g["sum"].columns)
+        S, N = g["sum"].to_numpy(), g["count"].to_numpy()
+        if labels:
+            keys = [labels[k] for k in keys]
+
+    def f(s, c):
+        return stat(dict(zip(keys, s / np.maximum(c, 1e-12))))
+    est = f(S.sum(0), N.sum(0))
+    rng = np.random.default_rng(seed)
+    bs = []
+    for _ in range(n):
+        i = rng.integers(0, len(S), len(S))
+        bs.append(f(S[i].sum(0), N[i].sum(0)))
+    lo, hi = np.percentile(bs, [2.5, 97.5])
+    return est, lo, hi
 
 
 if __name__ == "__main__":

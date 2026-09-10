@@ -13,13 +13,15 @@ Why this beats the FPL aggregates the model used before:
   * `xgot`                                    -> shot quality on target, separating
     chance creation from finishing
   * `tackles`,`interceptions`,`blocks`,`clearances`,`recoveries` held SEPARATELY
-    -> exactly the components the 26/27 BPS reweights (CBI now 1/3)
+    -> exactly the components the 26/27 BPS reweights (CBI now 1/3), and the ones a
+    defender's DefCon is summed from (`defcon_fpl`, via defcon_series)
   * `goals_prevented`, `xgot_faced`, `saves_inside_box` -> real keeper
     shot-stopping, which the model had no equivalent of
   * `start_min` / `finish_min`                -> exact time on pitch
 """
 import glob, os
 import numpy as np, pandas as pd
+import defcon_series as dcs
 
 BASE = config.repo("2025-2026")
 OUT = "/tmp/pms_panel.parquet"
@@ -86,7 +88,13 @@ def build():
     panel["cbi"] = num("clearances") + num("blocks") + num("interceptions")
     panel["tkl"] = num("tackles")
     panel["rec"] = num("recoveries")
-    panel["defcon_raw"] = num("defensive_contributions")
+    # DefCon under FPL's rule: CBIT summed from components for DEF, the upstream column
+    # for MID/FWD. NOT the upstream column for defenders — it is CBIRT in GW2-10 of 25/26
+    # (see defcon_series). NaN stays NaN: `num` would fill it with 0. Named `defcon_fpl`,
+    # not `defcon_raw`, so a panel pickled before the correction fails on read instead of
+    # feeding the contaminated series to a prior.
+    panel["defcon_fpl"] = dcs.fpl_defcon(panel, panel["pos"], "2025-2026")
+    dcs.assert_no_recoveries(panel, panel["defcon_fpl"], panel["pos"])
     # 25/26 BPS: CBI 1 per 2. 26/27: CBI 1 per 3, tackles unchanged.
     panel["bps_cbi_2526"] = np.floor(panel.cbi / 2.0)
     panel["bps_cbi_2627"] = np.floor(panel.cbi / 3.0)

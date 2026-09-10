@@ -52,6 +52,7 @@ import glob
 import os
 import numpy as np
 import pandas as pd
+import defcon_series as dcs
 
 # FPL DefCon thresholds. GK cannot score DefCon.
 THRESHOLD = {"Defender": 10, "Midfielder": 12, "Forward": 12}
@@ -95,6 +96,8 @@ def build_panel(season="2025-2026", base=None):
     `defensive_contributions` is 100% NULL before 25/26 — the stat did not exist until
     FPL introduced DefCon scoring. Nulls are DROPPED, never filled with zero: filling
     makes a player who was simply not measured look like one who never touched the ball.
+    The count is `defcon_series.fpl_defcon` (CBIT for defenders), which also refuses a
+    pre-25/26 season outright.
     """
     root = base or config.repo(season)
     fs = sorted(glob.glob(os.path.join(root, "By Gameweek", "GW*",
@@ -113,7 +116,9 @@ def build_panel(season="2025-2026", base=None):
     d = pd.concat(rows, ignore_index=True)
     d = d[d["match_id"].astype(str).str.contains("-prem-", na=False)]
 
-    d["dc"] = pd.to_numeric(d.get("defensive_contributions"), errors="coerce")
+    # FPL's rule, not the published column: for defenders that column is CBIRT in GW2-10
+    # of 25/26, which put a defender's hit rate at 0.63 in those weeks against FPL's 0.26.
+    d["dc"] = dcs.fpl_defcon(d, d["position"], season)
     d["mins"] = pd.to_numeric(d.get("minutes_played"), errors="coerce")
     d = d[d["dc"].notna() & (d["mins"] >= MIN_MINUTES)]
     if d.empty:

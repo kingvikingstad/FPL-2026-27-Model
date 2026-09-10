@@ -42,7 +42,7 @@ def season_rates(panel_path=PANEL, min_minutes=450):
         np_goals=("np_goals", "sum"), assists=("assists", "sum"),
         pens_scored=("pens_scored", "sum"), pens_missed=("pens_missed", "sum"),
         cbi=("cbi", "sum"), tkl=("tkl", "sum"), rec=("rec", "sum"),
-        defcon=("defcon_raw", "sum"),
+        defcon=("defcon_fpl", "sum"),
         saves=("saves_", "sum"), gp=("goals_prevented", "sum"),
         xgot_faced=("xgot_faced", "sum"),
         tob=("tob", "sum"), shots=("total_shots", "sum"),

@@ -5,7 +5,7 @@ import config
 """
 reconstruct_coldstart.py — build the cold-start calibration input
 (coldstart_hist.csv) from the 25/26 per-match panel, using the model's own
-event definitions (npxg, xa_, defcon_raw). Replaces the defective/unavailable
+event definitions (npxg, xa_, defcon_fpl). Replaces the defective/unavailable
 fpl-data-stats.csv that roster.calibrate_cold_start() expects, matching its
 exact schema so it runs unchanged.
 
@@ -22,7 +22,7 @@ def build():
     panel = pd.read_pickle(PANEL)
     agg = panel.groupby("player_id").agg(
         minutes=("mins", "sum"), npxg=("npxg", "sum"), xa=("xa_", "sum"),
-        defensive_contribution=("defcon_raw", "sum"), pos=("pos", "last")).reset_index()
+        defensive_contribution=("defcon_fpl", "sum"), pos=("pos", "last")).reset_index()
     agg["non_penalty_expected_goal_involvements"] = agg.npxg + agg.xa
     agg["expected_assists"] = agg.xa
     agg["element_type"] = agg.pos.map({"GK": 1, "DEF": 2, "MID": 3, "FWD": 4})

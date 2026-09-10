@@ -3,16 +3,22 @@ import config
 """
 defcon_roles.py — centre-back vs full-back, for the DefCon prior ONLY.
 =======================================================================
-Measured on `studies/defcon_matchups.csv` (2,934 appearances of 60+ minutes, 25/26):
+Measured on `studies/defcon_matchups.csv` (2,934 appearances of 60+ minutes, 25/26),
+with DEF DefCon counted by FPL's rule, CBIT (`defcon_series`):
 
-    CB       1,587.5 90s    9.811 DefCon per 90    hit rate 0.480
-    FB       1,269.3 90s    7.063 DefCon per 90    hit rate 0.207
-    all DEF  2,856.8 90s    8.590 per 90           hit rate 0.358
+    CB       1,587.5 90s    8.928 DefCon per 90    hit rate 0.398
+    FB       1,269.3 90s    6.116 DefCon per 90    hit rate 0.114
+    all DEF  2,856.8 90s    7.678 per 90           hit rate 0.271
 
-A single `PRIOR_DC["DEF"] = 7.6` cannot express a 2.3x difference in hit rate, and it is
-not even the right pooled value — 7.6 sits below the measured 8.590 for defenders as a
-whole, so every thin-history defender was being shrunk toward a target that is too low
-regardless of role.
+A single pooled DEF prior cannot express a 3.5x difference in hit rate.
+
+CORRECTED 2026-09-10. These were 9.811 / 7.063 / 8.590 (hit 0.480 / 0.207 / 0.358), a
+2.3x ratio, measured on the published `defensive_contributions` column — which for
+defenders in GW2-10 of 25/26 is CBIRT, recoveries included. The pooled value was
+introduced to REPLACE an older `PRIOR_DC["DEF"] = 7.6` on the grounds that 7.6 "sat below
+the measurement"; the measurement was the thing that was high, and the corrected pooled
+rate, 7.678, is within 0.1 of the value it displaced. Role LABELS are unaffected (they
+come from the aerial/crossing profile, not DefCon) and were verified identical.
 
 SCOPE — DELIBERATELY NARROW
 ----------------------------
@@ -34,8 +40,8 @@ That is a real limitation, not a rounding error, and it caps the value of this l
     changes almost nothing;
   * the split bites hardest on labelled defenders with THIN history — a returning or
     rotated CB whose own record is too short to identify his rate;
-  * for cold-start defenders the only available improvement is the corrected POOLED
-    value (8.590 rather than 7.6), which this module also supplies.
+  * for cold-start defenders the only available improvement is the measured POOLED
+    value, which this module also supplies (7.678; see the correction note above).
 
 Getting role onto cold-start players needs an external positional source (a lineup feed
 carrying CB/RB/LB, or average-position data for a player's previous league). Until then
@@ -52,9 +58,10 @@ STUDY = os.path.join(config.ROOT, "studies", "defcon_matchups.csv")
 
 # Measured per-90 rates. Recomputed by `measure()`; these are the committed values so a
 # prior build does not silently depend on a study file being present.
-RATE_CB = 9.811
-RATE_FB = 7.063
-RATE_DEF_POOLED = 8.590          # replaces the old 7.6, which was below the measurement
+# CBIT throughout since 2026-09-10; were 9.811 / 7.063 / 8.590 on the contaminated column.
+RATE_CB = 8.928
+RATE_FB = 6.116
+RATE_DEF_POOLED = 7.678
 MIN_APPS = 3                     # appearances needed before a role label is trusted
 
 

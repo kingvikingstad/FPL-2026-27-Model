@@ -40,7 +40,7 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
     p25 = p25.merge(codes25, on="player_id", how="left")
     a25 = p25.groupby(["player_code", "pos"], dropna=False).agg(
         mins=("mins", "sum"), npxg=("npxg", "sum"), xa=("xa_", "sum"),
-        defcon=("defcon_raw", "sum"),
+        defcon=("defcon_fpl", "sum"),
         # chances created = the repo's key-pass equivalent, and the EXPOSURE for the
         # assist-quality term. See to_priors and studies/rate_components.py.
         kp=("chances_created", "sum"),
@@ -56,7 +56,7 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
     p24 = build_2425_panel()
     a24 = p24.groupby(["player_code", "pos"], dropna=False).agg(
         mins=("mins", "sum"), npxg=("npxg", "sum"), xa=("xa_", "sum"),
-        defcon=("defcon_raw", "sum"),
+        defcon=("defcon_fpl", "sum"),
         kp=("chances_created", "sum"),
         starts=("mins", lambda s: (s >= 60).sum()), games=("mins", "size"),
         apps=("mins", lambda s: (s > 0).sum()),
@@ -67,13 +67,16 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
     a24["pens"] = 0.0; a24["pens_miss"] = 0.0     # 24/25 lacks the penalty split
 
     # MINUTES THAT CAN ACTUALLY CARRY A DEFCON.
-    # `defensive_contributions` does not exist in 24/25 — the column reads as all zeros,
-    # so a24 contributes 750,949 minutes to the pooled denominator and exactly 0 to the
-    # numerator. Every DefCon rate was therefore diluted by that player's 24/25 share of
-    # minutes: measured r(24/25 share, dilution) = -1.000, i.e. arithmetic, not noise.
-    # Pooled defender rate came out at 6.41 per 90 against a measured 8.36; restricting
-    # the denominator to 25/26 gives 8.40. The other Gamma channels (npxg, xa) are
-    # genuinely present in both seasons and keep the pooled denominator.
+    # `defensive_contributions` does not exist in 24/25 — the column is all NULL, and a
+    # sum over it is 0 — so a24 contributes 750,949 minutes to the pooled denominator and
+    # exactly 0 to the numerator. Every DefCon rate was therefore diluted by that player's
+    # 24/25 share of minutes: measured r(24/25 share, dilution) = -1.000, i.e. arithmetic,
+    # not noise. Pooled defender rate came out at 6.41 per 90; restricting the denominator
+    # to 25/26 gave 8.40 — a figure that was itself ~12% high, because the 25/26 DEF
+    # series it was measured on carried recoveries in GW2-10 (corrected 2026-09-10, see
+    # defcon_series; FPL's official DEF rate for 900+ minute defenders is 7.66).
+    # The other Gamma channels (npxg, xa) are genuinely present in both seasons and keep
+    # the pooled denominator.
     a25["mins_dc"] = a25["mins"]
     a24["mins_dc"] = 0.0
     both = pd.concat([a25, a24], ignore_index=True)
@@ -267,10 +270,11 @@ def to_priors(ev, revert=0.70, k0=3.0, pen_xg=0.79, deep_starts=None):
     # with two appearances would have his noisy rate taken almost at face value. Below the
     # threshold the pooled prior is used, because that is the regime it was fitted for.
     SPLIT_MIN_N90 = 5.0
-    # DEF corrected 7.6 -> 8.590, the measured pooled per-90 rate over 2,934 appearances
-    # (studies/defcon_matchups.csv). The old value sat BELOW the measurement, so every
-    # thin-history defender was shrunk toward a target that was too low before any
-    # question of role arose. GK/MID/FWD are untouched — no equivalent measurement.
+    # DEF is the measured pooled per-90 rate over 2,934 appearances of 60+ minutes
+    # (studies/defcon_matchups.csv), 7.678 under FPL's CBIT rule. It read 8.590 until
+    # 2026-09-10, measured on an upstream column that counted recoveries for defenders in
+    # GW2-10 (defcon_series); the 7.6 it replaced was right all along.
+    # GK/MID/FWD are untouched — no equivalent measurement.
     PRIOR_DC = {"GK": 0.0, "DEF": dcr.RATE_DEF_POOLED, "MID": 8.4, "FWD": 4.7}
     # Centre-back / full-back split, applied ONLY to the DefCon prior mean. `pos` stays
     # DEF everywhere else, so the threshold, clean-sheet and goal multipliers are
