@@ -210,7 +210,7 @@ def review(gw, force=False, write=True, supplied=None):
             w(f"| {t} | {r.proj:.1f} | {int(r.actual)} | {r['diff']:+.1f} |\n")
         w("\n## 5. Still to do by hand\n\n"
           "- [ ] Enter your own and the tracked squads' scores: "
-          f"`python scripts/track.py --gw {gw} --result MINE HYBRID MODEL`\n"
+          f"`python scripts/track.py --gw {gw} --result MINE HYBRID MODEL SOLVER`\n"
           f"- [ ] Freeze this week's plan squads into `predictions/gw{gw}_scored/` — "
           "`plan_constrained.py` overwrites them and they are not reproducible.\n"
           "- [ ] Save a locked board before the NEXT deadline, or the next review is a "

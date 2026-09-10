@@ -8,7 +8,8 @@ track.py — the shell: enter your squad, compare it to the model, keep the scor
     python scripts/track.py --init            create data/my_squad.csv to fill in
     python scripts/track.py                   validate + compare against the proposal
     python scripts/track.py --gw 2            a specific gameweek
-    python scripts/track.py --result 70 68    record what each squad actually scored
+    python scripts/track.py --result 70 68 71 record MINE HYBRID MODEL SOLVER
+                                              (trailing tracks may be omitted)
     python scripts/track.py --ledger          the running record
 
 The comparison is projection-vs-projection, which is cheap talk until results land.
@@ -53,13 +54,13 @@ def main():
         if L.empty:
             print("no results recorded yet — use --result MY MODEL after a gameweek")
             return
-        show = ["gw", "my_points", "hybrid_points", "model_points",
-                "vs_hybrid", "vs_model", "hybrid_vs_model"]
+        show = ["gw", "my_points", "hybrid_points", "model_points", "solver_points",
+                "vs_hybrid", "vs_model", "vs_solver", "hybrid_vs_model"]
         print(L[[c for c in show if c in L.columns]].round(1).to_string(index=False))
         n = len(L)
         print(f"\n  gameweeks recorded : {n}")
         for lab, col in (("yours ", "my_points"), ("hybrid", "hybrid_points"),
-                         ("model ", "model_points")):
+                         ("model ", "model_points"), ("solver", "solver_points")):
             s, m = L[col].sum(), L[col].mean()
             k = int(L[col].notna().sum())
             print(f"  {lab}  total {s:7.1f}   mean {m:6.1f}   ({k}/{n} weeks recorded)")
@@ -68,6 +69,9 @@ def main():
                   f"{int(L['vs_hybrid'].notna().sum())}")
             print(f"  weeks you beat the model  : {(L['vs_model'] > 0).sum()}/"
                   f"{int(L['vs_model'].notna().sum())}")
+            if int(L["vs_solver"].notna().sum()):
+                print(f"  weeks you beat the solver : {(L['vs_solver'] > 0).sum()}/"
+                      f"{int(L['vs_solver'].notna().sum())}")
         if n < 5:
             print("\n  Too few gameweeks to mean anything yet. Single-gameweek FPL "
                   "scores are mostly variance;\n  a handful of weeks cannot separate "
@@ -77,21 +81,23 @@ def main():
     if "--result" in args:
         i = args.index("--result")
         vals = []
-        for a in args[i + 1:i + 4]:
+        for a in args[i + 1:i + 5]:
             try:
                 vals.append(float(a))
             except ValueError:
                 break
         if len(vals) < 1:
-            print("usage: --result MINE [HYBRID] [MODEL]")
+            print("usage: --result MINE [HYBRID] [MODEL] [SOLVER]")
             return
         mine_p = vals[0]
         hyb_p = vals[1] if len(vals) > 1 else None
         mod_p = vals[2] if len(vals) > 2 else None
-        st.append_result(gw, mine_p, hyb_p, mod_p)
+        sol_p = vals[3] if len(vals) > 3 else None
+        st.append_result(gw, mine_p, hyb_p, mod_p, sol_p)
         parts = [f"you {mine_p:.0f}"]
         if hyb_p is not None: parts.append(f"hybrid {hyb_p:.0f}")
         if mod_p is not None: parts.append(f"model {mod_p:.0f}")
+        if sol_p is not None: parts.append(f"solver {sol_p:.0f}")
         print(f"recorded GW{gw}: " + ", ".join(parts))
         if hyb_p is None or mod_p is None:
             print("  (unrecorded tracks stored as blank, not zero)")

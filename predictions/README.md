@@ -186,3 +186,62 @@ collision structurally impossible instead of relying on a filter someone must ma
 **The locked boards themselves are never edited.** A crosswalk is an annotation in a
 separate file; it cannot change what a board predicted. Any board written from now on
 carries `player_code` and needs none of this.
+
+
+## THE LOOK-AHEAD THAT WASN'T — measured 2026-09-09
+
+`press_index.press_factor` and `set_piece_takers.observed_takers` both defaulted to
+"every completed gameweek at call time" until 2026-09-08. Because `gw2_*` was built on
+08-31 and `gw3_*` on 09-08 — both AFTER their own gameweek finished — those channels
+were suspected of conditioning the boards on the results they were meant to forecast,
+and the two ledger rows were flagged as probably contaminated.
+
+**They are not.** Measured, not inferred:
+
+The external feed is itself a git repo, so the information set can be pinned exactly
+rather than approximated. Each gameweek was rebuilt at the feed commit matching its
+original pull date, with current code, in three arms:
+
+| arm | feed commit | press source | `INSEASON_UPTO` |
+|---|---|---|---|
+| A control | as originally built | pitchapi (live) | unset |
+| B bounded | same | proxy | 1 (GW2) / 2 (GW3) |
+| C isolator | same | proxy | unset |
+
+`B vs C` is the pure WINDOW effect; `A vs C` is the pure FEED effect. On GW3, 629
+players:
+
+    B vs C   window          max|delta| = 0.000000   rows moved =   0
+    A vs C   feed source     max|delta| = 0.061      rows moved = 201
+    A vs B   both            max|delta| = 0.061      rows moved = 201
+
+**The window contributes exactly nothing.** GW2 is the same story and stronger — every
+one of 614 players is identical across every component (`mean`, `app_ev`, `att_ev`,
+`cs_ev`, `defcon_ev`, `sd`). That is a true null, not rounding: GW1 rows in the same
+files move by up to 0.065 and the board is written at three decimals.
+
+The reason is that pinning the feed already bounds every repo-derived channel — the
+proxy press table and `observed_takers` both read `By Gameweek/GW*/`, which the pin
+truncates. The only channel that was genuinely unbounded is PitchAPI, and PitchAPI is a
+live API rather than a window into the future: at the GW3 pin it carried 1-2 matches per
+club against the pinned repo's 2-2. It LAGS the repo. There was never future information
+in it to leak.
+
+So the ledger's GW2 and GW3 rows stand as they are. Bounding the channels was still the
+right fix — an unbounded read is a defect whether or not it happens to bite — but it
+corrects nothing already recorded, and the contamination warning attached to those rows
+is withdrawn.
+
+### The two `_upto` boards
+
+`gw2_board_prekickoff_from-2026-08-26-data_upto1.csv` (feed `0d089b2`, 2026-08-26 16:36
+UTC) and `gw3_board_prekickoff_from-2026-09-01-data_upto2.csv` (feed `a796c0c`,
+2026-09-01 20:44 UTC) are those arm-B rebuilds, kept because they are the only boards
+here whose information set is REPRODUCIBLE: name the feed commit and the env, and you
+get the same file back. Every other pre-kickoff board asks you to trust a date in a
+filename.
+
+**They are not forecasts and are not in the ledger.** They were built with 2026-09-08
+code — after the XI-constraint reordering and the RNG window fix — so they are not what
+the model said at the time. Scoring them measures those model changes, which is a
+different and separate question from scoring a forecast.

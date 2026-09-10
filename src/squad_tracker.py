@@ -35,7 +35,7 @@ Accents are optional, not forbidden: 'Petrovic' and 'Petrović' both find Petrov
 An ambiguous name is REPORTED, never guessed — see `resolve_names`.
 
 Actual points go in data/my_results.csv:
-    gw,my_points,model_points,note
+    gw,my_points,hybrid_points,model_points,solver_points,note
 
 Run:  python src/squad_tracker.py --selftest
 """
@@ -208,15 +208,22 @@ def compare(mine, proposed, ep_col="ep"):
             "only_proposed": only_prop.sort_values(ep_col, ascending=False)}
 
 
-# The three squads tracked. `hybrid` is the model optimising under the manager's stated
+# The four squads tracked. `hybrid` is the model optimising under the manager's stated
 # constraints; `model` is the same chip and transfer plan with those constraints removed.
 # Keeping both separates two different questions — is the model any good, and do my
 # preferences cost me — which a two-way comparison silently merges.
-TRACKS = ("mine", "hybrid", "model")
+#
+# `solver` is a DIFFERENT KIND of build and is kept in its own column for that reason:
+# `run_solver.py` optimises ONE gameweek in isolation, where hybrid/model come from a
+# GW1-3 horizon solve that prices transfers and a chip week across the window. Folding
+# a single-GW solve into `model_points` would change what that column means between
+# rows — the same defect `forecast-scorer` found in the scoring ledger's `misses`,
+# where a moving denominator made a flat rate look like a 6.5x improvement.
+TRACKS = ("mine", "hybrid", "model", "solver")
 
 
-def append_result(gw, my_points, hybrid_points=None, model_points=None, note="",
-                  path=None):
+def append_result(gw, my_points, hybrid_points=None, model_points=None,
+                  solver_points=None, note="", path=None):
     """Add a scored gameweek, replacing any existing row for that gameweek.
 
     A missing track is stored as NaN rather than zero: "not recorded" and "scored
@@ -226,11 +233,12 @@ def append_result(gw, my_points, hybrid_points=None, model_points=None, note="",
     row = {"gw": int(gw), "my_points": float(my_points),
            "hybrid_points": np.nan if hybrid_points is None else float(hybrid_points),
            "model_points": np.nan if model_points is None else float(model_points),
+           "solver_points": np.nan if solver_points is None else float(solver_points),
            "note": note}
     row = pd.DataFrame([row])
     if os.path.exists(p):
         d = pd.read_csv(p)
-        for c in ("hybrid_points", "model_points"):
+        for c in ("hybrid_points", "model_points", "solver_points"):
             if c not in d.columns:
                 d[c] = np.nan
         d = d[d["gw"] != int(gw)]
@@ -241,20 +249,26 @@ def append_result(gw, my_points, hybrid_points=None, model_points=None, note="",
 
 
 def ledger(path=None):
-    """Running record across all three tracks, per gameweek and cumulative."""
+    """Running record across all four tracks, per gameweek and cumulative.
+
+    A track is NaN where it was never recorded, and the difference columns
+    inherit that: `vs_solver` is NaN for a gameweek whose solver squad was never
+    frozen, which is not the same as a gameweek where the solver drew level.
+    """
     p = path or RESULTS_FILE
-    cols = ["gw", "my_points", "hybrid_points", "model_points"]
+    cols = ["gw", "my_points", "hybrid_points", "model_points", "solver_points"]
     if not os.path.exists(p):
         return pd.DataFrame(columns=cols)
     d = pd.read_csv(p).sort_values("gw")
-    for c in ("hybrid_points", "model_points"):
+    for c in ("hybrid_points", "model_points", "solver_points"):
         if c not in d.columns:
             d[c] = np.nan
     d["vs_hybrid"] = d["my_points"] - d["hybrid_points"]
     d["vs_model"] = d["my_points"] - d["model_points"]
     d["hybrid_vs_model"] = d["hybrid_points"] - d["model_points"]
+    d["vs_solver"] = d["my_points"] - d["solver_points"]
     for a, b in (("my_points", "cum_mine"), ("hybrid_points", "cum_hybrid"),
-                 ("model_points", "cum_model")):
+                 ("model_points", "cum_model"), ("solver_points", "cum_solver")):
         d[b] = d[a].cumsum()
     return d
 
@@ -327,7 +341,7 @@ def selftest():
 
     # ledger accumulates across three tracks and replaces rather than duplicating
     tmp = os.path.join(tempfile.mkdtemp(), "res.csv")
-    append_result(1, 70, 69, 68, path=tmp)
+    append_result(1, 70, 69, 68, 71, path=tmp)
     append_result(2, 55, 57, 60, path=tmp)
     append_result(2, 58, 57, 60, note="corrected", path=tmp)
     L = ledger(tmp)
@@ -339,6 +353,15 @@ def selftest():
     assert abs(float(L["vs_model"].iloc[0]) - 2.0) < 1e-9
     assert abs(float(L["hybrid_vs_model"].iloc[0]) - 1.0) < 1e-9
 
+    # `solver` is a fourth track with its own column, never folded into `model`. GW1
+    # records one and GW2 does not, which is the shape the real ledger has: a per-gameweek
+    # solve exists for some weeks and not others, and the difference column must go NaN
+    # rather than silently comparing against a squad that was never built.
+    assert abs(float(L.loc[L.gw == 1, "solver_points"].iloc[0]) - 71.0) < 1e-9
+    assert abs(float(L.loc[L.gw == 1, "vs_solver"].iloc[0]) + 1.0) < 1e-9   # 70 - 71
+    assert pd.isna(L.loc[L.gw == 2, "solver_points"].iloc[0]),         "an unrecorded solver week must be NaN, not 0"
+    assert pd.isna(L.loc[L.gw == 2, "vs_solver"].iloc[0]),         "vs_solver must not compare against a squad that was never built"
+
     # a missing track stays NaN — "not recorded" must not be read as "scored nothing"
     append_result(3, 60, path=tmp)
     L2 = ledger(tmp)
@@ -349,7 +372,8 @@ def selftest():
     print("SELFTEST OK: exact and whole-word name matching, accents optional on both "
           "sides without merging distinct players, ambiguity reported not guessed, "
           "squad rules validated, captain doubled and bench counted only when boosted, "
-          "ledger replaces a re-entered gameweek.")
+          "ledger replaces a re-entered gameweek, and the solver track is a "
+          "separate column that stays NaN where no squad was frozen.")
 
 
 if __name__ == "__main__":

@@ -607,7 +607,7 @@ def _first_clean(df, gws):
         return int(gws[0])
 
 
-def captaincy_tail(gw, draws_dir=None):
+def captaincy_tail(gw, draws_dir=None, board_mean=None, tol=0.01, diag=None):
     """Tail metrics for one gameweek, from the BOARD'S OWN posterior draws.
 
     Captaincy is a tail problem, not a mean problem — you are doubling a score, so the
@@ -641,7 +641,24 @@ def captaincy_tail(gw, draws_dir=None):
     the clean-sheet engine validated at GA r=0.89 / CS r=0.93 and that revalidation is a
     separate exercise against scored gameweeks.
 
-    Returns {player_code: {...}}, empty if the dump for `gw` is absent.
+    THE DUMP MUST BE RECONCILED AGAINST THE BOARD, NOT MERELY PRESENT.
+    `.cache/draws_gw<N>.npz` has no mtime relationship to the board that is loaded, and
+    `gw_board` dumps only ONE gameweek by default (`PRED_XI_GW`), so a scratch directory
+    accumulates dumps from every board ever run. Measured 2026-09-09 against the current
+    board: GW4's dump reconciled to 5e-4 (the CSV's own 4dp rounding) and the GW1-3 and
+    GW5-10 dumps, written eleven days earlier, disagreed by a median of 0.18-0.33 points
+    and a maximum of 4.21. Ranking captaincy for GW7 off that dump is a superseded model
+    wearing the current board's clothes -- plausible numbers, silently wrong, which is
+    the one failure this tool exists to prevent.
+
+    So the gate is the DRAWS' OWN MEAN against the board's `mean` for the same gameweek,
+    which is an identity when the dump came from this board and not otherwise. Nothing
+    is repaired: a dump that fails is treated as absent and the gameweek falls back to
+    ranking on the projection, which the page states per gameweek. `board_mean` is the
+    {player_code: mean} map for this gameweek; passing None skips the check and is only
+    for the selftest.
+
+    Returns {player_code: {...}}, empty if the dump for `gw` is absent or stale.
     """
     import numpy as _np
     d = draws_dir or config.SCRATCH
@@ -661,11 +678,32 @@ def captaincy_tail(gw, draws_dir=None):
     except Exception:
         HAUL_PTS, BLANK_PTS = 10, 2
 
+    mean = draws.mean(1)
+    # THE GATE. draws.mean(1) IS the board's `mean` when the dump came from this board,
+    # so any disagreement above the CSV's own rounding says the dump is from a different
+    # run. Rejected rather than repaired, and counted so `build` can name the gameweek.
+    if board_mean is not None:
+        have = [(i, board_mean.get(int(c))) for i, c in enumerate(codes)
+                if c == c and int(c) in board_mean]
+        if len(have) < 0.5 * len(codes):
+            if diag is not None:
+                diag.append({"gw": int(gw), "why": "codes", "n": len(have),
+                             "of": int(len(codes))})
+            return {}
+        worst = max(abs(float(mean[i]) - float(bm)) for i, bm in have)
+        if worst > tol:
+            if diag is not None:
+                diag.append({"gw": int(gw), "why": "stale", "maxdiff": round(worst, 4),
+                             "n": len(have)})
+            return {}
+        if diag is not None:
+            diag.append({"gw": int(gw), "why": "ok", "maxdiff": round(worst, 6),
+                         "n": len(have)})
+
     p_haul = (draws >= HAUL_PTS).mean(1)
     p_blank = (draws <= BLANK_PTS).mean(1)
     p_plays = (draws > 0).mean(1)
     ceiling = _np.percentile(draws, 95, axis=1)
-    mean = draws.mean(1)
 
     # The template captain: the most-owned of the genuinely strong options. `regret` is
     # measured against him because the cost of a differential is not "fewer points", it
@@ -709,6 +747,43 @@ def captaincy_tail(gw, draws_dir=None):
             "tmpl": bool(i == tmpl_i),
         }
     return out
+
+
+def captaincy_tails(df, gws, draws_dir=None):
+    """The same tail metrics for EVERY gameweek whose dump reconciles with this board.
+
+    WHY A CAPTAINCY VIEW NEEDS MORE THAN ONE GAMEWEEK. A captain is chosen weekly, so
+    "who is the best captain" has an answer per gameweek, and the answer to "which two
+    players do I need to own to have a good armband all month" is not the union of the
+    weekly answers -- it is a COVERAGE question over the window, and it cannot be asked
+    from a single week's numbers at all.
+
+    WHAT THIS DOES NOT DO. It does not fall back to a neighbouring gameweek's draws, and
+    it does not interpolate. A gameweek either has draws from THIS board or it has none,
+    and the page ranks it on the projection instead and says so on the row. Silently
+    mixing a tail-ranked week and a mean-ranked week under one heading would make the
+    ordering incomparable across the very axis -- the gameweek -- the view is built on.
+
+    Returns (per_gw, diag, gws_ok):
+      per_gw  {gw: {player_code: {...}}} for the gameweeks that reconciled
+      diag    one record per dump examined, for the build log
+      gws_ok  those gameweeks, sorted -- the index the page's per-gameweek tail arrays
+              are parallel to
+    """
+    if "mean" not in df.columns or "player_code" not in df.columns:
+        return {}, [], []
+    per_gw, diag = {}, []
+    d = draws_dir or config.SCRATCH
+    for gw in gws:
+        if not os.path.exists(os.path.join(d, f"draws_gw{int(gw)}.npz")):
+            continue
+        g = df[(df["gw"] == gw) & df["player_code"].notna()].drop_duplicates("player_code")
+        bm = {int(c): float(m) for c, m in zip(g["player_code"], g["mean"])
+              if m == m}
+        t = captaincy_tail(gw, draws_dir=d, board_mean=bm, diag=diag)
+        if t:
+            per_gw[int(gw)] = t
+    return per_gw, diag, sorted(per_gw)
 
 
 def season_to_date(season="2026-2027", base=None):
@@ -959,6 +1034,20 @@ def _exact(row, board_col, std, std_key, stale):
     return float(v)
 
 
+def _tail_series(tails, tail_gws, code):
+    """One player's tail metrics across the reconciled gameweeks, parallel to `tail_gws`.
+    None when he has no draw in any of them -- a cold-start player who was not in the
+    dump -- rather than an array of nulls that reads as a measured zero."""
+    out = {k: [] for k in ("p_haul", "p_blank", "ceiling")}
+    any_ = False
+    for gw in tail_gws:
+        t = tails.get(gw, {}).get(code)
+        for k in out:
+            out[k].append(None if t is None else t[k])
+        any_ = any_ or t is not None
+    return out if any_ else None
+
+
 def payload(df, board_path=None, notes=None, teams=None, res=None):
     """Everything the page needs, as one JSON-able dict."""
     gws = sorted(int(g) for g in df["gw"].unique())
@@ -977,7 +1066,16 @@ def payload(df, board_path=None, notes=None, teams=None, res=None):
     stale = {"cost": 0, "own": 0}
     # Tail metrics for the gameweek actually being picked for — the first with nothing
     # played. A captaincy question about a week already under way is not a question.
-    tail = captaincy_tail(_first_clean(df, gws))
+    _fc = _first_clean(df, gws)
+    _bm = df[(df["gw"] == _fc) & df["player_code"].notna()].drop_duplicates("player_code")         if "player_code" in df.columns and "mean" in df.columns else None
+    tail = captaincy_tail(_fc, board_mean=(
+        {int(c): float(m) for c, m in zip(_bm["player_code"], _bm["mean"]) if m == m}
+        if _bm is not None else None))
+    # Per-gameweek tails, for the captaincy view. Keyed on the gameweeks that reconciled
+    # and parallel to `tail_gws` rather than to `gws`: on a board dumped for one gameweek
+    # -- the default -- an array over all 38 would be 37 nulls per player per field, which
+    # is a third of a megabyte of nothing.
+    tails, tdiag, tail_gws = captaincy_tails(df, gws)
     players = []
     for _, g in df.groupby(key, sort=False):
         r = g.iloc[0]
@@ -1000,6 +1098,8 @@ def payload(df, board_path=None, notes=None, teams=None, res=None):
                     if pd.notna(r.get("player_code")) else None),
             "tail": (tail.get(int(r["player_code"]))
                      if pd.notna(r.get("player_code")) else None),
+            "tg": (_tail_series(tails, tail_gws, int(r["player_code"]))
+                   if tail_gws and pd.notna(r.get("player_code")) else None),
             "m": {k: _series(g, k, gws) for k, _, _ in metrics},
         })
     for k, n in stale.items():
@@ -1043,6 +1143,11 @@ def payload(df, board_path=None, notes=None, teams=None, res=None):
             "first_clean": clean[0] if clean else (live[0] if live else gws[-1] + 1),
             "notes": notes or [],
             "evidence": evidence(),
+            # Which gameweeks can be ranked on the TAIL, and which dumps were refused.
+            # The page states the basis per gameweek off these two, so a mean-ranked week
+            # and a tail-ranked week are never presented as the same kind of answer.
+            "tail_gws": tail_gws,
+            "tail_diag": tdiag,
         },
         "gws": gws,
         "played_gws": fully,
@@ -1167,6 +1272,25 @@ def build(board_path=None, out_html=None, out_csv=None, verbose=True):
         else:
             print("[explorer] no wildcard XI on file — run "
                   "`python scripts/export_wildcard_xi.py`")
+        # CAPTAINCY BASIS, per gameweek, named in the log as well as on the page. A
+        # rejected dump is the interesting line: it means a draws file for that gameweek
+        # EXISTS and was refused, which looks identical to "no file" on the page.
+        _tg = pay["meta"]["tail_gws"]
+        _bad = [d for d in pay["meta"]["tail_diag"] if d["why"] != "ok"]
+        _win = [g for g in pay["gws"] if g >= pay["meta"]["first_clean"]]
+        print(f"[explorer] captaincy: {len(_tg)} gameweek(s) rank on the posterior TAIL "
+              f"({'GW' + ','.join(str(g) for g in _tg) if _tg else 'none'}); the other "
+              f"{len([g for g in _win if g not in set(_tg)])} unplayed gameweek(s) rank "
+              f"on the projection")
+        for d in _bad:
+            print(f"[explorer]   GW{d['gw']} draws REFUSED — "
+                  + (f"only {d['n']} of {d['of']} player_codes matched the board"
+                     if d["why"] == "codes" else
+                     f"max |draws.mean - board.mean| = {d['maxdiff']} over {d['n']} "
+                     f"players, so the dump is from a different board run"))
+        if len(_tg) < len(_win):
+            print("[explorer]   DUMP_DRAWS=all python scripts/gw_board.py dumps every "
+                  "gameweek, which puts the whole window on the tail basis")
         print(f"[explorer] team dashboard: {len(pay['teams_meta'])} clubs with season "
               f"metrics, {len(pay['results'])} with realised results")
         print(f"[explorer] wrote {out_html}  ({os.path.getsize(out_html)/1e6:.1f} MB)")
@@ -1243,6 +1367,45 @@ def selftest():
     assert _exact(row, "cost", fpl, "cost", st) == 4.6 and st["cost"] == 1, st
     assert _exact(row, "own", fpl, "own", st) == 5.0 and st["own"] == 0, st
     assert _exact(row, "cost", {}, "cost", st) == 4.5, "no FPL row must fall back to the board"
+
+    # ---- the captaincy reconciliation gate --------------------------------------
+    # THE ONE THING THIS FEATURE CAN GET SILENTLY WRONG. A draws dump left in SCRATCH by
+    # an older board has the right shape, the right codes and plausible tail metrics; it
+    # is simply a different model. Measured on the live tree 2026-09-09, eight of the ten
+    # dumps present were exactly that. So the gate is exercised both ways here: a dump
+    # built FROM the board must be accepted, and the same dump shifted by more than the
+    # CSV's rounding must be refused rather than repaired.
+    with tempfile.TemporaryDirectory() as d:
+        _codes = sorted(board["player_code"].unique())
+        _bm = board[board["gw"] == 3].drop_duplicates("player_code")                    .set_index("player_code")["mean"]
+        # draws whose column mean IS the board's mean for GW3 — what a real dump looks like
+        _dr = np.stack([_bm[c] + rng.normal(0, 3, 500) for c in _codes])
+        _dr = _dr - _dr.mean(1, keepdims=True) + np.array([_bm[c] for c in _codes])[:, None]
+        np.savez_compressed(os.path.join(d, "draws_gw3.npz"), draws=_dr,
+                            player_code=np.array(_codes, dtype=float))
+        _bmd = {int(c): float(_bm[c]) for c in _codes}
+        _diag = []
+        ok = captaincy_tail(3, draws_dir=d, board_mean=_bmd, diag=_diag)
+        assert ok, "a dump that reconciles with the board was refused"
+        assert _diag and _diag[-1]["why"] == "ok", _diag
+        assert set(ok) == {int(c) for c in _codes}
+        # the SAME dump, one player moved by 0.5 — a different board run
+        _dr2 = _dr.copy(); _dr2[0] += 0.5
+        np.savez_compressed(os.path.join(d, "draws_gw3.npz"), draws=_dr2,
+                            player_code=np.array(_codes, dtype=float))
+        _diag2 = []
+        assert not captaincy_tail(3, draws_dir=d, board_mean=_bmd, diag=_diag2),             "a stale dump was accepted as this board's"
+        assert _diag2 and _diag2[-1]["why"] == "stale", _diag2
+        assert abs(_diag2[-1]["maxdiff"] - 0.5) < 1e-3, _diag2
+        # and with no board to check against it is accepted — the selftest-only path
+        assert captaincy_tail(3, draws_dir=d, board_mean=None),             "board_mean=None must skip the check, not fail closed"
+        # the multi-gameweek driver reports the gameweek as unavailable rather than
+        # falling back to a neighbour's draws
+        _per, _dg, _gok = captaincy_tails(df, [1, 2, 3, 4, 5], draws_dir=d)
+        assert _gok == [], f"a stale gameweek entered the tail basis: {_gok}"
+        _pay2 = payload(df)
+        assert _pay2["meta"]["tail_gws"] == [], _pay2["meta"]["tail_gws"]
+        assert all(p.get("tg") is None for p in _pay2["players"]),             "per-gameweek tail arrays were emitted with no reconciled gameweek"
 
     html = render_html(pay)
     assert html.lstrip().startswith("<!DOCTYPE"), "template did not render"

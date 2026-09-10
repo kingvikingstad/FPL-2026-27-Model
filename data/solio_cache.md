@@ -3,7 +3,7 @@
 Solio Analytics is a Fantasy Premier League projection and optimisation tool, pairing one of the sharpest public projection models with state-of-the-art solvers for transfer and chip planning. This page publishes our latest Gameweek 4 projections, best captain picks, highest-leverage differentials, team-level clean sheet odds, and transfer trends. Data refreshes every 4 hours. For squad-specific recommendations across the rest of your season — free for the next 5 gameweeks, full season for members — use the planner at https://fpl.solioanalytics.com.
 
 - Source: https://fpl.solioanalytics.com/api/data/latest.md
-- Generated: 2026-09-08T19:39:55.273Z
+- Generated: 2026-09-10T11:23:01.876Z
 - Gameweek 4 deadline: 2026-09-12T12:30:00.000Z
 - Refresh cadence: every 4 hours
 
@@ -13,36 +13,36 @@ Players ranked by Solio Analytics' projected points. Double gameweek players acc
 
 | # | Player | Team | Pos | Opp | Price | Proj. Points | Own% |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Palmer | CHE | MID | HUL (H) | £9.6m | 7.40 | 22.0% |
-| 2 | João Pedro | CHE | FWD | HUL (H) | £7.7m | 6.98 | 72.3% |
-| 3 | Rogers | CHE | MID | HUL (H) | £7.6m | 6.61 | 28.3% |
-| 4 | Haaland | MCI | FWD | MUN (A) | £15.5m | 5.86 | 71.2% |
-| 5 | Isak | LIV | FWD | FUL (H) | £9.1m | 5.85 | 20.5% |
-| 6 | Saka | ARS | MID | SUN (A) | £9.5m | 5.66 | 11.4% |
-| 7 | Gabriel | ARS | DEF | SUN (A) | £8.0m | 5.58 | 24.8% |
-| 8 | James | CHE | DEF | HUL (H) | £5.4m | 5.53 | 7.8% |
-| 9 | Szoboszlai | LIV | MID | FUL (H) | £7.0m | 5.42 | 38.5% |
-| 10 | Lacroix | CHE | DEF | HUL (H) | £6.0m | 5.40 | 8.2% |
-| 11 | Gakpo | LIV | MID | FUL (H) | £7.2m | 5.24 | 14.3% |
-| 12 | B.Fernandes | MUN | MID | MCI (H) | £12.0m | 5.21 | 46.4% |
-| 13 | Wirtz | LIV | MID | FUL (H) | £7.4m | 5.14 | 8.4% |
-| 14 | De Cuyper | BHA | DEF | COV (A) | £4.8m | 4.89 | 19.7% |
-| 15 | Calvert-Lewin | LEE | FWD | NEW (H) | £6.0m | 4.88 | 24.0% |
-| 16 | Groß | BHA | MID | COV (A) | £5.5m | 4.86 | 16.2% |
-| 17 | Fofana | CHE | DEF | HUL (H) | £5.0m | 4.78 | 0.1% |
-| 18 | Marmoush | TOT | FWD | EVE (H) | £7.0m | 4.67 | 2.2% |
-| 19 | Thiago | BRE | FWD | BOU (A) | £7.9m | 4.67 | 12.0% |
-| 20 | White | ARS | DEF | SUN (A) | £5.5m | 4.65 | 7.6% |
-| 21 | Tavernier | BOU | MID | BRE (H) | £6.0m | 4.59 | 3.1% |
-| 22 | Konsa | ARS | DEF | SUN (A) | £4.4m | 4.57 | 13.2% |
-| 23 | Gibbs-White | NFO | MID | AVL (A) | £7.9m | 4.56 | 9.4% |
-| 24 | Gomez | BHA | MID | COV (A) | £5.0m | 4.47 | 4.9% |
-| 25 | Calafiori | ARS | DEF | SUN (A) | £5.7m | 4.45 | 47.6% |
-| 26 | Khalaili | CRY | DEF | IPS (H) | £5.0m | 4.43 | 0.2% |
-| 27 | Evanilson | BOU | FWD | BRE (H) | £6.0m | 4.38 | 3.3% |
-| 28 | Pedro Porro | TOT | DEF | EVE (H) | £5.5m | 4.38 | 11.4% |
-| 29 | Virgil | LIV | DEF | FUL (H) | £6.5m | 4.36 | 17.3% |
-| 30 | Wissa | NEW | FWD | LEE (A) | £6.2m | 4.33 | 17.0% |
+| 1 | Palmer | CHE | MID | HUL (H) | £9.6m | 7.40 | 23.2% |
+| 2 | João Pedro | CHE | FWD | HUL (H) | £7.7m | 6.90 | 72.6% |
+| 3 | Rogers | CHE | MID | HUL (H) | £7.6m | 6.50 | 29.5% |
+| 4 | Isak | LIV | FWD | FUL (H) | £9.1m | 5.78 | 21.2% |
+| 5 | Haaland | MCI | FWD | MUN (A) | £15.5m | 5.77 | 71.3% |
+| 6 | Saka | ARS | MID | SUN (A) | £9.5m | 5.71 | 11.4% |
+| 7 | Gabriel | ARS | DEF | SUN (A) | £8.0m | 5.61 | 24.6% |
+| 8 | James | CHE | DEF | HUL (H) | £5.4m | 5.49 | 7.8% |
+| 9 | Szoboszlai | LIV | MID | FUL (H) | £7.0m | 5.40 | 38.4% |
+| 10 | Lacroix | CHE | DEF | HUL (H) | £6.0m | 5.36 | 8.1% |
+| 11 | Gakpo | LIV | MID | FUL (H) | £7.2m | 5.28 | 14.2% |
+| 12 | B.Fernandes | MUN | MID | MCI (H) | £12.0m | 5.16 | 45.5% |
+| 13 | Wirtz | LIV | MID | FUL (H) | £7.4m | 5.11 | 8.3% |
+| 14 | De Cuyper | BHA | DEF | COV (A) | £4.8m | 4.95 | 20.2% |
+| 15 | Calvert-Lewin | LEE | FWD | NEW (H) | £6.0m | 4.93 | 23.5% |
+| 16 | Groß | BHA | MID | COV (A) | £5.6m | 4.89 | 16.3% |
+| 17 | Thiago | BRE | FWD | BOU (A) | £7.9m | 4.76 | 11.7% |
+| 18 | Fofana | CHE | DEF | HUL (H) | £5.0m | 4.74 | 0.1% |
+| 19 | White | ARS | DEF | SUN (A) | £5.5m | 4.68 | 7.6% |
+| 20 | Marmoush | TOT | FWD | EVE (H) | £7.0m | 4.65 | 2.2% |
+| 21 | Tavernier | BOU | MID | BRE (H) | £6.0m | 4.62 | 3.3% |
+| 22 | Konsa | ARS | DEF | SUN (A) | £4.4m | 4.60 | 13.9% |
+| 23 | Gibbs-White | NFO | MID | AVL (A) | £7.9m | 4.54 | 9.4% |
+| 24 | Calafiori | ARS | DEF | SUN (A) | £5.7m | 4.49 | 48.0% |
+| 25 | Gomez | BHA | MID | COV (A) | £5.0m | 4.43 | 4.9% |
+| 26 | N.Jackson | AVL | FWD | NFO (H) | £6.5m | 4.42 | 1.1% |
+| 27 | Pedro Porro | TOT | DEF | EVE (H) | £5.5m | 4.41 | 11.4% |
+| 28 | Virgil | LIV | DEF | FUL (H) | £6.5m | 4.40 | 17.2% |
+| 29 | Evanilson | BOU | FWD | BRE (H) | £6.0m | 4.39 | 3.2% |
+| 30 | Khalaili | CRY | DEF | IPS (H) | £5.0m | 4.39 | 0.2% |
 
 ## Best captain picks for Gameweek 4
 
@@ -50,16 +50,16 @@ Top captaincy candidates ranked by projected points. The captain scores double, 
 
 | # | Player | Team | Pos | Opp | Proj. Points | Captain Proj. |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Palmer | CHE | MID | HUL (H) | 7.40 | 14.80 |
-| 2 | João Pedro | CHE | FWD | HUL (H) | 6.98 | 13.96 |
-| 3 | Rogers | CHE | MID | HUL (H) | 6.61 | 13.21 |
-| 4 | Haaland | MCI | FWD | MUN (A) | 5.86 | 11.73 |
-| 5 | Isak | LIV | FWD | FUL (H) | 5.85 | 11.69 |
-| 6 | Saka | ARS | MID | SUN (A) | 5.66 | 11.31 |
-| 7 | Gabriel | ARS | DEF | SUN (A) | 5.58 | 11.16 |
-| 8 | James | CHE | DEF | HUL (H) | 5.53 | 11.07 |
-| 9 | Szoboszlai | LIV | MID | FUL (H) | 5.42 | 10.83 |
-| 10 | Lacroix | CHE | DEF | HUL (H) | 5.40 | 10.80 |
+| 1 | Palmer | CHE | MID | HUL (H) | 7.40 | 14.79 |
+| 2 | João Pedro | CHE | FWD | HUL (H) | 6.90 | 13.80 |
+| 3 | Rogers | CHE | MID | HUL (H) | 6.50 | 13.00 |
+| 4 | Isak | LIV | FWD | FUL (H) | 5.78 | 11.57 |
+| 5 | Haaland | MCI | FWD | MUN (A) | 5.77 | 11.54 |
+| 6 | Saka | ARS | MID | SUN (A) | 5.71 | 11.43 |
+| 7 | Gabriel | ARS | DEF | SUN (A) | 5.61 | 11.22 |
+| 8 | James | CHE | DEF | HUL (H) | 5.49 | 10.97 |
+| 9 | Szoboszlai | LIV | MID | FUL (H) | 5.40 | 10.81 |
+| 10 | Lacroix | CHE | DEF | HUL (H) | 5.36 | 10.71 |
 
 ## Highest-leverage differentials for Gameweek 4
 
@@ -67,21 +67,21 @@ Ranked by **leverage = Proj. Points × (1 − ownership%)**. Higher leverage mea
 
 | # | Player | Team | Pos | Price | Proj. Points | Own% | Leverage |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Palmer | CHE | MID | £9.6m | 7.40 | 22.0% | 5.77 |
-| 2 | James | CHE | DEF | £5.4m | 5.53 | 7.8% | 5.10 |
-| 3 | Saka | ARS | MID | £9.5m | 5.66 | 11.4% | 5.01 |
-| 4 | Lacroix | CHE | DEF | £6.0m | 5.40 | 8.2% | 4.96 |
-| 5 | Fofana | CHE | DEF | £5.0m | 4.78 | 0.1% | 4.78 |
-| 6 | Rogers | CHE | MID | £7.6m | 6.61 | 28.3% | 4.74 |
-| 7 | Wirtz | LIV | MID | £7.4m | 5.14 | 8.4% | 4.71 |
-| 8 | Isak | LIV | FWD | £9.1m | 5.85 | 20.5% | 4.65 |
-| 9 | Marmoush | TOT | FWD | £7.0m | 4.67 | 2.2% | 4.57 |
-| 10 | Gakpo | LIV | MID | £7.2m | 5.24 | 14.3% | 4.49 |
-| 11 | Tavernier | BOU | MID | £6.0m | 4.59 | 3.1% | 4.45 |
-| 12 | Khalaili | CRY | DEF | £5.0m | 4.43 | 0.2% | 4.43 |
-| 13 | White | ARS | DEF | £5.5m | 4.65 | 7.6% | 4.30 |
-| 14 | N.Jackson | AVL | FWD | £6.5m | 4.32 | 1.1% | 4.28 |
-| 15 | Sávio | TOT | MID | £6.5m | 4.29 | 0.7% | 4.26 |
+| 1 | Palmer | CHE | MID | £9.6m | 7.40 | 23.2% | 5.68 |
+| 2 | Saka | ARS | MID | £9.5m | 5.71 | 11.4% | 5.06 |
+| 3 | James | CHE | DEF | £5.4m | 5.49 | 7.8% | 5.06 |
+| 4 | Lacroix | CHE | DEF | £6.0m | 5.36 | 8.1% | 4.92 |
+| 5 | Fofana | CHE | DEF | £5.0m | 4.74 | 0.1% | 4.73 |
+| 6 | Wirtz | LIV | MID | £7.4m | 5.11 | 8.3% | 4.69 |
+| 7 | Rogers | CHE | MID | £7.6m | 6.50 | 29.5% | 4.58 |
+| 8 | Isak | LIV | FWD | £9.1m | 5.78 | 21.2% | 4.56 |
+| 9 | Marmoush | TOT | FWD | £7.0m | 4.65 | 2.2% | 4.55 |
+| 10 | Gakpo | LIV | MID | £7.2m | 5.28 | 14.2% | 4.53 |
+| 11 | Tavernier | BOU | MID | £6.0m | 4.62 | 3.3% | 4.46 |
+| 12 | Khalaili | CRY | DEF | £5.0m | 4.39 | 0.2% | 4.38 |
+| 13 | N.Jackson | AVL | FWD | £6.5m | 4.42 | 1.1% | 4.37 |
+| 14 | White | ARS | DEF | £5.5m | 4.68 | 7.6% | 4.33 |
+| 15 | Sávio | TOT | MID | £6.5m | 4.35 | 0.7% | 4.32 |
 
 ## Highest projected goals for Gameweek 4
 
@@ -89,21 +89,21 @@ Players ranked by projected goals (prG) across all Gameweek 4 fixtures, penaltie
 
 | # | Player | Team | Pos | Price | prG | Proj. P (Goals) | Proj. Points |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | João Pedro | CHE | FWD | £7.7m | 0.68 | 2.74 | 6.98 |
-| 2 | Haaland | MCI | FWD | £15.5m | 0.62 | 2.48 | 5.86 |
-| 3 | Isak | LIV | FWD | £9.1m | 0.60 | 2.41 | 5.85 |
-| 4 | Palmer | CHE | MID | £9.6m | 0.60 | 3.01 | 7.40 |
-| 5 | Calvert-Lewin | LEE | FWD | £6.0m | 0.49 | 1.96 | 4.88 |
-| 6 | Thiago | BRE | FWD | £7.9m | 0.46 | 1.83 | 4.67 |
-| 7 | Rogers | CHE | MID | £7.6m | 0.43 | 2.13 | 6.61 |
-| 8 | Marmoush | TOT | FWD | £7.0m | 0.40 | 1.62 | 4.67 |
+| 1 | João Pedro | CHE | FWD | £7.7m | 0.69 | 2.76 | 6.90 |
+| 2 | Haaland | MCI | FWD | £15.5m | 0.62 | 2.48 | 5.77 |
+| 3 | Isak | LIV | FWD | £9.1m | 0.60 | 2.40 | 5.78 |
+| 4 | Palmer | CHE | MID | £9.6m | 0.60 | 2.99 | 7.40 |
+| 5 | Calvert-Lewin | LEE | FWD | £6.0m | 0.49 | 1.96 | 4.93 |
+| 6 | Thiago | BRE | FWD | £7.9m | 0.46 | 1.83 | 4.76 |
+| 7 | Rogers | CHE | MID | £7.6m | 0.42 | 2.09 | 6.50 |
+| 8 | Marmoush | TOT | FWD | £7.0m | 0.41 | 1.64 | 4.65 |
 | 9 | Wissa | NEW | FWD | £6.2m | 0.38 | 1.51 | 4.33 |
-| 10 | Strand Larsen | CRY | FWD | £6.0m | 0.37 | 1.47 | 3.69 |
-| 11 | N.Jackson | AVL | FWD | £6.5m | 0.36 | 1.43 | 4.32 |
-| 12 | Havertz | ARS | FWD | £7.5m | 0.35 | 1.42 | 4.22 |
-| 13 | Saka | ARS | MID | £9.5m | 0.33 | 1.67 | 5.66 |
-| 14 | Barry | EVE | FWD | £5.6m | 0.33 | 1.33 | 3.86 |
-| 15 | Evanilson | BOU | FWD | £6.0m | 0.33 | 1.33 | 4.38 |
+| 10 | Strand Larsen | CRY | FWD | £6.0m | 0.38 | 1.50 | 3.75 |
+| 11 | Havertz | ARS | FWD | £7.5m | 0.36 | 1.45 | 4.32 |
+| 12 | N.Jackson | AVL | FWD | £6.5m | 0.36 | 1.44 | 4.42 |
+| 13 | Saka | ARS | MID | £9.5m | 0.34 | 1.71 | 5.71 |
+| 14 | Barry | EVE | FWD | £5.6m | 0.33 | 1.33 | 3.92 |
+| 15 | Evanilson | BOU | FWD | £6.0m | 0.33 | 1.33 | 4.39 |
 
 ## Highest projected assists for Gameweek 4
 
@@ -111,21 +111,21 @@ Players ranked by projected assists (prA) across all Gameweek 4 fixtures.
 
 | # | Player | Team | Pos | Price | prA | Proj. P (Assists) | Proj. Points |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Rogers | CHE | MID | £7.6m | 0.43 | 1.29 | 6.61 |
-| 2 | B.Fernandes | MUN | MID | £12.0m | 0.39 | 1.18 | 5.21 |
-| 3 | João Pedro | CHE | FWD | £7.7m | 0.37 | 1.11 | 6.98 |
-| 4 | Neto | CHE | MID | £6.5m | 0.34 | 1.03 | 3.89 |
-| 5 | Palmer | CHE | MID | £9.6m | 0.33 | 0.98 | 7.40 |
-| 6 | Saka | ARS | MID | £9.5m | 0.31 | 0.92 | 5.66 |
-| 7 | Groß | BHA | MID | £5.5m | 0.30 | 0.89 | 4.86 |
-| 8 | Gakpo | LIV | MID | £7.2m | 0.29 | 0.87 | 5.24 |
-| 9 | Szoboszlai | LIV | MID | £7.0m | 0.29 | 0.86 | 5.42 |
-| 10 | Wirtz | LIV | MID | £7.4m | 0.27 | 0.81 | 5.14 |
-| 11 | Wharton | CRY | MID | £5.5m | 0.26 | 0.77 | 4.23 |
-| 12 | Sávio | TOT | MID | £6.5m | 0.25 | 0.74 | 4.29 |
-| 13 | Ødegaard | ARS | MID | £6.6m | 0.23 | 0.70 | 4.14 |
-| 14 | James | CHE | DEF | £5.4m | 0.23 | 0.68 | 5.53 |
-| 15 | Cherki | MCI | MID | £7.8m | 0.23 | 0.68 | 2.95 |
+| 1 | Rogers | CHE | MID | £7.6m | 0.43 | 1.28 | 6.50 |
+| 2 | B.Fernandes | MUN | MID | £12.0m | 0.39 | 1.17 | 5.16 |
+| 3 | João Pedro | CHE | FWD | £7.7m | 0.37 | 1.10 | 6.90 |
+| 4 | Neto | CHE | MID | £6.5m | 0.34 | 1.02 | 3.85 |
+| 5 | Palmer | CHE | MID | £9.6m | 0.32 | 0.97 | 7.40 |
+| 6 | Saka | ARS | MID | £9.5m | 0.31 | 0.94 | 5.71 |
+| 7 | Groß | BHA | MID | £5.6m | 0.30 | 0.89 | 4.89 |
+| 8 | Gakpo | LIV | MID | £7.2m | 0.29 | 0.86 | 5.28 |
+| 9 | Szoboszlai | LIV | MID | £7.0m | 0.29 | 0.86 | 5.40 |
+| 10 | Wirtz | LIV | MID | £7.4m | 0.27 | 0.80 | 5.11 |
+| 11 | Wharton | CRY | MID | £5.5m | 0.26 | 0.79 | 4.28 |
+| 12 | Sávio | TOT | MID | £6.5m | 0.25 | 0.75 | 4.35 |
+| 13 | Ødegaard | ARS | MID | £6.6m | 0.24 | 0.71 | 4.15 |
+| 14 | Cherki | MCI | MID | £7.8m | 0.23 | 0.68 | 2.95 |
+| 15 | James | CHE | DEF | £5.4m | 0.23 | 0.68 | 5.49 |
 
 ## Best clean sheet odds for Gameweek 4
 
@@ -133,16 +133,16 @@ Probability of at least one clean sheet across all Gameweek fixtures.
 
 | # | Team | Fixtures | Proj. G Against | CS % |
 | --- | --- | --- | --- | --- |
-| 1 | Arsenal | @ SUN | 0.68 | 50% |
-| 2 | Chelsea | vs HUL | 0.72 | 48% |
-| 3 | Liverpool | vs FUL | 1.05 | 35% |
-| 4 | Crystal Palace | vs IPS | 1.10 | 33% |
-| 5 | Spurs | vs EVE | 1.11 | 33% |
-| 6 | Brighton | @ COV | 1.12 | 33% |
-| 7 | Aston Villa | vs NFO | 1.15 | 32% |
+| 1 | Arsenal | @ SUN | 0.67 | 51% |
+| 2 | Chelsea | vs HUL | 0.72 | 49% |
+| 3 | Liverpool | vs FUL | 1.02 | 36% |
+| 4 | Spurs | vs EVE | 1.11 | 33% |
+| 5 | Brighton | @ COV | 1.12 | 33% |
+| 6 | Crystal Palace | vs IPS | 1.12 | 33% |
+| 7 | Aston Villa | vs NFO | 1.14 | 32% |
 | 8 | Leeds United | vs NEW | 1.32 | 27% |
-| 9 | Nott'm Forest | @ AVL | 1.44 | 24% |
-| 10 | Man City | @ MUN | 1.46 | 23% |
+| 9 | Man City | @ MUN | 1.45 | 24% |
+| 10 | Nott'm Forest | @ AVL | 1.45 | 23% |
 
 ## Highest projected bonus points for Gameweek 4
 
@@ -150,21 +150,21 @@ Players ranked by BPS-derived projected bonus points across all Gameweek fixture
 
 | # | Player | Team | Pos | Price | Proj. P (Bonus) | Proj. Points |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | João Pedro | CHE | FWD | £7.7m | 1.22 | 6.98 |
-| 2 | Palmer | CHE | MID | £9.6m | 0.98 | 7.40 |
-| 3 | Isak | LIV | FWD | £9.1m | 0.97 | 5.85 |
-| 4 | Haaland | MCI | FWD | £15.5m | 0.88 | 5.86 |
-| 5 | Marmoush | TOT | FWD | £7.0m | 0.81 | 4.67 |
-| 6 | Rogers | CHE | MID | £7.6m | 0.78 | 6.61 |
-| 7 | Saka | ARS | MID | £9.5m | 0.70 | 5.66 |
-| 8 | B.Fernandes | MUN | MID | £12.0m | 0.69 | 5.21 |
-| 9 | Calvert-Lewin | LEE | FWD | £6.0m | 0.68 | 4.88 |
-| 10 | Thiago | BRE | FWD | £7.9m | 0.68 | 4.67 |
-| 11 | Wissa | NEW | FWD | £6.2m | 0.68 | 4.33 |
-| 12 | Wirtz | LIV | MID | £7.4m | 0.66 | 5.14 |
-| 13 | Szoboszlai | LIV | MID | £7.0m | 0.62 | 5.42 |
-| 14 | N.Jackson | AVL | FWD | £6.5m | 0.60 | 4.32 |
-| 15 | Evanilson | BOU | FWD | £6.0m | 0.58 | 4.38 |
+| 1 | João Pedro | CHE | FWD | £7.7m | 1.13 | 6.90 |
+| 2 | Palmer | CHE | MID | £9.6m | 1.01 | 7.40 |
+| 3 | Isak | LIV | FWD | £9.1m | 0.93 | 5.78 |
+| 4 | Haaland | MCI | FWD | £15.5m | 0.80 | 5.77 |
+| 5 | Thiago | BRE | FWD | £7.9m | 0.78 | 4.76 |
+| 6 | Marmoush | TOT | FWD | £7.0m | 0.77 | 4.65 |
+| 7 | Calvert-Lewin | LEE | FWD | £6.0m | 0.73 | 4.93 |
+| 8 | Rogers | CHE | MID | £7.6m | 0.72 | 6.50 |
+| 9 | Saka | ARS | MID | £9.5m | 0.70 | 5.71 |
+| 10 | Wissa | NEW | FWD | £6.2m | 0.69 | 4.33 |
+| 11 | N.Jackson | AVL | FWD | £6.5m | 0.68 | 4.42 |
+| 12 | B.Fernandes | MUN | MID | £12.0m | 0.67 | 5.16 |
+| 13 | Wirtz | LIV | MID | £7.4m | 0.63 | 5.11 |
+| 14 | Gakpo | LIV | MID | £7.2m | 0.62 | 5.28 |
+| 15 | Szoboszlai | LIV | MID | £7.0m | 0.62 | 5.40 |
 
 ## Highest projected DefCon for Gameweek 4
 
@@ -172,21 +172,21 @@ Defenders (10+ CBIT threshold), midfielders and forwards (12+ CBIT threshold) ra
 
 | # | Player | Team | Pos | Price | DefCon % | Proj. P (DefCon) | Proj. Points |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Botman | NEW | DEF | £5.0m | 65% | 1.30 | 4.02 |
-| 2 | Mendy | HUL | DEF | £4.0m | 65% | 1.30 | 2.41 |
-| 3 | Hill | BOU | DEF | £5.5m | 59% | 1.18 | 4.06 |
-| 4 | Egan | HUL | DEF | £4.1m | 57% | 1.15 | 2.27 |
-| 5 | Tarkowski | EVE | DEF | £6.0m | 57% | 1.15 | 3.82 |
-| 6 | Anderson | MCI | MID | £6.3m | 57% | 1.13 | 4.30 |
-| 7 | Muharemović | LEE | DEF | £5.0m | 53% | 1.07 | 4.06 |
-| 8 | Andersen | FUL | DEF | £5.0m | 53% | 1.06 | 2.53 |
-| 9 | Garner | EVE | MID | £6.0m | 53% | 1.06 | 3.98 |
-| 10 | Ballard | SUN | DEF | £4.9m | 53% | 1.06 | 3.20 |
+| 1 | Botman | NEW | DEF | £5.0m | 65% | 1.30 | 4.04 |
+| 2 | Mendy | HUL | DEF | £4.0m | 65% | 1.30 | 2.43 |
+| 3 | Hill | BOU | DEF | £5.5m | 59% | 1.18 | 4.05 |
+| 4 | Egan | HUL | DEF | £4.1m | 57% | 1.15 | 2.29 |
+| 5 | Tarkowski | EVE | DEF | £6.0m | 57% | 1.15 | 3.78 |
+| 6 | Anderson | MCI | MID | £6.3m | 57% | 1.13 | 4.29 |
+| 7 | Muharemović | LEE | DEF | £5.0m | 53% | 1.07 | 4.08 |
+| 8 | Andersen | FUL | DEF | £5.0m | 53% | 1.06 | 2.55 |
+| 9 | Garner | EVE | MID | £6.0m | 53% | 1.06 | 4.02 |
+| 10 | Ballard | SUN | DEF | £4.9m | 53% | 1.06 | 3.18 |
 | 11 | Greaves | IPS | DEF | £4.0m | 53% | 1.05 | 3.12 |
-| 12 | Murillo | NFO | DEF | £5.5m | 51% | 1.03 | 3.78 |
-| 13 | Scott | BOU | MID | £6.0m | 51% | 1.02 | 4.15 |
-| 14 | Ajer | BRE | DEF | £4.5m | 48% | 0.97 | 3.53 |
-| 15 | Branthwaite | EVE | DEF | £5.5m | 48% | 0.96 | 3.44 |
+| 12 | Murillo | NFO | DEF | £5.5m | 51% | 1.03 | 3.72 |
+| 13 | Scott | BOU | MID | £6.0m | 51% | 1.02 | 4.14 |
+| 14 | Ajer | BRE | DEF | £4.5m | 48% | 0.97 | 3.51 |
+| 15 | Branthwaite | EVE | DEF | £5.5m | 48% | 0.96 | 3.43 |
 
 ## Best attacking fixtures for Gameweek 4
 
@@ -194,14 +194,14 @@ Teams ranked by total projected goals scored. Strong signal for picking attacker
 
 | # | Team | Fixtures | Proj. G For | Proj. G Against |
 | --- | --- | --- | --- | --- |
-| 1 | Chelsea | vs HUL | 2.72 | 0.72 |
-| 2 | Liverpool | vs FUL | 2.33 | 1.05 |
-| 3 | Arsenal | @ SUN | 1.81 | 0.68 |
-| 4 | Man City | @ MUN | 1.78 | 1.46 |
+| 1 | Chelsea | vs HUL | 2.70 | 0.72 |
+| 2 | Liverpool | vs FUL | 2.31 | 1.02 |
+| 3 | Arsenal | @ SUN | 1.85 | 0.67 |
+| 4 | Man City | @ MUN | 1.77 | 1.45 |
 | 5 | Brighton | @ COV | 1.73 | 1.12 |
-| 6 | Crystal Palace | vs IPS | 1.69 | 1.10 |
+| 6 | Crystal Palace | vs IPS | 1.72 | 1.12 |
 | 7 | Bournemouth | vs BRE | 1.58 | 1.51 |
-| 8 | Spurs | vs EVE | 1.53 | 1.11 |
+| 8 | Spurs | vs EVE | 1.55 | 1.11 |
 | 9 | Brentford | @ BOU | 1.51 | 1.58 |
 | 10 | Leeds United | vs NEW | 1.47 | 1.32 |
 
@@ -211,16 +211,16 @@ Popularity doesn't always equal value — compare transfer volume against projec
 
 | # | Player | Team | Pos | Price | Transfers In | Own% | Proj. Points |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Gakpo | LIV | MID | £7.2m | 535,633 | 14.3% | 5.24 |
-| 2 | Rogers | CHE | MID | £7.6m | 425,854 | 28.3% | 6.61 |
-| 3 | Isak | LIV | FWD | £9.1m | 378,681 | 20.5% | 5.85 |
-| 4 | Palmer | CHE | MID | £9.6m | 332,985 | 22.0% | 7.40 |
-| 5 | Wissa | NEW | FWD | £6.2m | 308,479 | 17.0% | 4.33 |
-| 6 | De Cuyper | BHA | DEF | £4.8m | 281,123 | 19.7% | 4.89 |
-| 7 | Konsa | ARS | DEF | £4.4m | 272,495 | 13.2% | 4.57 |
-| 8 | Ødegaard | ARS | MID | £6.6m | 255,609 | 13.5% | 4.14 |
-| 9 | Calafiori | ARS | DEF | £5.7m | 252,751 | 47.6% | 4.45 |
-| 10 | Hall | NEW | DEF | £5.1m | 249,047 | 11.7% | 3.04 |
+| 1 | Gakpo | LIV | MID | £7.2m | 594,651 | 14.2% | 5.28 |
+| 2 | Rogers | CHE | MID | £7.6m | 555,685 | 29.5% | 6.50 |
+| 3 | Palmer | CHE | MID | £9.6m | 445,714 | 23.2% | 7.40 |
+| 4 | Isak | LIV | FWD | £9.1m | 444,437 | 21.2% | 5.78 |
+| 5 | Ødegaard | ARS | MID | £6.6m | 377,743 | 14.7% | 4.15 |
+| 6 | Wissa | NEW | FWD | £6.2m | 363,172 | 17.2% | 4.33 |
+| 7 | Konsa | ARS | DEF | £4.4m | 347,940 | 13.9% | 4.60 |
+| 8 | De Cuyper | BHA | DEF | £4.8m | 340,751 | 20.2% | 4.95 |
+| 9 | Hall | NEW | DEF | £5.1m | 312,118 | 12.2% | 3.10 |
+| 10 | Calafiori | ARS | DEF | £5.7m | 304,182 | 48.0% | 4.49 |
 
 ## Most transferred-out players for Gameweek 4
 
@@ -228,34 +228,34 @@ Popularity doesn't always equal value — compare transfer volume against projec
 
 | # | Player | Team | Pos | Price | Transfers Out | Own% | Proj. Points |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | O'Reilly | MCI | DEF | £6.5m | 330,673 | 15.2% | 2.57 |
-| 2 | Szoboszlai | LIV | MID | £7.0m | 306,710 | 38.5% | 5.42 |
-| 3 | B.Fernandes | MUN | MID | £12.0m | 274,290 | 46.4% | 5.21 |
-| 4 | Calvert-Lewin | LEE | FWD | £6.0m | 226,683 | 24.0% | 4.88 |
-| 5 | Mbeumo | MUN | MID | £7.9m | 217,243 | 25.6% | 4.24 |
-| 6 | Tzolis | ARS | MID | £6.4m | 207,467 | 17.5% | 3.72 |
-| 7 | Cherki | MCI | MID | £7.8m | 183,844 | 30.4% | 2.95 |
-| 8 | Maguire | MUN | DEF | £4.9m | 174,538 | 12.5% | 2.58 |
-| 9 | Shaw | MUN | DEF | £4.4m | 173,102 | 14.0% | 2.29 |
-| 10 | Ndiaye | MCI | MID | £5.9m | 172,210 | 10.2% | 1.55 |
+| 1 | O'Reilly | MCI | DEF | £6.5m | 387,977 | 14.6% | 2.63 |
+| 2 | Szoboszlai | LIV | MID | £7.0m | 359,241 | 38.4% | 5.40 |
+| 3 | B.Fernandes | MUN | MID | £12.0m | 358,197 | 45.5% | 5.16 |
+| 4 | Calvert-Lewin | LEE | FWD | £6.0m | 273,104 | 23.5% | 4.93 |
+| 5 | Mbeumo | MUN | MID | £7.9m | 269,249 | 25.2% | 4.19 |
+| 6 | Tzolis | ARS | MID | £6.4m | 246,776 | 17.1% | 3.76 |
+| 7 | Cherki | MCI | MID | £7.8m | 236,312 | 30.1% | 2.95 |
+| 8 | Maguire | MUN | DEF | £4.9m | 207,512 | 12.1% | 2.59 |
+| 9 | Shaw | MUN | DEF | £4.4m | 204,691 | 13.7% | 2.29 |
+| 10 | Ndiaye | MCI | MID | £5.9m | 203,858 | 9.8% | 1.60 |
 
 ## Frequently asked questions
 
 ### Who should I captain in Gameweek 4?
 
-Solio Analytics' top captaincy pick for Gameweek 4 is Palmer (CHE) with 7.40 projected points, giving a captaincy return of 14.80 projected points.
+Solio Analytics' top captaincy pick for Gameweek 4 is Palmer (CHE) with 7.40 projected points, giving a captaincy return of 14.79 projected points.
 
 ### Which team has the best clean sheet odds for Gameweek 4?
 
-Arsenal has the strongest clean sheet odds for Gameweek 4 at 50% based on projected goals conceded.
+Arsenal has the strongest clean sheet odds for Gameweek 4 at 51% based on projected goals conceded.
 
 ### What is a good budget midfielder for Gameweek 4?
 
-Groß at £5.5m leads budget midfielders with 4.86 projected points.
+Groß at £5.6m leads budget midfielders with 4.89 projected points.
 
 ### Which premium player offers the most projected points for Gameweek 4?
 
-Haaland (£15.5m) leads premium picks (£10.0m+) with 5.86 projected points.
+Haaland (£15.5m) leads premium picks (£10.0m+) with 5.77 projected points.
 
 ### How accurate are Solio Analytics' projections?
 
@@ -275,6 +275,6 @@ Import your FPL team at https://fpl.solioanalytics.com to get personalised trans
 
 ---
 
-Generated at 2026-09-08T19:39:55.273Z. Solio Analytics runs one of the sharpest public FPL projection models alongside state-of-the-art optimisation solvers. Data refreshes every 4 hours.
+Generated at 2026-09-10T11:23:01.876Z. Solio Analytics runs one of the sharpest public FPL projection models alongside state-of-the-art optimisation solvers. Data refreshes every 4 hours.
 
 For personalised squad recommendations, chip timing, and transfer planning — free for the next 5 gameweeks, full-season optimisation for members — visit https://fpl.solioanalytics.com.
