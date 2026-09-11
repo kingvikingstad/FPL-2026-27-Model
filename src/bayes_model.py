@@ -98,6 +98,41 @@ def _player_rng(p, seed=None, gw=0):
     """
     return np.random.default_rng([int(PROJECT_SEED if seed is None else seed),
                                   _player_key(p), int(gw)])
+# Domain-separation tag. A player stream is seeded [seed, player_key, gw]; a team stream
+# is [seed, _TEAM_STREAM, team_key, gw]. Different entropy lengths give different
+# SeedSequences, so a crc32 that happens to equal some player_code cannot make a team's
+# concessions replay a player's draws.
+_TEAM_STREAM = 0x7EA3
+
+
+def _team_key(team):
+    import zlib
+    return int(zlib.crc32(str(team).encode("utf-8")))
+
+
+def _team_rng(team, seed=None, gw=0):
+    """One reproducible generator per (team, gameweek window), for TEAM-LEVEL events.
+
+    Goals conceded belong to a match, not to a player: every defender, keeper and
+    midfielder at a club concedes the same goals in the same fixture. They were drawn
+    inside the player loop on each player's own stream until 2026-09-11, so two
+    team-mates received two independent realisations of one match. Measured on the GW4
+    draws dump: same-club nailed-defender pairs correlated at +0.033, beside the +0.000
+    an independent draw predicts and nowhere near the +0.275 a shared one does. Every
+    marginal was right, which is why nothing caught it; what was wrong was the JOINT
+    distribution, understating a two-defender stack's sd by ~11% and a three-defender
+    stack's by ~21%, in the direction that makes stacking look safer than it is.
+
+    Keyed on (seed, team, gw) for the same reasons `_player_rng` is: reproducible,
+    independent across gameweeks, and — the property that matters here — independent of
+    which players happen to be in the frame or in what order. Drawing concessions from the
+    first player's stream at each club would re-randomise a club's defence whenever the
+    player list changed, which is the defect per-player streams were introduced to remove.
+    """
+    return np.random.default_rng([int(PROJECT_SEED if seed is None else seed),
+                                  _TEAM_STREAM, _team_key(team), int(gw)])
+
+
 LEAGUE_MU = 1.40
 BET_NAME = {"Man Utd": "Man United", "Spurs": "Tottenham"}
 # per-position bonus that rides along with a goal (recovered in the earlier
@@ -438,6 +473,12 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, seed=None, return_draws=Fa
             lf.append(lam_for); la.append(lam_against)
         fix_by_team[team] = (np.array(lf), np.array(la))   # (nfix, S)
 
+    # Goals conceded: ONE realisation per (team, fixture, draw), shared by every player at
+    # the club — see _team_rng. Drawn here, outside the player loop, so a club's defence
+    # sees the same match in path s regardless of who is being simulated.
+    conc_by_team = {team: _team_rng(team, seed, gw_lo).poisson(la)
+                    for team, (_lf, la) in fix_by_team.items()}
+
     out = []
     draw_rows = []
     for _, p in players.iterrows():
@@ -496,7 +537,10 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, seed=None, return_draws=Fa
             # and this was invisible there; what was wrong was their JOINT distribution,
             # i.e. sd, p5/p95 and the captaincy tail, which is precisely what the
             # posterior draws are retained for.
-            conc = prng.poisson(lam_against[f])
+            # Shared, not drawn: the same match's goals for everyone at the club.
+            # Within-player coherence (one realisation driving both cs and concp) is kept;
+            # across-player coherence is what the shared matrix adds.
+            conc = conc_by_team[p.team][f]
             cs = (conc == 0) & played60
             csp = cs * (CLEAN_SHEET_PTS[pos] + BONUS_PER_CS[pos])
             concp = np.where(np.isin(pos, ["GK", "DEF"]) & played60,
