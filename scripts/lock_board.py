@@ -23,26 +23,43 @@ Deadlines do not fall on a weekday a cron can express: GW4 is a Saturday at 12:3
 GW18 a Wednesday at 18:30. Anything pinned to a time either fires days early — writing a
 PRIMARY lock with none of the team news it exists to capture — or misses the week.
 
-So `--auto` runs daily and acts only when the state says to: the next gameweek's deadline
-is inside `DEADLINE_WINDOW_H`, and no lock for it exists yet. Every other day it prints
-one line and exits 0, so a scheduler sees success rather than a daily failure. Running it
-ten times in a day is a no-op nine times. This is the same trigger `postgw_review --auto`
-uses, for the same reason.
+So `--auto` runs several times a day and acts only when the state says to: the next
+gameweek's deadline is inside `DEADLINE_WINDOW_H`, and no lock for it exists yet. Every
+other run prints one line and exits 0, so a scheduler sees success rather than a daily
+failure. This is the same trigger `postgw_review --auto` uses, for the same reason.
 
-`--auto` does two things before locking, in this order:
+INSIDE THE WINDOW IT WAITS FOR TEAM NEWS, UP TO A POINT
+--------------------------------------------------------
+"Lock on the first in-window run" meant more scheduler slots made the lock EARLIER, not
+better-informed: GW4's primary was taken at 11:31 UTC on the Friday, 25h out, by an
+on-launch catch-up, while fpl.page still returned 404 for GW4. The one input the lock
+exists to capture was the one it reliably missed. So inside the window:
+
+  * a predicted-XI source exists for the gameweek  ->  lock now, WITH team news;
+  * none exists, and the deadline is more than `LAST_CHANCE_H` away  ->  SKIP, exit 0,
+    write nothing; a later run tries again;
+  * none exists, and the deadline is inside `LAST_CHANCE_H`  ->  lock anyway, WITHOUT
+    team news, and say so loudly. An unlocked gameweek can never be scored, which is
+    strictly worse than a lock missing its best input.
+
+`LAST_CHANCE_H` is derived from the scheduler's slots, see the constant. Every lock
+records how many predicted-XI sources it carried in a `team_news_sources` column, so
+whether a lock had team news is read off the file, never inferred later.
+
+When it locks it does two things, in this order:
 
   1. FETCH TEAM NEWS for that gameweek (`fplpage`), because the predicted XI is the input
      the project's own scoring identifies as its largest error source — correlation
      roughly halves conditioned on appearing, and GW1 lost 52.6 projected points to 13
-     availability misses. Best effort: fpl.page publishes the day before a deadline, so a
-     404 is the normal answer when this runs early, and a lock without team news still
-     beats no lock. The outcome is reported either way.
+     availability misses. The fetch is also what decides between waiting and locking,
+     so it runs on every in-window run until the lock is taken.
   2. REBUILD the board, because the failure this guards against is not locking late, it
      is locking a board built before the last data pull. `gw_board` folds the predicted XI
-     it just fetched into the projection, which is why the order is fixed.
+     it just fetched into the projection, which is why the order is fixed. The rebuild is
+     pinned to the gameweek being locked (`PRED_XI_GW`), so the `team_news_sources` count
+     describes the XI the board actually folded, not a neighbouring week's.
 
-Both are expensive and therefore happen only on the day the lock is actually taken, never
-on the quiet days before it.
+The rebuild is the expensive half and runs only on the run that actually locks.
 
 WHAT IT REFUSES TO DO, AND WHY EACH REFUSAL EARNS ITS PLACE
 ------------------------------------------------------------
@@ -93,6 +110,26 @@ SEASON = "2026-2027"
 # exists to prevent. 26h buys the fallback and costs at most two extra hours of team news
 # in the rare case it is used.
 DEADLINE_WINDOW_H = 26.0
+# Inside the window, `--auto` waits for team news until the deadline is this close, then
+# locks without it. It is pinned by the scheduler's slots (fpl-lock-board, cron
+# `0 7,9,17,22 * * *` in America/New_York local time), measured against all 38 26/27
+# deadlines, and has to sit strictly between two numbers:
+#
+#   ABOVE 10.5h. 22 of the 38 deadlines fall at 08:30 local on a Saturday, and the last
+#   evening slot before them is Friday 22:00 — 10.5h out. Below that, the Friday 22:00 run
+#   SKIPS and the only thing left before kick-off is a 07:00 Saturday run; if the machine
+#   is off then, nothing locks. On the old 09/17/22 cron an 8-10h cutoff left those 22
+#   gameweeks with no unconditional run at all.
+#   BELOW 15.5h. Friday and Wednesday deadlines fall at 13:30 local, and the Thursday or
+#   Tuesday 22:00 slot before them is 15.5h out. Above that, it locks without news before
+#   the morning of deadline day — which is when fpl.page dated GW1, GW2 and GW3's articles.
+#
+# 14.5 keeps an hour of margin on both sides and gives every deadline at least TWO slots
+# inside it (Fri 22:00 + Sat 07:00 for the 08:30s; Fri 17:00 + 22:00 for the 06:00 and
+# 07:00 kick-offs; 07:00 + 09:00 on the day for the 13:30s), so one missed run cannot cost
+# a gameweek, and the on-launch catch-up is a third chance. The scheduler's jitter (~8 min)
+# only ever makes a run later, never earlier. If the cron changes, re-derive this.
+LAST_CHANCE_H = 14.5
 KEEP = ["player_code", "player", "pos", "team", "cost", "own", "gw", "mean", "solio",
         "blended", "src", "sd", "app_ev", "att_ev", "defcon_ev", "cs_ev", "conc_ev",
         "par", "p5", "median", "p95"]
@@ -140,15 +177,15 @@ def fetch_lineups(gw, verbose=True):
     points. A deadline lock taken without it is preserving a prediction missing its most
     valuable ingredient, which is most of the reason a deadline lock beats an early one.
 
-    It is best-effort and not a precondition, because a lock WITHOUT team news still beats
-    no lock at all — a gameweek that goes unlocked can never be scored. But the outcome is
-    reported loudly either way: whether the lock carries team news changes what it is
-    worth, and that has to be visible in the file's provenance rather than inferred later.
+    It never raises, and its count is what `auto` waits on: zero sources means wait, unless
+    the deadline is inside `LAST_CHANCE_H`, where a lock WITHOUT team news still beats no
+    lock at all — a gameweek that goes unlocked can never be scored. Whether the lock
+    carries team news changes what it is worth, so the lock records it in the file.
 
-    fpl.page publishes the day before a deadline, so a 404 is the NORMAL answer when this
-    runs early and is not an error. Returns the number of predicted-XI sources available
-    for `gw` afterwards, counting every feed `predicted_xi` can see — a manually saved
-    Rotowire or FFS file counts just as much as the scrape.
+    fpl.page dated GW1-GW3's articles on deadline day itself, so a 404 is the NORMAL
+    answer the day before and is not an error. Returns the number of predicted-XI sources
+    available for `gw` afterwards, counting every feed `predicted_xi` can see — a manually
+    saved Rotowire or FFS file counts just as much as the scrape.
     """
     try:
         import fplpage
@@ -161,8 +198,8 @@ def fetch_lineups(gw, verbose=True):
         if verbose:
             msg = str(e)
             if "404" in msg:
-                print(f"  team news: no GW{gw} preview published yet (404) — normal if "
-                      f"this is running more than a day out")
+                print(f"  team news: no GW{gw} preview published yet (404) — normal "
+                      f"before deadline day")
             else:
                 print(f"  team news: fetch failed ({type(e).__name__}: {msg[:120]})")
     try:
@@ -171,21 +208,42 @@ def fetch_lineups(gw, verbose=True):
     except Exception:
         n = 0
     if verbose:
-        print(f"  team news: {n} predicted-XI source(s) on disk for GW{gw}"
-              + ("" if n else "  ** the lock will carry NO team news **"))
+        print(f"  team news: {n} predicted-XI source(s) on disk for GW{gw}")
     return n
 
 
-def rebuild_board(verbose=True):
+def team_news_sources(gw, board_path, xi_dir=None):
+    """How many predicted-XI sources for `gw` existed when the board was last built.
+
+    What a manual `lock` records in `team_news_sources` (`auto` passes the count it
+    fetched instead, just before its own rebuild). Only files no newer than the board
+    count: a preview saved after the board was built is not in it. Overwriting a source
+    after a build therefore UNDER-counts, which is the safe direction. None if the
+    sources cannot be read, which is written as an empty cell — unknown, not zero.
+    """
+    try:
+        import predicted_xi as pxi
+        built = _os.path.getmtime(board_path)
+        return sum(1 for s in pxi.sources(gw, data_dir=xi_dir)
+                   if _os.path.getmtime(s["path"]) <= built)
+    except Exception:                                             # noqa: BLE001
+        return None
+
+
+def rebuild_board(gw=None, verbose=True):
     """Re-run the board so the lock preserves a current projection, not a stale one.
 
     PYTHONIOENCODING is forced because a child writing to a pipe on Windows gets cp1252
     and dies on the first non-ASCII player name — the trap documented in CLAUDE.md and
-    handled the same way in `test_all`.
+    handled the same way in `test_all`. PRED_XI_GW is pinned to the gameweek being
+    locked: `gw_board` otherwise derives its own team-news week, and if that ever
+    disagreed with `is_next` the lock would claim team news the board never folded.
     """
     import subprocess
     script = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "gw_board.py")
     env = dict(_os.environ, PYTHONIOENCODING="utf-8")
+    if gw is not None:
+        env["PRED_XI_GW"] = str(int(gw))
     if verbose:
         print("  rebuilding the board first ...")
     r = subprocess.run([_sys.executable, script], env=env, capture_output=True, text=True)
@@ -198,13 +256,22 @@ def rebuild_board(verbose=True):
     return True
 
 
-def auto(out_dir=None, season=SEASON, base=None, now=None, verbose=True):
-    """Lock the next gameweek IF its deadline is close and it is not already locked.
+def auto(out_dir=None, season=SEASON, base=None, now=None, verbose=True,
+         board_path=None, fetch=fetch_lineups, rebuild=rebuild_board):
+    """Lock the next gameweek IF its deadline is close, it is not already locked, and
+    either team news exists or the deadline is inside `LAST_CHANCE_H`.
 
-    Returns the path written, or None. Never raises on the quiet path: a scheduler must
-    see exit 0 on the days there is nothing to do.
+    Returns the path written, or None. Never raises on the quiet paths — outside the
+    window, already locked, waiting for team news: a scheduler must see exit 0 on runs
+    where there is nothing to do. A failed rebuild still raises, so nothing is written.
+    `fetch` and `rebuild` are injectable so the selftest never touches the network or
+    the real board.
     """
     out_dir = out_dir or config.PREDICTIONS
+    # With the real clock, `lock` reads the clock again at write time instead of reusing
+    # this one: a fetch plus a rebuild takes ~15 minutes, and a run that starts just
+    # before the deadline must not write a lock that is timestamped before it.
+    live_clock = now is None
     now = now or _dt.datetime.now(_dt.timezone.utc)
     g = gameweeks(season, base=base)
     try:
@@ -218,38 +285,63 @@ def auto(out_dir=None, season=SEASON, base=None, now=None, verbose=True):
         print(f"[auto] GW{gw} has no deadline in gameweek_summaries.csv; nothing done.")
         return None
     hrs = (deadline.to_pydatetime() - now).total_seconds() / 3600.0
+    existing = _glob.glob(_os.path.join(out_dir, f"gw{gw}_board_locked_*_deadline*.csv"))
     if hrs <= 0:
-        print(f"[auto] GW{gw}'s deadline passed {abs(hrs):.1f}h ago and it was never "
-              f"locked. Nothing can be written now — that gameweek is unscoreable.")
+        # `is_next` only moves on when the feed refreshes, so a run just after a deadline
+        # can still see it. Say "missed" only if it really was.
+        if existing:
+            print(f"[auto] GW{gw}'s deadline passed {abs(hrs):.1f}h ago; it was locked "
+                  f"({_os.path.basename(existing[-1])}). Nothing to do.")
+        else:
+            print(f"[auto] GW{gw}'s deadline passed {abs(hrs):.1f}h ago and it was never "
+                  f"locked. Nothing can be written now — that gameweek is unscoreable.")
         return None
     if hrs > DEADLINE_WINDOW_H:
         print(f"[auto] GW{gw} deadline in {hrs:.1f}h, outside the "
               f"{DEADLINE_WINDOW_H:.0f}h window. Nothing to do.")
         return None
-    existing = _glob.glob(_os.path.join(out_dir, f"gw{gw}_board_locked_*_deadline*.csv"))
     if existing:
         print(f"[auto] GW{gw} already has a deadline lock "
               f"({_os.path.basename(existing[-1])}). Nothing to do.")
         return None
-    print(f"[auto] GW{gw} deadline in {hrs:.1f}h and unlocked — locking now.")
     # Order matters: team news first, THEN the board, because `gw_board` folds the
     # predicted XI into the projection it is about to build. Fetching after the rebuild
     # would lock a board that never saw it.
-    n_xi = fetch_lineups(gw, verbose=verbose)
-    rebuild_board(verbose=verbose)
-    path = lock(gw=gw, label="deadline", out_dir=out_dir, season=season, base=base,
-                now=now, verbose=verbose)
+    n_xi = fetch(gw, verbose=verbose)
+    if not n_xi and hrs > LAST_CHANCE_H:
+        print(f"[auto] GW{gw} deadline in {hrs:.1f}h, unlocked, no team news yet — "
+              f"WAITING. A later run locks with it, or without it once inside "
+              f"{LAST_CHANCE_H:g}h. Nothing written.")
+        return None
+    if n_xi:
+        print(f"[auto] GW{gw} deadline in {hrs:.1f}h, unlocked, team news found "
+              f"({n_xi} source(s)) — locking now.")
+    else:
+        print("*" * 74)
+        print(f"[auto] LAST CHANCE: GW{gw} deadline in {hrs:.1f}h and STILL NO TEAM NEWS.")
+        print("       Locking WITHOUT it, because an unlocked gameweek can never be scored.")
+        print("       This primary lock is missing the input worth most to the projection.")
+        print("*" * 74)
+    rebuild(gw=gw, verbose=verbose)
+    path = lock(gw=gw, label="deadline", board_path=board_path, out_dir=out_dir,
+                season=season, base=base, now=None if live_clock else now,
+                verbose=verbose, team_news=n_xi)
     if verbose:
         print(f"\n[auto] locked GW{gw} "
               + (f"WITH team news ({n_xi} source(s))" if n_xi
-                 else "WITHOUT team news — no preview was available"))
+                 else f"WITHOUT team news — none published {hrs:.1f}h before the deadline"))
     return path
 
 
 def lock(gw=None, label="deadline", board_path=None, out_dir=None, season=SEASON,
          base=None, dry_run=False, force_late=False, now=None, verbose=True,
-         anyway=False):
-    """Write the lock. Returns the path written, or None on a dry run."""
+         anyway=False, team_news=None, xi_dir=None):
+    """Write the lock. Returns the path written, or None on a dry run.
+
+    `team_news` is the number of predicted-XI sources the board was built with, written
+    to every row as `team_news_sources`; when not given it is counted from disk by
+    `team_news_sources()` (from `xi_dir`, default the data dir).
+    """
     board_path = board_path or _os.path.join(config.OUTPUTS, "gw_board_long.csv")
     out_dir = out_dir or config.PREDICTIONS
     now = now or _dt.datetime.now(_dt.timezone.utc)
@@ -317,7 +409,16 @@ def lock(gw=None, label="deadline", board_path=None, out_dir=None, season=SEASON
     missing = [c for c in ("player_code", "player", "blended") if c not in cols]
     if missing:
         raise SystemExit(f"the board is missing required columns {missing}")
-    out = sel[cols]
+    if team_news is None:
+        team_news = team_news_sources(gw, board_path, xi_dir=xi_dir)
+    # Provenance travels IN the file: whether this lock saw team news changes what it is
+    # worth, and a column cannot be separated from the board the way a log line can.
+    out = sel[cols].assign(team_news_sources=pd.NA if team_news is None
+                           else int(team_news))
+    if verbose:
+        print("  team news " + ("UNKNOWN (sources unreadable)" if team_news is None else
+                                f"{int(team_news)} predicted-XI source(s)"
+                                + ("" if team_news else "  ** NONE: no team news **")))
 
     stamp = now.strftime("%Y-%m-%d")
     name = (f"gw{gw}_board_locked_{stamp}_{label}.csv" if not (late and force_late)
@@ -344,8 +445,10 @@ def lock(gw=None, label="deadline", board_path=None, out_dir=None, season=SEASON
         print(f"  {len(out)} players, projected total {out['blended'].sum():.1f}")
         print("  top: " + ", ".join(out.nlargest(5, "blended")["player"].astype(str)))
         print("\n  README row:")
+        news = ("team news unknown" if team_news is None else
+                f"team news: {int(team_news)} source(s)" if team_news else "NO team news")
         print(f"| `{name}` | {now:%Y-%m-%d %H:%M} UTC, deadline {deadline} | GW{gw} | "
-              f"{'PRIMARY' if label == 'deadline' else 'secondary'} |")
+              f"{'PRIMARY' if label == 'deadline' else 'secondary'}; {news} |")
     return path
 
 
@@ -368,6 +471,9 @@ def selftest():
                   "sd": [3.0, 4.0], "p5": [0.0, 1.0], "median": [4.0, 6.0],
                   "p95": [11.0, 14.0]}).to_csv(bp, index=False)
     out = _os.path.join(d, "pred"); _os.makedirs(out)
+    # predicted-XI files for the test live here, never in the real data dir
+    xd = _os.path.join(d, "xi"); _os.makedirs(xd)
+    kw = dict(board_path=bp, out_dir=out, base=base, xi_dir=xd, verbose=False)
 
     g = gameweeks(base=base)
     assert next_gw(g) == 4, next_gw(g)
@@ -377,74 +483,168 @@ def selftest():
     after = _dt.datetime(2026, 9, 13, tzinfo=_dt.timezone.utc)
 
     # a dry run writes nothing
-    assert lock(board_path=bp, out_dir=out, base=base, now=before, dry_run=True,
-                verbose=False) is None
+    assert lock(now=before, dry_run=True, **kw) is None
     assert not _os.listdir(out), "dry run must not write"
 
-    p = lock(board_path=bp, out_dir=out, base=base, now=before, verbose=False)
+    p = lock(now=before, **kw)
     assert _os.path.basename(p) == "gw4_board_locked_2026-09-12_deadline.csv", p
     got = pd.read_csv(p)
     assert len(got) == 2 and "player_code" in got.columns
     assert set(got["gw"]) == {4}, "only the locked gameweek may be in the file"
+    assert set(got["team_news_sources"]) == {0}, "no XI on disk must read 0, not blank"
 
     # never regenerated
     try:
-        lock(board_path=bp, out_dir=out, base=base, now=before, verbose=False)
+        lock(now=before, **kw)
         raise AssertionError("must refuse to overwrite an existing lock")
     except SystemExit:
         pass
 
     # THE guard: past the deadline it refuses outright
     try:
-        lock(board_path=bp, out_dir=out, base=base, now=after, verbose=False)
+        lock(now=after, **kw)
         raise AssertionError("must refuse to lock after the deadline")
     except SystemExit:
         pass
     # ...and --force-late names the file so it cannot pass as a prediction
-    pl = lock(board_path=bp, out_dir=out, base=base, now=after, force_late=True,
-              verbose=False)
+    pl = lock(now=after, force_late=True, **kw)
     assert "LATE_not_a_prediction" in _os.path.basename(pl), pl
+
+    # a manual lock counts only the previews that predate the board it copies
+    def xi(src, gw=4):
+        f = _os.path.join(xd, f"predicted_xi_gw{gw}_{src}.csv")
+        pd.DataFrame({"team": ["X"], "player": ["A"], "role": ["start"]}).to_csv(
+            f, index=False)
+        return f
+    built = _os.path.getmtime(bp)
+    _os.utime(xi("rotowire"), (built - 60, built - 60))     # saved before the build
+    _os.utime(xi("fplpage"), (built + 60, built + 60))      # saved after it: not in it
+    _os.utime(xi("rotowire", gw=5), (built - 60, built - 60))
+    assert team_news_sources(4, bp, xi_dir=xd) == 1, team_news_sources(4, bp, xi_dir=xd)
+    assert team_news_sources(3, bp, xi_dir=xd) == 0, "another week's XI is not this week's"
 
     # a `deadline` lock taken days out is refused; `early` at the same moment is fine
     far = _dt.datetime(2026, 9, 8, tzinfo=_dt.timezone.utc)   # ~4.5 days out
     try:
-        lock(board_path=bp, out_dir=out, base=base, now=far, verbose=False)
+        lock(now=far, **kw)
         raise AssertionError("a primary lock days from the deadline must be refused")
     except SystemExit:
         pass
-    pe = lock(board_path=bp, out_dir=out, base=base, now=far, label="early",
-              verbose=False)
+    pe = lock(now=far, label="early", **kw)
     assert "_early" in _os.path.basename(pe), pe
+    assert set(pd.read_csv(pe)["team_news_sources"]) == {1}
     # ...and --anyway overrides it
-    pa = lock(board_path=bp, out_dir=out, base=base, now=far, anyway=True, verbose=False)
+    pa = lock(now=far, anyway=True, **kw)
     assert "_deadline" in _os.path.basename(pa), pa
 
     # a gameweek the board does not carry is refused, not silently written empty
     try:
-        lock(gw=5, board_path=bp, out_dir=out, base=base, now=before, verbose=False)
+        lock(gw=5, now=before, **kw)
         raise AssertionError("must refuse a gameweek absent from the board")
     except SystemExit:
         pass
-    # --- auto: quiet on the days there is nothing to do, and never raises ---
-    out2 = _os.path.join(d, "pred2"); _os.makedirs(out2)
-    far = _dt.datetime(2026, 9, 8, tzinfo=_dt.timezone.utc)      # outside the window
-    assert auto(out_dir=out2, base=base, now=far, verbose=False) is None
+
+    # --- auto: stubs stand in for the network fetch and the real rebuild ---
+    import contextlib, io
+    calls = []
+
+    def no_news(gw, verbose=True):
+        calls.append("fetch"); return 0
+
+    def news(gw, verbose=True):
+        calls.append("fetch"); return 2
+
+    def rebuilt(gw=None, verbose=True):
+        calls.append(f"rebuild GW{gw}"); return True
+
+    def broken(gw=None, verbose=True):
+        calls.append(f"rebuild GW{gw}")
+        raise SystemExit("REFUSING: the board rebuild failed")
+
+    A = dict(base=base, board_path=bp, verbose=False, rebuild=rebuilt)
+
+    def fresh(name):
+        o = _os.path.join(d, name); _os.makedirs(o); calls.clear()
+        return o
+
+    # quiet on the runs there is nothing to do, never raises, and does not even fetch
+    out2 = fresh("pred2")
+    assert auto(out_dir=out2, now=far, fetch=news, **A) is None
     assert not _os.listdir(out2), "auto must write nothing outside the window"
     past = _dt.datetime(2026, 9, 20, tzinfo=_dt.timezone.utc)    # deadline long gone
-    assert auto(out_dir=out2, base=base, now=past, verbose=False) is None
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        assert auto(out_dir=out2, now=past, fetch=news, **A) is None
     assert not _os.listdir(out2), "auto must never write a post-deadline lock"
+    assert "never locked" in buf.getvalue()
     # and it treats an existing deadline lock as done
     open(_os.path.join(out2, "gw4_board_locked_2026-09-12_deadline.csv"), "w").close()
     inside = _dt.datetime(2026, 9, 12, 6, 0, tzinfo=_dt.timezone.utc)
-    assert auto(out_dir=out2, base=base, now=inside, verbose=False) is None, (
+    assert auto(out_dir=out2, now=inside, fetch=news, **A) is None, (
         "auto must not overwrite an existing deadline lock")
+    # ...including after the deadline, where it must not report a miss that did not happen
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        auto(out_dir=out2, now=past, fetch=news, **A)
+    assert "never locked" not in buf.getvalue(), buf.getvalue()
+    assert calls == [], f"the quiet paths must not fetch or rebuild: {calls}"
+
+    # inside the window: wait for team news, lock with it, or lock without it at the end
+    dl = _dt.datetime(2026, 9, 12, 12, 30, tzinfo=_dt.timezone.utc)
+    waiting = dl - _dt.timedelta(hours=LAST_CHANCE_H + 6)     # in the window, pre-cutoff
+    last = dl - _dt.timedelta(hours=LAST_CHANCE_H - 4)        # inside the cutoff
+    assert LAST_CHANCE_H + 6 < DEADLINE_WINDOW_H
+
+    # 1. no team news and the cutoff not reached: SKIP. It fetched; it did not rebuild
+    #    or write, and it returns quietly so the scheduler sees exit 0.
+    o = fresh("wait")
+    assert auto(out_dir=o, now=waiting, fetch=no_news, **A) is None
+    assert not _os.listdir(o), "no news before the cutoff must write nothing"
+    assert calls == ["fetch"], calls
+
+    # 2. the same moment WITH team news: lock now, fetch before rebuild, rebuild pinned
+    #    to the locked week, and the file itself records that it carried team news
+    calls.clear()
+    p = auto(out_dir=o, now=waiting, fetch=news, **A)
+    assert _os.path.basename(p) == "gw4_board_locked_2026-09-11_deadline.csv", p
+    assert calls == ["fetch", "rebuild GW4"], calls
+    assert set(pd.read_csv(p)["team_news_sources"]) == {2}
+    calls.clear()
+    assert auto(out_dir=o, now=last, fetch=news, **A) is None and calls == [], (
+        "once locked, later runs do nothing")
+
+    # 3. last chance: still no team news inside the cutoff — lock anyway, as the primary,
+    #    and the file says it has none
+    o = fresh("last")
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        p = auto(out_dir=o, now=last, fetch=no_news, **A)
+    assert p is not None, "inside LAST_CHANCE_H it must lock even without team news"
+    assert _os.path.basename(p) == "gw4_board_locked_2026-09-12_deadline.csv", p
+    assert calls == ["fetch", "rebuild GW4"], calls
+    assert set(pd.read_csv(p)["team_news_sources"]) == {0}, "a no-news lock must say so"
+    assert "LAST CHANCE" in buf.getvalue() and "WITHOUT" in buf.getvalue()
+
+    # 4. a failed rebuild refuses on both locking paths, and writes nothing
+    for fetch_, when in ((news, waiting), (no_news, last)):
+        o = fresh(f"broken_{fetch_.__name__}")
+        try:
+            auto(out_dir=o, now=when, fetch=fetch_, **dict(A, rebuild=broken))
+            raise AssertionError("a failed rebuild must refuse")
+        except SystemExit:
+            pass
+        assert not _os.listdir(o), "nothing may be written over a failed rebuild"
 
     shutil.rmtree(d, ignore_errors=True)
     print("SELFTEST OK: picks is_next, dry run writes nothing, refuses to overwrite, "
           "refuses to lock after the deadline, refuses a PRIMARY lock taken days early "
           "while allowing `early` at the same moment, --force-late is named so it cannot "
-          "pass as a prediction, an absent gameweek is refused not written empty, and --auto is "
-          "silent outside the window, after the deadline, and when already locked.")
+          "pass as a prediction, an absent gameweek is refused not written empty, "
+          "team_news_sources counts only previews that predate the board; --auto is "
+          "silent (and does not fetch) outside the window, after the deadline and when "
+          "already locked, WAITS without team news before LAST_CHANCE_H, locks WITH it "
+          "as soon as it exists, locks WITHOUT it inside LAST_CHANCE_H and says so in "
+          "the file, and refuses over a failed rebuild on both paths.")
 
 
 if __name__ == "__main__":
@@ -459,8 +659,9 @@ if __name__ == "__main__":
     ap.add_argument("--anyway", action="store_true",
                     help="write a `deadline` lock even though the deadline is far off")
     ap.add_argument("--auto", action="store_true",
-                    help="for a daily scheduler: lock only if the deadline is close and "
-                         "the gameweek is not already locked; exit 0 quietly otherwise")
+                    help="for a scheduler: lock only if the deadline is close, the "
+                         "gameweek is not already locked, and team news exists or the "
+                         "deadline is inside LAST_CHANCE_H; exit 0 quietly otherwise")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
     if a.selftest:
