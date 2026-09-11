@@ -1,5 +1,11 @@
 # Set-Piece Duty, DefCon Matchups, and Early Dispersion
 
+> **DefCon numbers below are SUPERSEDED (2026-09-10).** They were measured on an upstream
+> column that counted recoveries for defenders in GW2-10 of 25/26. Re-measured: opponent
+> quartiles 0.245/0.240/0.334/0.246, CB vs FB 0.398 vs 0.114 (3.5×, not 2.3×), pooled DEF
+> 7.678/90 (not 8.590). The conclusions survive; the numbers do not. See
+> [DEFCON_SOURCE_CORRECTION_2026-09-10](DEFCON_SOURCE_CORRECTION_2026-09-10.md).
+
 **Opened:** 2026-08-11 · Three requests: reflect projected set-piece duty in player values,
 push the early-season and matchup findings into projections, and analyse when defenders
 actually earn DefCon.

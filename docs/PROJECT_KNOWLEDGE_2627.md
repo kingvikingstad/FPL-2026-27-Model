@@ -124,20 +124,30 @@ drives goals 3x harder early. **Applied 2026-08-11:** a single-step GW1-3 home d
 0.152, split symmetrically home/away so the match total is preserved (−0.41%); one step
 not a schedule because md4-6 shows no discount and the segment profile is non-monotone.
 Board effect confined to GW1-3, home −0.084 / away +0.079, net ~0),
-`defcon_matchups` (DefCon flat in opponent strength; CB vs FB 2.3x — see §5),
+`defcon_matchups` (DefCon flat in opponent strength; CB vs FB 3.5x — see §5; all figures
+re-measured on CBIT 2026-09-10),
 `defcon_team_matchups` (opponent **identity**, which a strength quartile cannot express.
-DefCon hit rate swings **0.129** across opponents, within player — Bournemouth/Leeds/
-Liverpool permissive, Fulham/West Ham/Chelsea/Wolves suppressing, and the ordering is NOT
-the strength ordering. Split-half r=+0.555, EB shrink 0.68 agreeing independently.
-**Shipped** as `defcon_opponent_category` in `team_projections_season.csv`; worth ~0.25
-pts/match between extremes vs ~0.87 for the clean-sheet swing, so a **tiebreaker not a
-driver**, and it points the SAME way as clean sheets (corr +0.264 with opponent attack) so
-there is still no "hard fixture, DefCon floor" trade. MID fails the gate (r=+0.241),
-ships flagged unusable. **Matchup (club x opponent) is a null**: it clears a permutation
-null but match identity explains more (R2 0.278 vs 0.170) and the two meetings of the same
-pair correlate **r=-0.217** — it is match-level shock, not tactics. **Own-team DefCon is
-NOT identified** within a season (club nested in player); untested, not dead — needs a
-second season of DefCon with transfers),
+**Re-measured on CBIT 2026-09-10** — the first run used the contaminated DEF column (§5).
+DefCon hit rate swings **0.142** across opponents (was 0.129), within player —
+Bournemouth/Liverpool/Leeds permissive, West Ham/Fulham/Chelsea/Wolves suppressing, and
+the ordering is NOT the strength ordering. Split-half **r=+0.526** (was +0.555) against a
+pre-registered 0.5 gate — **passes procedurally but carries little information** (~0.16
+SE over the gate on 20 opponents; Fisher CI 0.11-0.79), which is acceptable only because
+the rating is **display-only**; promoting it into points needs a pre-registered 26/27
+replication. EB shrink 0.68, now **clustered by club-match** (the row-level version
+ignored a 1.31 design effect and over-stated every rating ~11%). 18/20 categories
+unchanged (Arsenal neutral→permissive, Tottenham permissive→neutral). **Shipped** as
+`defcon_opponent_category` in `team_projections_season.csv`; worth ~0.28 pts/match
+between extremes vs ~0.87 for the clean-sheet swing, so a **tiebreaker not a driver**,
+and it points the SAME way as clean sheets (corr +0.346 with opponent attack) so there is
+still no "hard fixture, DefCon floor" trade. MID fails the gate (r=+0.241, unchanged —
+MID was never contaminated), ships flagged unusable. **Matchup (club x opponent) is a
+null, re-founded 2026-09-10**: inside a club-match BLOCK permutation null (0.503 vs
+[0.440, 0.545]) and not repeatable across the two meetings (r=+0.005). Both legs first
+recorded were faulty — the row-level permutation null was anti-conservative (a club's
+defenders share a match shock), and the match-identity / r=−0.217 legs were built by the
+defect's GW2-10 time block. **Own-team DefCon is NOT identified** within a season (club
+nested in player); untested, not dead — needs a second season of DefCon with transfers),
 `team_explosiveness` (are teams differentially explosive? **Two nulls and one reversed
 finding.** Per-club dispersion reliability r=+0.006 vs simulated true-Poisson null
 (-0.426,+0.480); return concentration r=+0.363 vs shuffled null (-0.415,+0.397),
@@ -239,13 +249,47 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
   `penalties_order` by default since that is a carryover at pre-season —
   `FPL_SETPIECE=fill|off` reverts. Sources agree on 14/20 clubs, disagree on 5. Board:
   Szoboszlai +4.91, Kluivert +3.06 / Robinson −4.51, Hirst −2.04; mean ≈ 0.
-- **DefCon matchups (2026-08-11):** the supply hypothesis is WRONG — DefCon rate is flat in
-  opponent strength (0.339/0.328/0.416/0.329) while clean sheets collapse 0.344→0.127, so
-  total defender EV falls monotonically 2.05→1.17 and hard fixtures pay nothing back. Pick
-  defenders on fixture ease. **CBs hit DefCon 2.3× as often as FBs** (0.480 vs 0.207, CI
-  +0.239/+0.308) with identical CS value — `PRIOR_DC` is a single 7.6 for all defenders,
-  wrong for cold-start CBs and FBs alike, but the fix is circular without a positional
-  source. NB `defensive_contributions` is 100% null in 24/25 — never fillna(0).
+- **DefCon source correction (2026-09-10) — the DEF DefCon series was wrong at source**
+  `[VERIFIED]`. FPL-Core-Insights 25/26 `defensive_contributions` is **CBIRT for defenders
+  in GW2-10 only** (recoveries included), CBIT elsewhere: DEF mismatch vs FPL official
+  0.81-0.88 in those weeks, 0.00 in every other; MID/FWD exact. It put P(hit 10 | 60+ min)
+  at 0.361 against FPL's 0.270 (GW2-10: 0.632 vs 0.259) and a defender's per-90 rate ~12%
+  high (8.66 vs 7.68; per-player median +13%, max +41%). **Fix:** `src/defcon_series.py`
+  sums DEF DefCon from components (exact in 92.3% of rows, mean error +0.003/match,
+  P(hit10) 0.270 vs 0.270) and never reads the published column for a defender; MID/FWD
+  keep it. Chosen over vaastav's official column because it is the same feed and grain
+  (no element→code + fixture→match_id joins) and the SAME rule works in-season — in 26/27
+  the published column and the per-match components are both 100% null through GW3, and
+  the only populated source, `player_gameweek_stats`, has FPL-exact components. Two
+  further faults fixed in the same pass: evidence is now counted under the rule of the
+  **26/27 scoring position** (Sessegnon and Wieffer, MID→DEF, had carried midfield
+  recoveries into a CBIT threshold; Sessegnon `defcon_ev` 0.42→0.09/gw), shrunk toward
+  their OWN position's pool in the scoring unit, and DefCon
+  **exposure drops minutes with a null defensive block** (2.4% of minutes; Disasi's 14
+  appearances all null, rate 1.81/90 vs pooled 7.68) — `fillna(0)` by another route.
+  **Board A/B, same seed:** DEF likely starters `defcon_ev` 0.683→0.539/gw (**−21%**, via
+  threshold convexity on an 11% rate cut); DEF GW4-9 rank Spearman 0.998, top-12
+  unchanged; cheap DefCon-reliant CBs fall most (Bassey, Mitchell, Dunk ~−0.25/gw); every
+  MID/FWD/GK row bit-identical except six re-listed players. Stats-referee: ship with
+  changes, all applied. Open, pre-existing and `[CHECK]`: the Poisson P(≥10) composition
+  under-predicts low-rate and over-predicts high-rate defenders (0.043 vs 0.088; 0.576 vs
+  0.516) — the −21% passes through it. Full record and the survives/does-not table:
+  docs/DEFCON_SOURCE_CORRECTION_2026-09-10.md.
+- **DefCon matchups (2026-08-11; re-measured on CBIT 2026-09-10):** the supply hypothesis
+  is WRONG — DefCon rate is flat in opponent strength (**0.245/0.240/0.334/0.246**; was
+  0.339/0.328/0.416/0.329 on the contaminated series — level down ~0.09, shape identical;
+  flat in the MONOTONE sense only: the Q3 bump +0.090 survives an opponent-level
+  permutation, selection-adjusted p=0.0095, is post hoc and UNEXPLAINED — not opponent
+  identity, which the null already carries — and is not consumed pending a 26/27
+  replication) while clean sheets collapse 0.344→0.127, so total defender EV
+  falls monotonically **1.86→1.00** (was 2.05→1.17) and hard fixtures pay nothing back.
+  Pick defenders on fixture ease. **CBs hit DefCon 3.5× as often as FBs** (0.398 vs
+  0.114, ratio CI 2.82-4.37, gap +0.284 CI (+0.238,+0.328) under a corrected
+  player-cluster bootstrap — the old one subsampled without replacement; was 2.3×, 0.480
+  vs 0.207 — recoveries had inflated FBs proportionally more) with identical CS value. Role priors (`defcon_roles`) now CB 8.928
+  / FB 6.116 / pooled **7.678** per 90 (were 9.811/7.063/8.590); the old `PRIOR_DC` DEF
+  7.6 that 8.590 "corrected" was right. NB `defensive_contributions` is 100% null in
+  24/25 — never fillna(0).
 - **Minutes exposure fix (2026-08-11) — largest correctness gain in the deep-history pass:**
   `project()` assumed every starter plays exactly 90 minutes. Measured over 23,059
   appearances, mean minutes GIVEN 60+ is 85.3, and positional: GK 89.9 / DEF 87.5 /
@@ -521,6 +565,13 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
 - **`E0.csv` and `fpl-data-stats.csv` not required** — reconstructed from the repo
   (`reconstruct_e0.py`, `reconstruct_coldstart.py`).
 - **PL match filter:** keep only `match_id` containing `-prem-`. **Prices in millions.**
+- **Never read the published DefCon column for a defender.** FPL-Core-Insights'
+  `defensive_contributions` (per match) and `defensive_contribution` (per gameweek) are
+  CBIRT for defenders in GW2-10 of 25/26. Every DefCon count goes through
+  `defcon_series.fpl_defcon`, which sums DEF from components, keys the rule on the
+  position the player is SCORED at, keeps nulls null, and refuses pre-25/26 seasons (the
+  components exist in 24/25; summing them there would invent unvalidated DEF evidence —
+  an open, untested extension, not a done one). DefCon exposure is `defcon_series.exposure`.
 - **Minutes per start needs `start_minutes`, not `minutes`.** Total minutes over starts is wrong
   for anyone who both started some matches and came off the bench in others — the substitute
   minutes land in the numerator with no start in the denominator and the ratio can exceed 90.

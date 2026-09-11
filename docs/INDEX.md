@@ -1,6 +1,6 @@
 # docs/ — what to read, and what not to
 
-28 files, ~63,000 words. Reading them in order is not a strategy; most of what is
+31 files, ~69,000 words. Reading them in order is not a strategy; most of what is
 here is the *record* of how a claim was established, not the claim itself. This
 index routes by question, and marks what is stale so nobody spends context on it.
 
@@ -20,8 +20,9 @@ Everything below is the evidence behind those two.
 | Why is the team layer shaped this way? Archetypes, hyperparameters | `TEAM_FIXTURE_FINDINGS.md` (48 KB — the largest; read the section you need) |
 | Minutes, congestion, penalties — the player layer | `PLAYER_LAYER_FINDINGS.md` |
 | Does a start predict the next start? | `START_PERSISTENCE_2026-09-07.md` |
-| Set-piece duty, DefCon matchups, early dispersion | `SETPIECE_DEFCON_FINDINGS.md` |
-| DefCon by team/matchup, and the explosiveness null | `DEFCON_TEAM_EXPLOSIVENESS_2026-09-02.md` |
+| Is the DefCon series itself right? The GW2-10 defender defect, and which DefCon findings survived it | `DEFCON_SOURCE_CORRECTION_2026-09-10.md` — **read this before quoting any DefCon number from the two rows below** |
+| Set-piece duty, DefCon matchups, early dispersion | `SETPIECE_DEFCON_FINDINGS.md` (its DefCon **numbers** predate the 2026-09-10 correction; the conclusions are re-scored in the row above) |
+| DefCon by team/matchup, and the explosiveness null | `DEFCON_TEAM_EXPLOSIVENESS_2026-09-02.md` (DefCon numbers predate the correction, as above; the explosiveness null is unaffected) |
 | Understat / shot-level integration | `SOCCERDATA_FINDINGS.md` |
 | Deep history (2016/17→) — what it does and does not support | `DEEP_HISTORY_FINDINGS.md` |
 | Regime change: why it widens κ and asserts no direction | `regime_weighting_note.md` |
