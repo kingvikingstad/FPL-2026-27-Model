@@ -251,19 +251,49 @@ def main():
                      **{str(k): v for k, v in q.items()},
                      "CB": cbfb["CB"], "FB": cbfb["FB"], "CB/FB": cbfb["CB"] / cbfb["FB"]})
     print("\n" + pd.DataFrame(rows).set_index("series").round(3).to_string())
-    print("\n  opponent-quartile hit rates, corrected, player-clustered 95% CIs:")
+    print("\n  opponent-quartile hit rates, corrected, player-clustered 95% CIs "
+          "(descriptive: they hold the opponents in each bin fixed):")
     for q in ["weakest opp", "Q2", "Q3", "strongest opp"]:
         est = _cluster_boot(D[D["opp_q"] == q], "hit", lambda s: s["ALL"], by_role=False)
         print(f"    {q:14s} {est[0]:.3f}  ({est[1]:.3f}, {est[2]:.3f})")
-    bump = _cluster_boot(D.assign(_q3=(D["opp_q"] == "Q3")), "hit",
-                         lambda s: s["Q3"] - s["rest"], by="_q3",
-                         labels={True: "Q3", False: "rest"})
-    print(f"    Q3 minus the other three: {bump[0]:+.3f}  ({bump[1]:+.3f}, {bump[2]:+.3f})"
-          f"{'' if bump[1] <= 0 <= bump[2] else '  * excludes zero'}")
+    # The Q3 bump was first SEEN on the contaminated series, so it is post hoc, and a
+    # player-cluster CI holds fixed which opponents fall in Q3 (6 of 20) — the wrong unit.
+    # The right null permutes STRENGTH across the 20 opponents (each keeps its own identity
+    # effect) and takes the MAX bin-minus-rest over the four bins, which is the selection
+    # actually made. [stats-referee, 2026-09-10]
+    obs, p_max, p_q3, q95 = _bin_perm(D)
+    print(f"    Q3 minus the other three: {obs:+.3f}; opponent-permutation null: "
+          f"p={p_max:.4f} for the largest of four bins (p={p_q3:.4f} had Q3 been named "
+          f"in advance; null 95th pct of the max {q95:.3f}). POST HOC and unexplained: a "
+          f"strength-shuffled null already contains each opponent's identity effect, so "
+          f"'identity falling into one bin' does not account for it. Not consumed.")
 
     D[["season", "player_code", "role", "dc", "hit", "mins", "opp_str", "own_str",
        "conceded", "is_home"]].to_csv(OUT, index=False)
     print(f"\n-> {OUT}")
+
+
+def _bin_perm(D, n=2000, seed=0):
+    """Observed Q3-minus-rest hit rate, and its null from permuting opponent strength
+    across opponents: (obs, p for the max over 4 bins, p for Q3 alone, 95th pct of max)."""
+    key = D["season"].astype(str) + "|" + D["opp"].astype(str)
+    strength = D.groupby(key)["opp_str"].first()
+    hit = D["hit"].to_numpy()
+    tot, cnt = hit.sum(), len(hit)
+
+    def diffs(smap):
+        q = pd.qcut(key.map(smap).to_numpy(), 4, labels=False, duplicates="drop")
+        s = np.bincount(q, weights=hit, minlength=4)
+        c = np.bincount(q, minlength=4)
+        return s / np.maximum(c, 1) - (tot - s) / np.maximum(cnt - c, 1)
+
+    obs = diffs(strength)
+    rng = np.random.default_rng(seed)
+    null = np.array([diffs(pd.Series(rng.permutation(strength.to_numpy()),
+                                     index=strength.index)) for _ in range(n)])
+    mx = null.max(axis=1)
+    return (float(obs[2]), float((mx >= obs.max()).mean()),
+            float((null[:, 2] >= obs[2]).mean()), float(np.percentile(mx, 95)))
 
 
 def _cluster_boot(D, value, stat, by="role", labels=None, by_role=True, n=2000, seed=0):

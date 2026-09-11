@@ -152,8 +152,12 @@ _NODES = [
     Node("pms_panel.pkl", config.PMS_PANEL, "derived", producer="scripts/build_all.py",
          inputs=("players.csv", "playerstats.csv", "team_history.csv"),
          note="25/26 per-match panel (build_pms); DefCon is `defcon_fpl`, CBIT for DEF"),
+    # players.csv (the 26/27 roster) added 2026-09-10: two_season_evidence reads it to
+    # count each player's DefCon under the rule of the position he is SCORED at, so a
+    # re-listing there must mark the priors stale. Declared, not left to the incidental
+    # transitive path through pms_panel.pkl.
     Node("ms_priors.pkl", config.MS_PRIORS, "derived", producer="scripts/build_all.py",
-         inputs=("pms_panel.pkl",),
+         inputs=("pms_panel.pkl", "players.csv"),
          note="two-season pooled priors, older_weight=0.5"),
     # NOT derived, and deliberately not an input edge anywhere. `starter_prior.
     # calibrate_ownership_start()` REWRITES this pickle every time it is called, and it

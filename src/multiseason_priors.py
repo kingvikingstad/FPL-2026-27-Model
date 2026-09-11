@@ -90,7 +90,7 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
     # not noise. Pooled defender rate came out at 6.41 per 90; restricting the denominator
     # to 25/26 gave 8.40 — a figure that was itself ~12% high, because the 25/26 DEF
     # series it was measured on carried recoveries in GW2-10 (corrected 2026-09-10, see
-    # defcon_series; FPL's official DEF rate for 900+ minute defenders is 7.66).
+    # defcon_series; FPL's official DEF rate for 900+ minute defenders is 7.68).
     # The other Gamma channels (npxg, xa) are genuinely present in both seasons and keep
     # the pooled denominator. a25's `mins_dc` is aggregated above and excludes the 25/26
     # appearances whose defensive block is null, for the same reason.
@@ -109,7 +109,30 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
     ev = ev[ev.mins >= min_minutes_total].copy()
     ev["n_seasons"] = ev.player_code.map(
         both.groupby("player_code").size())
+    # A player re-listed ACROSS the DefCon rules (DEF <-> MID/FWD) is shrunk toward the
+    # pooled rate of the position he PLAYED, counted in the unit he will be PAID in: a
+    # 25/26 defender listed MID in 26/27 toward defenders' CBIRT, a 25/26 midfielder
+    # listed DEF toward midfielders' CBIT. The new label's own pool would be an unfitted
+    # mean-pull on an administrative relabel [stats-referee 2026-09-10: 8.46 vs 11.3 for
+    # DEF->MID, 7.68 vs 4.1 for MID->DEF]. Measured live from this panel, so no constant
+    # can drift from the series. NaN for everyone else, who keeps the usual prior.
+    cross = (ev["pos"].eq("DEF") != ev["pos_scored"].eq("DEF")) & \
+        ev["pos"].isin(["DEF", "MID", "FWD"]) & ev["pos_scored"].isin(["DEF", "MID", "FWD"])
+    rates = {k: _pooled_rate(p25, *k) for k in
+             set(zip(ev.loc[cross, "pos"], ev.loc[cross, "pos_scored"]))}
+    ev["dc_prior_relisted"] = [rates[(a, b)] if c else np.nan for a, b, c in
+                               zip(ev["pos"], ev["pos_scored"], cross)]
     return ev
+
+
+def _pooled_rate(p, evidence_pos, score_pos, min_mins=60):
+    """Pooled DefCon per 90 of `evidence_pos` players' 60+ minute 25/26 appearances,
+    counted under `score_pos`'s rule — the same basis as defcon_roles.RATE_DEF_POOLED."""
+    q = p[(p["pos"] == evidence_pos) & (p["mins"] >= min_mins)]
+    x = dcs.fpl_defcon(q, q["pos"], "2025-2026",
+                       score_pos=pd.Series(score_pos, index=q.index))
+    n90 = dcs.exposure(q["mins"], x).sum() / 90.0
+    return float(x.sum() / n90) if n90 > 0 else np.nan
 
 
 _POS = {"Goalkeeper": "GK", "Defender": "DEF", "Midfielder": "MID", "Forward": "FWD"}
@@ -117,7 +140,7 @@ _POS = {"Goalkeeper": "GK", "Defender": "DEF", "Midfielder": "MID", "Forward": "
 
 def _scoring_positions():
     """player_code -> the 26/27 FPL position, i.e. the rule a DefCon count is paid on."""
-    p = pd.read_csv(f"{BASE}/2026-2027/players.csv")[["player_code", "position"]]
+    p = pd.read_csv(f"{config.repo('2026-2027')}/players.csv")[["player_code", "position"]]
     p = p.dropna(subset=["player_code"]).drop_duplicates("player_code")
     return dict(zip(p["player_code"], p["position"].map(_POS)))
 
@@ -311,13 +334,14 @@ def to_priors(ev, revert=0.70, k0=3.0, pen_xg=0.79, deep_starts=None):
     for _, r in ev.iterrows():
         n90 = r.mins / 90.0
         pos = r.pos if r.pos in PRIOR_INV else "MID"
-        # The DefCon prior mean must be on the scale of the rule the evidence was counted
-        # under — CBIT for a 26/27 defender, CBIRT otherwise (two_season_evidence). So it
-        # follows the 26/27 position only when that changes the RULE: DEF <-> MID/FWD.
-        # A MID re-listed FWD is CBIRT either way and keeps his own position's prior; the
-        # FWD pool's 4.7 is a statement about forwards, not about him.
-        ps = getattr(r, "pos_scored", pos)
-        pos_dc = ps if (ps in PRIOR_INV and (ps == "DEF") != (pos == "DEF")) else pos
+        # The DefCon prior mean must be in the unit the evidence was counted in — CBIT for
+        # a 26/27 defender, CBIRT otherwise (two_season_evidence). For the few players
+        # re-listed across those rules it is `dc_prior_relisted`: their OWN position's
+        # pool converted to the scoring unit. Everyone else, including MID <-> FWD
+        # re-listings (CBIRT either way), keeps the prior of the position he played.
+        rel = getattr(r, "dc_prior_relisted", np.nan)
+        dc_prior = (float(rel) if pd.notna(rel) else
+                    (dcr.prior_rate(pos, _roles.get(r.player_code)) or PRIOR_DC[pos]))
         # deep history extends the minutes Beta only; the Gamma priors keep the
         # repo's Opta-sourced two-season evidence untouched
         d_st = hs.get(r.player_code, 0.0) if hs else 0.0
@@ -333,8 +357,7 @@ def to_priors(ev, revert=0.70, k0=3.0, pen_xg=0.79, deep_starts=None):
             # pooled n90 here halved the implied hit rate for every player who featured
             # in 24/25, and inverted the ordering so cold-start defenders (on the 7.6
             # prior) out-rated established ones (diluted to 6.31).
-            "defcon_alpha": (dcr.prior_rate(pos_dc, _roles.get(r.player_code))
-                             or PRIOR_DC[pos_dc]) * k0 + revert * r.defcon,
+            "defcon_alpha": dc_prior * k0 + revert * r.defcon,
             "defcon_beta": k0 + revert * (getattr(r, "mins_dc", r.mins) / 90.0),
             "start_a": 2.0 + revert * (r.starts + d_st),
             "start_b": 2.0 + revert * (max(r.games - r.starts, 0)

@@ -109,7 +109,9 @@ def build():
         h = pd.read_csv(config.FPL_DATA_STATS)
         h = h[["id", "gameweek", "total_points", "minutes", "defensive_contribution"]]
         h = h.rename(columns={"id": "player_id", "minutes": "fpl_minutes",
-                              "defensive_contribution": "fpl_defcon"})
+                              # the PUBLISHED per-GW value, CBIRT for DEF in GW2-10 —
+                              # named so it cannot be mistaken for `defcon_fpl`
+                              "defensive_contribution": "published_defcon_gw"})
         panel = panel.merge(h, on=["player_id", "gameweek"], how="left")
     except Exception:
         pass

@@ -74,7 +74,10 @@ OUT = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)),
                     "defcon_team_matchups.csv")
 
 
-def perm_r2(s, group_cols, value, n=N_PERM, seed=0):
+BLOCK = ["club", "match_id"]   # one club's defenders in one match share a shock
+
+
+def perm_r2(s, group_cols, value, n=N_PERM, seed=0, block=None):
     """R-squared of a grouping, against a null that permutes the OUTCOME.
 
     The obvious null — shuffling the opponent LABELS — is wrong here. The fixture
@@ -86,21 +89,43 @@ def perm_r2(s, group_cols, value, n=N_PERM, seed=0):
     Permuting the outcome instead holds the design — and therefore every cell size —
     exactly fixed, and destroys only the association being tested. That is the null
     the excess should be measured against.
+
+    `block`: permute whole BLOCKS, not rows. [VERIFIED 2026-09-10, stats-referee] A
+    club's ~4 defenders in one match share that match's shock (game state, red card,
+    rout), so rows are not exchangeable within a grouping that nests club-matches —
+    opponent, club x opponent and match identity all do. Row-level permutation breaks
+    that shared shock apart and hands every such grouping a null it beats by
+    construction: the "club x opponent clears its null" leg of D2 was exactly this.
+    With `block`, rows are collapsed to block means (weighted by rows) and the block
+    outcomes are permuted, so the design is still fixed and the shock stays whole.
+    Every grouping in `group_cols` must be constant within a block.
     """
-    v = s[value].to_numpy(dtype=float)
-    V = v.var()
+    if block:
+        keep = [c for c in group_cols if c not in block]
+        s = s.groupby(block, observed=True).agg(
+            _v=(value, "mean"), _w=(value, "size"),
+            **{c: (c, "first") for c in keep}).reset_index()
+        v, w = s["_v"].to_numpy(dtype=float), s["_w"].to_numpy(dtype=float)
+    else:
+        v, w = s[value].to_numpy(dtype=float), np.ones(len(s))
     codes = s.groupby(group_cols, observed=True).ngroup().to_numpy()
     ncell = codes.max() + 1
 
-    def r2(vals):
-        sums = np.bincount(codes, weights=vals, minlength=ncell)
-        cnts = np.bincount(codes, minlength=ncell)
-        means = sums / np.maximum(cnts, 1)
-        return 1 - (vals - means[codes]).var() / V
+    def r2(vals, wts):
+        mu = np.average(vals, weights=wts)
+        V = np.average((vals - mu) ** 2, weights=wts)
+        sums = np.bincount(codes, weights=vals * wts, minlength=ncell)
+        cnts = np.bincount(codes, weights=wts, minlength=ncell)
+        means = sums / np.maximum(cnts, 1e-12)
+        return 1 - np.average((vals - means[codes]) ** 2, weights=wts) / V
 
-    real = r2(v)
+    real = r2(v, w)
     rng = np.random.default_rng(seed)
-    vals = np.array([r2(rng.permutation(v)) for _ in range(n)])
+    vals = []
+    for _ in range(n):
+        i = rng.permutation(len(v))
+        vals.append(r2(v[i], w[i]))
+    vals = np.array(vals)
     return real, vals.mean(), np.percentile(vals, [2.5, 97.5])
 
 
@@ -134,12 +159,16 @@ def main():
         # Everything below is measured on PLAYER-DEMEANED actions, so it is variance
         # explained beyond who happened to be on the pitch.
         s["dc_dm"] = s["dc"] - s.groupby("player_code")["dc"].transform("mean")
+        # Row-level permutation is ANTI-CONSERVATIVE here (it splits a club-match's
+        # shared shock); it is printed for the audit trail and decides nothing. The
+        # verdicts use the club-match BLOCK null (see perm_r2).
         for lab, cols in (("opponent", ["opp"]), ("club x opponent", ["club", "opp"])):
-            real, base, ci = perm_r2(s, cols, "dc_dm")
+            rr_, rb_, rc_ = perm_r2(s, cols, "dc_dm")
+            real, base, ci = perm_r2(s, cols, "dc_dm", block=BLOCK)
             excess = real - base
-            print(f"    {lab:28s} R2 {real:6.3f}   permuted {base:6.3f} "
-                  f"[{ci[0]:.3f},{ci[1]:.3f}]   EXCESS {excess:+.3f}"
-                  f"{'  *' if real > ci[1] else ''}")
+            print(f"    {lab:28s} rows: R2 {rr_:6.3f} vs {rb_:6.3f} [{rc_[0]:.3f},{rc_[1]:.3f}]"
+                  f" | BLOCKS: R2 {real:6.3f} vs {base:6.3f} [{ci[0]:.3f},{ci[1]:.3f}]"
+                  f"  EXCESS {excess:+.3f}{'  *' if real > ci[1] else ''}")
             rowsout.append({"position": pos, "term": lab, "r2": real,
                             "r2_permuted": base, "excess": excess,
                             "beats_null": bool(real > ci[1])})
@@ -159,12 +188,15 @@ def main():
         s["dc_dm"] = s["dc"] - s.groupby("player_code")["dc"].transform("mean")
         # residual of the ADDITIVE model: player effect and a common opponent effect out
         s["resid_add"] = s["dc_dm"] - s.groupby("opp")["dc_dm"].transform("mean")
-        real, base, ci = perm_r2(s, ["club", "opp"], "resid_add")
+        real, base, ci = perm_r2(s, ["club", "opp"], "resid_add", block=BLOCK)
         beats = bool(real > ci[1])
+        rrow = perm_r2(s, ["club", "opp"], "resid_add")
         print(f"\n    {pos}:")
         print(f"      pre-registered (nested, misleading): opponent {e['opponent']:+.3f}"
               f" vs matchup {e['club x opponent']:+.3f}")
-        print(f"      CORRECT interaction test on additive residuals: R2 {real:.3f} vs "
+        print(f"      interaction on additive residuals, ROW null (anti-conservative): "
+              f"R2 {rrow[0]:.3f} vs {rrow[1]:.3f} [{rrow[2][0]:.3f},{rrow[2][1]:.3f}]")
+        print(f"      interaction on additive residuals, BLOCK null: R2 {real:.3f} vs "
               f"permuted {base:.3f} [{ci[0]:.3f},{ci[1]:.3f}]  ->  "
               f"{'clears its null' if beats else 'inside the null'}")
         rowsout.append({"position": pos, "term": "interaction | additive", "r2": real,
@@ -175,8 +207,8 @@ def main():
         # permutation null may simply be match-level shock — a red card, a game state,
         # a rout — which is real variance and completely unpredictable. Two checks
         # separate a repeatable tactical matchup from that.
-        rm, bm, cm = perm_r2(s, ["match_id"], "resid_add")
-        print(f"      match identity on the same residual:  R2 {rm:.3f} vs permuted "
+        rm, bm, cm = perm_r2(s, ["match_id"], "resid_add", block=BLOCK)
+        print(f"      match identity on the same residual (BLOCKS):  R2 {rm:.3f} vs permuted "
               f"{bm:.3f} [{cm[0]:.3f},{cm[1]:.3f}]")
         if rm >= real:
             print("      -> match identity explains AT LEAST as much as club x opponent,")
@@ -313,8 +345,8 @@ def _matchup_legs(panel, pos):
     s = panel[panel["position"] == pos].copy()
     s["dc_dm"] = s["dc"] - s.groupby("player_code")["dc"].transform("mean")
     s["resid_add"] = s["dc_dm"] - s.groupby("opp")["dc_dm"].transform("mean")
-    real = perm_r2(s, ["club", "opp"], "resid_add", n=20)[0]
-    rm = perm_r2(s, ["match_id"], "resid_add", n=20)[0]
+    real = perm_r2(s, ["club", "opp"], "resid_add", n=1)[0]      # row level, as first
+    rm = perm_r2(s, ["match_id"], "resid_add", n=1)[0]           # recorded (audit only)
     s["_pair"] = s["club"].astype(str) + " v " + s["opp"].astype(str)
     cell = s.groupby(["_pair", "match_id"])["resid_add"].mean().reset_index()
     cell["k"] = cell.groupby("_pair").cumcount()
@@ -373,10 +405,32 @@ def selftest():
     s2["dc_dm"] = s2["dc"] - s2.groupby("player_code")["dc"].transform("mean")
     real2, base2, ci2 = perm_r2(s2, ["opp"], "dc_dm", n=80)
     assert real2 > ci2[1], f"planted opponent effect missed: {real2:.4f} vs {ci2[1]:.4f}"
+
+    # ...and a SHARED club-match shock with no matchup effect must fool the row null
+    # (the trap the block null exists for) and not the block null.
+    rows3 = []
+    for ci_, club in enumerate(teams):
+        for gw in range(1, 39):
+            opp = teams[(ci_ + gw) % 20]
+            if opp == club:
+                continue
+            shock = rng.normal(0, 2.0)
+            for k in range(4):
+                rows3.append(dict(player_code=ci_ * 4 + k, club=club, opp=opp,
+                                  match_id=f"{club}-{gw}", dc=8 + shock + rng.normal(0, 1.0)))
+    s3 = pd.DataFrame(rows3)
+    s3["dc_dm"] = s3["dc"] - s3.groupby("player_code")["dc"].transform("mean")
+    r_row = perm_r2(s3, ["club", "opp"], "dc_dm", n=80)
+    r_blk = perm_r2(s3, ["club", "opp"], "dc_dm", n=80, block=BLOCK)
+    assert r_row[0] > r_row[2][1], "a shared club-match shock should beat the ROW null"
+    assert r_blk[0] <= r_blk[2][1], (
+        f"block null flagged a pure club-match shock as a matchup: {r_blk[0]:.3f}")
     print(f"SELFTEST OK: with no planted effect club x opponent raw R2 is {real_m:.3f} "
           f"but sits inside its permutation null [{ci_m[0]:.3f},{ci_m[1]:.3f}] - the "
           f"degrees-of-freedom trap is caught; a planted opponent effect still clears "
-          f"its null ({real2:.3f} > {ci2[1]:.3f}).")
+          f"its null ({real2:.3f} > {ci2[1]:.3f}); a shared club-match shock beats the "
+          f"row null ({r_row[0]:.3f} > {r_row[2][1]:.3f}) but not the block null "
+          f"({r_blk[0]:.3f} <= {r_blk[2][1]:.3f}).")
 
 
 if __name__ == "__main__":
