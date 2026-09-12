@@ -58,6 +58,7 @@ USE_MARKET = _os.environ.get("MARKET_ODDS") != "off"
 
 OUT_SEASON = _os.path.join(config.OUTPUTS, "team_projections_season.csv")
 OUT_GW = _os.path.join(config.OUTPUTS, f"team_projections_gw1_{GW_HI}.csv")
+import travel
 
 
 def odds_provenance():
@@ -120,8 +121,9 @@ def build():
         if r.team not in idx or r.opp not in idx:
             continue
         gw = int(r.gameweek)
-        he = bayes_model._home_effect(home, gw, bool(r.is_home))
-        ho = bayes_model._home_effect(home, gw, not bool(r.is_home))
+        trip = travel.fixture_shift(r.team, r.opp, bool(r.is_home), S=len(home))
+        he = bayes_model._home_effect(home, gw, bool(r.is_home), trip)
+        ho = bayes_model._home_effect(home, gw, not bool(r.is_home), trip)
         lf = np.exp(mu + he + A[:, idx[r.team]] - D[:, idx[r.opp]])   # (S,)
         la = np.exp(mu + ho + A[:, idx[r.opp]] - D[:, idx[r.team]])
         # match outcome: independent Poisson per posterior draw (engine's assumption)

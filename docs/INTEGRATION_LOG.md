@@ -90,6 +90,26 @@ default view, from the construct that answers it. The selftest asserts the strin
 appears nowhere in the rendered page, so it cannot come back by accident.
 
 Profile axes are also filtered by availability now: an axis whose column the board does not
+## Travel distance: one real effect, one null, shipped off then switched on, 10-11 Sep 2026
+Pre-registered study `studies/travel_distance.py`, outcome-blind design pass first. 31
+seasons, team-season attack+defence FE, SEs clustered on the club pair.
+- **Traveller goals against: real.** +0.0323 per log-km, z = +4.62, the same in 2016-26
+  alone. A derby roughly halves home advantage; the longest trips add ~4% to home goals.
+- **Traveller goals for: null.** No code path.
+- **Failed the market gate** (score z = +1.73), so `src/travel.py` ships **off by default**
+  (`FPL_TRAVEL=on`). It is hooked into `_home_effect`, home side only, centred on the 25/26
+  mean trip, with b drawn per posterior draw. The guard's premise (double-counting odds)
+  does not hold mechanically here, because the per-fixture λ ingests no match odds. That is
+  raised for a decision in `docs/TRAVEL_DISTANCE_2026-09-10.md` §6, not acted on.
+- `style_matchup.market_score_test` split out of `beats_the_market`, so any covariate uses
+  the one gate implementation; `beats_the_market` behaviour is unchanged.
+- A/B, same seed: per-fixture CS moves −1.4pp to +3.6pp; season CS ±0.12 per club.
+  Player-level deltas sit at the Monte Carlo floor. A changed λ desynchronises numpy's
+  small-λ Poisson stream, so a same-seed A/B of a λ change is not common random numbers.
+- **11 Sep 2026: switched ON by default** on the owner's explicit decision. It is a scoped
+  override of the market gate, recorded in the CLAUDE.md guard row; `FPL_TRAVEL=off`
+  disables it. The board and everything downstream were rebuilt. The GW4 deadline lock
+  predates the change.
 carry is not offered, rather than drawing an empty ring for every player, which reads as
 "measured, and zero". The squad tab's rotation planner is untouched where it ranks on GAIN PER
 £m PARKED — a marginal quantity over the capital actually left idle, which is the same

@@ -328,21 +328,32 @@ def beats_the_market(matches: pd.DataFrame, styles: pd.DataFrame,
     Returns (coef, se) of z on the market residual, per interaction.
     """
     S = styles.set_index(["team", "season"])
+    lam = matches[market_lambda_col].values.astype(float)
+    y = matches["goals"].values.astype(float)
     rows = []
     for (own_ax, opp_ax, sign, label), th in zip(CANDIDATE_INTERACTIONS, theta.theta):
         own = np.array([S.loc[(r.team, r.season), own_ax] for r in matches.itertuples()])
         opp = np.array([S.loc[(r.opp, r.season), opp_ax] for r in matches.itertuples()])
-        z = own * opp
-        z = (z - z.mean()) / (z.std(ddof=0) + 1e-12)
-        # Poisson score test of z given a fixed market offset
-        lam = matches[market_lambda_col].values.astype(float)
-        y = matches["goals"].values.astype(float)
-        num = float(z @ (y - lam))
-        den = float(np.sqrt((z ** 2) @ lam))
         rows.append({"interaction": f"{own_ax} x opp_{opp_ax}",
-                     "score_z": num / den if den > 0 else np.nan,
-                     "adds_over_market": abs(num / den) > 2.5 if den > 0 else False})
+                     **market_score_test(own * opp, y, lam)})
     return pd.DataFrame(rows)
+
+
+def market_score_test(z, y, lam, crit=2.5) -> dict:
+    """The market-orthogonality gate for ANY covariate, not only style products.
+
+    Poisson score test of z given a fixed market offset: z is standardised, then
+    sum z(y - lam) / sqrt(sum z^2 lam). Split out of `beats_the_market` (2026-09-10) so a
+    non-style team signal — first user: studies/travel_distance.py — runs through the one
+    implementation of the gate rather than a copy of it. Mean-only, like the gate it came
+    from: blind to tail/dispersion claims (see CLAUDE.md, market orthogonality).
+    """
+    z = np.asarray(z, float)
+    z = (z - z.mean()) / (z.std(ddof=0) + 1e-12)
+    num = float(z @ (np.asarray(y, float) - np.asarray(lam, float)))
+    den = float(np.sqrt((z ** 2) @ np.asarray(lam, float)))
+    sz = num / den if den > 0 else np.nan
+    return {"score_z": sz, "adds_over_market": bool(den > 0 and abs(sz) > crit)}
 
 
 def transfer_prior(new_club: str, manager_prev_club_styles: pd.DataFrame,

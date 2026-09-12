@@ -29,6 +29,7 @@ import numpy as np, pandas as pd
 from scipy import stats
 import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
 import betting_features as bf
+import travel
 from schedule_2627 import schedule, PROMOTED
 from fpl_xp_model import (GOAL_POINTS, CLEAN_SHEET_PTS, ASSIST_POINTS,
                           DEFCON_THRESHOLD, DEFCON_PTS)
@@ -395,8 +396,13 @@ def _minutes_if_sub():
     return MINUTES_IF_SUB
 
 
-def _home_effect(home, gameweek, is_home):
+def _home_effect(home, gameweek, is_home, trip=0.0):
     """Home advantage for a given gameweek and side, in log space.
+
+    `trip` is `travel.fixture_shift(...)` for this fixture — a shift to the HOME side's
+    log-lambda by the away side's distance travelled. It is 0.0 when FPL_TRAVEL=off and
+    is added to the home side only: the measured effect is on the traveller's goals
+    AGAINST, and its goals FOR was a null (studies/travel_distance.py).
 
     SPLIT SYMMETRICALLY, which matters. The measured early-season pattern is that home
     goals FALL (-0.064 in logs over md1-3) and away goals RISE (+0.076), with total match
@@ -433,11 +439,11 @@ def _home_effect(home, gameweek, is_home):
     # always return something shaped like `home` (an array of S posterior draws), so
     # callers never have to care which branch they got
     if not early:
-        return home if is_home else np.zeros_like(home)
+        return home + trip if is_home else np.zeros_like(home)
     half = disc / 2.0
     # a discount larger than the fitted advantage would flip home into a disadvantage,
     # which nothing in the data supports; floor at zero
-    return np.maximum(home - half, 0.0) if is_home else np.zeros_like(home) + half
+    return np.maximum(home - half, 0.0) + trip if is_home else np.zeros_like(home) + half
 
 
 def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, seed=None, return_draws=False):
@@ -466,8 +472,10 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, seed=None, return_draws=Fa
                 continue
             ti, oi = idx2[team], idx2[r.opp]
             gw = getattr(r, "gameweek", None)
-            h = _home_effect(home, gw, bool(r.is_home))          # this team's side
-            hopp = _home_effect(home, gw, not bool(r.is_home))   # the opponent's
+            # one value for the fixture; _home_effect applies it to whichever side is home
+            trip = travel.fixture_shift(team, r.opp, bool(r.is_home), S=len(home))
+            h = _home_effect(home, gw, bool(r.is_home), trip)          # this team's side
+            hopp = _home_effect(home, gw, not bool(r.is_home), trip)   # the opponent's
             lam_for = np.exp(mu + h + A[:, ti] - D[:, oi])
             lam_against = np.exp(mu + hopp + A[:, oi] - D[:, ti])
             lf.append(lam_for); la.append(lam_against)

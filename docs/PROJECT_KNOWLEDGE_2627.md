@@ -148,6 +148,20 @@ where captaincy concentrates. `apply_tail_calibration` implements it **OFF BY DE
 wiring it in moves the CS engine validated at GA r=0.89/CS r=0.93. Two traps that each
 flipped a result: in-sample lambda deflated dispersion to 0.887 vs 1.056 cross-fitted, and
 P(4+) convexity in lambda needs a simulated null, not a z-test),
+`travel_distance` (2026-09-10, pre-registered; does the away side's trip move goals with
+team quality held constant? 11,944 matches, team-season attack+defence FE, SEs clustered on
+the club pair. **Traveller goals AGAINST: real** — +0.0323 per log-km, z=+4.62, +8.8% home
+goals from the P10 to P90 trip (23→316 km); 2016-26 alone +0.0315; linear and
+holiday-free cuts agree. A derby roughly halves home advantage (0.184 → 0.079).
+**Traveller goals FOR: null** (z=−1.14, sign flips in the recent decade). **Failed the
+market gate** (score z=+1.73; the market prices about half, CI for the unpriced part
+−0.002..+0.032), so `src/travel.py` shipped off by default. It is home side only,
+centred on the 25/26 mean trip. **ON by default since 2026-09-11 by explicit owner
+override** of the market gate, scoped to this signal (CLAUDE.md guard row). The gate's
+premise, double-counting odds, does not hold mechanically here because the per-fixture
+lambda ingests no match odds. `FPL_TRAVEL=off` disables it. The GW4 deadline lock predates
+the change, so GW5 is the first locked board carrying it; the scored derby validation is
+still owed),
 `early_dispersion` (does the model under-disperse strength in GW1-6? residual slope +0.101
 CI (+0.002,+0.206) early vs −0.023 CI (−0.056,+0.009) later, difference +0.127
 CI (+0.018,+0.235). **Measured, NOT applied** — barely clears zero, third test of the same

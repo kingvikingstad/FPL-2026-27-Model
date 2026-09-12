@@ -224,7 +224,9 @@ this one.
 `INJURY_IMPACT`, `TEAM_OVERRIDES`, `XI_CONSTRAINT` (start probabilities sum to 11 per
 club), `MARKET_ODDS`, `DEFCON_ENV`, `SOLIO`, `INSEASON` (see below), `PRESS_MEASURED`
 (measured PPDA blended into the judgment table — on, but weighted 0.02 at GW1, so it
-does nothing until the sample earns it).
+does nothing until the sample earns it), `FPL_TRAVEL` (home goals scaled by the away
+side's trip: derbies ×0.90, 465 km ×1.04. On since 2026-09-11 by an owner-approved
+exception to the market gate; see `docs/TRAVEL_DISTANCE_2026-09-10.md`).
 
 `INSEASON` folds 26/27 results back in: realised starts into the minutes prior,
 finished-match xG (not scorelines) into the team model's E0 stack. **It defaults ON as of

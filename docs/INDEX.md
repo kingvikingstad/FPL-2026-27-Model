@@ -19,6 +19,7 @@ Everything below is the evidence behind those two.
 | How do FPL points actually work? | `FPL_RULES.md` |
 | Why is the team layer shaped this way? Archetypes, hyperparameters | `TEAM_FIXTURE_FINDINGS.md` (48 KB — the largest; read the section you need) |
 | Minutes, congestion, penalties — the player layer | `PLAYER_LAYER_FINDINGS.md` |
+| Does the away side's travel distance move goals? Why is `FPL_TRAVEL` on despite failing the market gate? | `TRAVEL_DISTANCE_2026-09-10.md` |
 | Does a start predict the next start? | `START_PERSISTENCE_2026-09-07.md` |
 | Set-piece duty, DefCon matchups, early dispersion | `SETPIECE_DEFCON_FINDINGS.md` |
 | DefCon by team/matchup, and the explosiveness null | `DEFCON_TEAM_EXPLOSIVENESS_2026-09-02.md` |
@@ -57,6 +58,11 @@ name. The evidence, if you need to see it before you believe it:
 | Team explosiveness | r=+0.006 inside a simulated true-Poisson null | `DEFCON_TEAM_EXPLOSIVENESS_2026-09-02.md` |
 | Four early-season scoring hypotheses | four nulls | `EARLY_SCORING_TRENDS_2026-08-20.md` |
 
+| Travel distance → the traveller's goals **for** | −0.0096/log-km, z=−1.1; sign flips 2016+ | `TRAVEL_DISTANCE_2026-09-10.md` |
+
+Travel distance → the traveller's goals **against** is NOT a null. It is real (z=+4.6 under
+team-season FE) and failed only the market gate; it is ON by an owner-approved, scoped
+exception to that gate (2026-09-11). `FPL_TRAVEL=off` disables it.
 GW27+ congestion is **untested, not null** — it needs knockout kickoff times and the
 FA Cup, neither of which the data source carries.
 

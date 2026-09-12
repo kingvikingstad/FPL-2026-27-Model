@@ -415,6 +415,15 @@ pl["pen_xg90"] = np.where(pl.player_code.isin(pen1),
                           pl.pen_xg90.fillna(0).clip(lower=0.10), 0.0)
 print(f"[set-piece] penalty xG floor applied to {int(pl.player_code.isin(pen1).sum())} "
       f"players across {len(pen1)} resolved codes")
+# The away side's trip as a per-fixture modifier of home advantage (src/travel.py). ON by
+# default since 2026-09-11: real in 31 seasons under team-season FE (z=+4.6 on the
+# traveller's goals against). It did NOT clear the market gate (score z=+1.73); it is on by
+# an explicit owner override of that guard, scoped to this signal, because the per-fixture
+# lambda here ingests no match odds and so has nothing to double-count — see CLAUDE.md and
+# docs/TRAVEL_DISTANCE_2026-09-10.md §6. FPL_TRAVEL=off disables it. Resolved here for the
+# banner; bayes_model reads the same variable through travel.enabled(), same off-values.
+import travel
+_flag("FPL_TRAVEL", "on", off_values=travel.OFF_VALUES)
 
 # ---------- team model with betting-odds strength ----------
 elo = ci.to_elo_frame(t26); pclub = ci.promoted_prior_from_elo(t26)["per_club"]
