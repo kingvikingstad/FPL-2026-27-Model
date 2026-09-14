@@ -216,15 +216,20 @@ table above is the clean read of what the term does.
 | `scripts/export_team_projections.py` | passes the trip, so the team table matches the board |
 | `studies/travel_distance.py` / `.csv` | the pre-registered study, `--design` (outcome-blind) and `--selftest` |
 
-**Wired 2026-09-14 — this section previously said "not wired".** `captaincy.point_draws`,
+**Wired 14 Sep 2026 — this section previously said "not wired".** `captaincy.point_draws`,
 `cs_fixtures.py`, the `xga27` blocks in `gw_board.py` / `run_final_board.py` and
 `tests/test_defcon_env.py` built their own home term inline as `0.0 if is_home else home`,
 a pre-2026-08 expression that ignored the GW1-3 home discount and, once `FPL_TRAVEL` went
 on, the travel term as well. All five now go through `bayes_model.fixture_home_terms`,
 which owns the convention (fetch the fixture's trip once, apply `_home_effect` to both
-sides) so a future fixture-level term reaches every consumer rather than only `project()`.
-`project()` was routed through the same helper and the board is BYTE-IDENTICAL across that
-refactor, so the measured change below is the correction alone.
+sides with the same trip) so a future fixture-level term reaches every consumer rather than
+only `project()`. `project()` was routed through the same helper and the board is
+BYTE-IDENTICAL across that refactor, so everything measured below is the correction alone.
+
+**The refactor is exact where it must be.** With `FPL_TRAVEL=off` all 700 GW4-38
+team-fixtures give bitwise-identical `lam_for` and `lam_against`, `point_draws` over
+GW4 / GW4-6 / GW7-10 is bitwise equal, and `cs_fixtures_gw1_10.csv` is identical across all
+140 GW4-10 rows. GW1-3 moves by exactly e^±0.076 — the discount, applied symmetrically.
 
 Both terms bite, at comparable size and partly offsetting. On the club-season xGA that
 feeds the DefCon environment (GW1-10 mean): discount alone mean -0.0022 / max |0.031|,
@@ -235,14 +240,19 @@ rise (Newcastle +0.019, Ipswich/Sunderland/Hull +0.020) and the London clubs see
 
 Board effect, `LIVE_FPL=off SOLIO=off`, comparing `mean`: 5,943 of 25,004 player-gw rows
 move, mean +0.0002, max |0.12|; largest season-total move 0.90 pts (Thiaw, Newcastle).
-Only defenders move, because with `project()` already routed the sole remaining channel
-into the board is `xga27` -> DefCon.
+**Only defenders move**, because with `project()` already routed the sole remaining channel
+into the board is `xga27` -> DefCon, which touches DEF/CBIT only; GK, MID and FWD are
+bitwise identical at float64. That is a check on the change as much as a description of it.
 
 CS fixture ranking (`cs_fixtures.py`, 200 fixtures GW1-10): P(CS) moves by more than 0.01
 on 71 of them, max 0.062. **The top-10 table is unchanged in membership** — the churn is
-mid-table (178 fixtures move at least one rank, max 46 places). The biggest gainers are
-short away trips in GW1-3, where both corrections push the same way: Chelsea at Fulham
-(2 km) +0.062, Palace at Fulham (13 km) +0.052, Chelsea at Arsenal (10 km) +0.045. The
-biggest losers are GW1-3 HOME sides — that half is the discount's away-side bonus, not
-travel, since the trip is added to the home side only and so does not enter a home team's
-goals-against at all.
+mid-table (178 fixtures move at least one rank, max 46 places). The derbies this document
+is about are what moves: GW1 Chelsea at Fulham (2 km) +6.2pp, GW3 Palace at Fulham (13 km)
++5.2pp, GW3 Chelsea at Arsenal (10 km) +4.5pp, GW4 Man City at Old Trafford 25.4% -> 28.7%,
+GW5 Chelsea at Brentford 20.8% -> 23.8%; the longest trips fall (Brighton at Sunderland
+-1.4pp). In GW1-3 both corrections push the same way, which is why the largest moves sit
+there. The biggest LOSERS are GW1-3 home sides, and that half is the discount's away-side
+bonus rather than travel: `fixture_shift` adds the trip to the home side only, so a
+long-travelling opponent never enters a home team's goals-against.
+
+Measured effect and the full decomposition in `INTEGRATION_LOG.md`, 14 Sep 2026.

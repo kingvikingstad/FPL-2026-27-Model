@@ -493,13 +493,16 @@ sched, long = schedule(); win = long[long.gameweek <= GW_HI]
 xga27 = {}
 for t, g in win.groupby("team"):
     if t not in idx: continue
-    _v = []
+    _x = []
     for _, r in g.iterrows():
-        if r.opp not in idx:
-            continue
-        _, _hopp = bayes_model.fixture_home_terms(home, r.gameweek, bool(r.is_home), t, r.opp)
-        _v.append(np.exp(mu + _hopp + A[:, idx[r.opp]] - D[:, idx[t]]).mean())
-    xga27[t] = float(np.mean(_v))
+        if r["opp"] not in idx: continue
+        # the opponent's home term exactly as project() builds lam_against. An inline
+        # `0 if is_home else home` skipped the GW1-3 discount and the travel shift, so the
+        # DefCon environment read a different xGA from the board's own clean-sheet term.
+        _, _hopp = bayes_model.fixture_home_terms(home, r["gameweek"], bool(r["is_home"]),
+                                                  t, r["opp"])
+        _x.append(np.exp(mu + _hopp + A[:, idx[r["opp"]]] - D[:, idx[t]]).mean())
+    xga27[t] = float(np.mean(_x))
 # The press leg of the CBIRT channel revises itself against 26/27 results as the season
 # accrues (src/press_measured.py). Resolved here purely so the banner reports it: the
 # switch is read inside press_index, and both read the same env var with the same default.

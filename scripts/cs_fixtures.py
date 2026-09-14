@@ -33,7 +33,9 @@ for _, r in win.iterrows():
     if t not in idx or o not in idx:
         continue
     ti, oi = idx[t], idx[o]
-    _, hopp = bayes_model.fixture_home_terms(home, r.gameweek, bool(r.is_home), t, o)
+    # home advantage applies to the OPPONENT if they're home, through the board's
+    # own helper so the GW1-3 discount and any travel shift match project()
+    _, hopp = bayes_model.fixture_home_terms(home, r["gameweek"], bool(r["is_home"]), t, o)
     lam_against = np.exp(mu + hopp + A[:, oi] - D[:, ti])
     cs = float(np.mean(np.exp(-lam_against)))    # posterior P(opponent scores 0)
     rows.append({"gw": int(r.gameweek), "team": t, "opp": o,

@@ -67,13 +67,15 @@ sched, long = schedule(); win = long[(long.gameweek >= GW_LO) & (long.gameweek <
 xga27 = {}
 for t, g in win.groupby("team"):
     if t not in idx: continue
-    _v = []
+    _x = []
     for _, r in g.iterrows():
-        if r.opp not in idx:
-            continue
-        _, _hopp = bayes_model.fixture_home_terms(home, r.gameweek, bool(r.is_home), t, r.opp)
-        _v.append(np.exp(mu + _hopp + A[:, idx[r.opp]] - D[:, idx[t]]).mean())
-    xga27[t] = float(np.mean(_v))
+        if r["opp"] not in idx: continue
+        # the opponent's home term exactly as project() builds lam_against (GW1-3
+        # discount + travel shift), so the environment agrees with the board's CS term
+        _, _hopp = bayes_model.fixture_home_terms(home, r["gameweek"], bool(r["is_home"]),
+                                                  t, r["opp"])
+        _x.append(np.exp(mu + _hopp + A[:, idx[r["opp"]]] - D[:, idx[t]]).mean())
+    xga27[t] = float(np.mean(_x))
 
 if os.environ.get("DEFCON_ENV") != "off":
     pl = de.apply_defcon_environment(pl, xga27, REPO)

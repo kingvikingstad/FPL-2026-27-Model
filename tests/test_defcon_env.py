@@ -44,10 +44,12 @@ for t, g in win.groupby("team"):
     if t not in idx: continue
     v = []
     for _, r in g.iterrows():
-        if r.opp not in idx:
-            continue
-        _, hopp = bayes_model.fixture_home_terms(home, r.gameweek, bool(r.is_home), t, r.opp)
-        v.append(np.exp(mu + hopp + A[:, idx[r.opp]] - D[:, idx[t]]).mean())
+        if r["opp"] not in idx: continue
+        # the opponent's home term as project() and gw_board build it (GW1-3 discount +
+        # travel shift), so this test conditions on the environment the board uses
+        _, hopp = bayes_model.fixture_home_terms(home, r["gameweek"], bool(r["is_home"]),
+                                                 t, r["opp"])
+        v.append(np.exp(mu + hopp + A[:, idx[r["opp"]]] - D[:, idx[t]]).mean())
     xga27[t] = float(np.mean(v))
 
 pl_env = de.apply_defcon_environment(pl.copy(), xga27, REPO)

@@ -60,11 +60,14 @@ def point_draws(players, tm, tsamp, gw_lo, gw_hi, S=4000):
         if team not in idx: continue
         lf, la = [], []
         for _, r in g.iterrows():
-            if r.opp not in idx: continue
-            h, ho = bm.fixture_home_terms(home, getattr(r, "gameweek", None),
-                                          bool(r.is_home), team, r.opp)
-            lf.append(np.exp(mu + h + A[:, idx[team]] - D[:, idx[r.opp]]))
-            la.append(np.exp(mu + ho + A[:, idx[r.opp]] - D[:, idx[team]]))
+            if r["opp"] not in idx: continue
+            # the board's home term, not a copy of it: an inline `home if is_home` skipped
+            # the GW1-3 discount and the travel shift, so these tails disagreed with the
+            # board's own mean for the same fixture
+            h, ho = bm.fixture_home_terms(home, r["gameweek"], bool(r["is_home"]),
+                                          team, r["opp"])
+            lf.append(np.exp(mu + h + A[:, idx[team]] - D[:, idx[r["opp"]]]))
+            la.append(np.exp(mu + ho + A[:, idx[r["opp"]]] - D[:, idx[team]]))
         fix[team] = (np.array(lf), np.array(la))
 
     names, draws = [], []

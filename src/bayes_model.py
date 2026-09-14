@@ -499,7 +499,7 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, seed=None, return_draws=Fa
                 continue
             ti, oi = idx2[team], idx2[r.opp]
             gw = getattr(r, "gameweek", None)
-            h, hopp = fixture_home_terms(home, gw, bool(r.is_home), team, r.opp)
+            h, hopp = fixture_home_terms(home, gw, bool(r["is_home"]), team, r["opp"])
             lam_for = np.exp(mu + h + A[:, ti] - D[:, oi])
             lam_against = np.exp(mu + hopp + A[:, oi] - D[:, ti])
             lf.append(lam_for); la.append(lam_against)
