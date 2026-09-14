@@ -216,9 +216,16 @@ table above is the clean read of what the term does.
 | `scripts/export_team_projections.py` | passes the trip, so the team table matches the board |
 | `studies/travel_distance.py` / `.csv` | the pre-registered study, `--design` (outcome-blind) and `--selftest` |
 
-**Not wired, and pre-dating this change.** `captaincy.point_draws`, `cs_fixtures.py` and
-the `xga27` line in `gw_board.py` build their own home term inline rather than through
-`_home_effect`. They therefore ignore the GW1-3 home discount, and **with `FPL_TRAVEL`
-now on they also ignore the travel term.** So captaincy tail metrics and the CS fixture
-ranking can disagree with the board for derbies until that is fixed; a separate task is
-routing them through `_home_effect`.
+**Wired 12 Sep 2026.** `captaincy.point_draws`, `cs_fixtures.py` and the `xga27` line in
+`gw_board.py` built their own home term inline rather than through `_home_effect`, so they
+ignored the GW1-3 discount and, once `FPL_TRAVEL` went on, the travel term with it. All
+three now call `_home_effect` with the gameweek and one `fixture_shift` per fixture, as
+`project()` does; so do the same `xga27` loops in `run_final_board.py` and
+`tests/test_defcon_env.py`. The refactor is exact: with `FPL_TRAVEL=off`, all 700 GW4-38
+team-fixtures give bitwise-identical λ. With it **on**, which is the default, the derbies
+this document is about now reach the CS table — GW4 Man City at Old Trafford P(CS)
+25.4% → 28.7%, GW5 Chelsea at Brentford 20.8% → 23.8%, and the longest trips fall (Brighton
+at Sunderland −1.4pp). Measured effect in INTEGRATION_LOG, 12 Sep.
+`ab_market_vs_recon.py` keeps its inline term: it cannot run on this machine (hard-coded
+`/tmp` and `/home/claude` paths), its two fixtures are GW4 and GW8, and it reports a
+difference between two fits that share one home convention.

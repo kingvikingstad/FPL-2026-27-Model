@@ -34,6 +34,7 @@ from scipy import stats
 from fpl_xp_model import (GOAL_POINTS, CLEAN_SHEET_PTS, ASSIST_POINTS,
                           DEFCON_THRESHOLD, DEFCON_PTS)
 import bayes_model as bm
+import travel
 
 rng = np.random.default_rng(11)
 
@@ -60,11 +61,16 @@ def point_draws(players, tm, tsamp, gw_lo, gw_hi, S=4000):
         if team not in idx: continue
         lf, la = [], []
         for _, r in g.iterrows():
-            if r.opp not in idx: continue
-            h = home if r.is_home else 0.0
-            ho = 0.0 if r.is_home else home
-            lf.append(np.exp(mu + h + A[:, idx[team]] - D[:, idx[r.opp]]))
-            la.append(np.exp(mu + ho + A[:, idx[r.opp]] - D[:, idx[team]]))
+            if r["opp"] not in idx: continue
+            # the board's home term, not a copy of it: an inline `home if is_home` skipped
+            # the GW1-3 discount and the travel shift, so these tails disagreed with the
+            # board's own mean for the same fixture
+            is_home = bool(r["is_home"])
+            trip = travel.fixture_shift(team, r["opp"], is_home, S=len(home))
+            h = bm._home_effect(home, r["gameweek"], is_home, trip)
+            ho = bm._home_effect(home, r["gameweek"], not is_home, trip)
+            lf.append(np.exp(mu + h + A[:, idx[team]] - D[:, idx[r["opp"]]]))
+            la.append(np.exp(mu + ho + A[:, idx[r["opp"]]] - D[:, idx[team]]))
         fix[team] = (np.array(lf), np.array(la))
 
     names, draws = [], []

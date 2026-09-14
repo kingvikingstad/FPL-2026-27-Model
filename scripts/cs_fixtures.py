@@ -11,7 +11,7 @@ team-strength uncertainty; Poisson zero-goal probability).
 """
 import warnings; warnings.filterwarnings("ignore")
 import numpy as np, pandas as pd, sys; import os as _os, sys as _sys; _sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "src")); _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
-import core_insights as ci, bayes_model
+import core_insights as ci, bayes_model, travel
 from bayes_model import TeamModel
 from schedule_2627 import schedule
 
@@ -33,7 +33,11 @@ for _, r in win.iterrows():
     if t not in idx or o not in idx:
         continue
     ti, oi = idx[t], idx[o]
-    hopp = 0.0 if r.is_home else home           # home advantage applies to the OPPONENT if they're home
+    # home advantage applies to the OPPONENT if they're home, through the board's
+    # _home_effect so the GW1-3 discount and any travel shift match project()
+    is_home = bool(r["is_home"])
+    trip = travel.fixture_shift(t, o, is_home, S=len(home))
+    hopp = bayes_model._home_effect(home, r["gameweek"], not is_home, trip)
     lam_against = np.exp(mu + hopp + A[:, oi] - D[:, ti])
     cs = float(np.mean(np.exp(-lam_against)))    # posterior P(opponent scores 0)
     rows.append({"gw": int(r.gameweek), "team": t, "opp": o,

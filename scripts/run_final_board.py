@@ -13,6 +13,7 @@ Env flags: REGIME_PANEL=on, REGIME=proposed, DEFCON_ENV=off (default on).
 import warnings; warnings.filterwarnings("ignore")
 import os, numpy as np, pandas as pd, sys; import os as _os, sys as _sys; _sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "src")); _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
 import core_insights as ci, bayes_model, signals as sg, starter_prior as sp, defcon_env as de
+import travel
 from bayes_model import TeamModel, project
 from roster import calibrate_cold_start, _coldstart_row
 from schedule_2627 import schedule
@@ -67,8 +68,16 @@ sched, long = schedule(); win = long[(long.gameweek >= GW_LO) & (long.gameweek <
 xga27 = {}
 for t, g in win.groupby("team"):
     if t not in idx: continue
-    xga27[t] = float(np.mean([np.exp(mu + (0.0 if r.is_home else home) + A[:, idx[r.opp]] - D[:, idx[t]]).mean()
-                              for _, r in g.iterrows() if r.opp in idx]))
+    _x = []
+    for _, r in g.iterrows():
+        if r["opp"] not in idx: continue
+        # the opponent's home term exactly as project() builds lam_against (GW1-3
+        # discount + travel shift), so the environment agrees with the board's CS term
+        _ih = bool(r["is_home"])
+        _trip = travel.fixture_shift(t, r["opp"], _ih, S=len(home))
+        _hopp = bayes_model._home_effect(home, r["gameweek"], not _ih, _trip)
+        _x.append(np.exp(mu + _hopp + A[:, idx[r["opp"]]] - D[:, idx[t]]).mean())
+    xga27[t] = float(np.mean(_x))
 
 if os.environ.get("DEFCON_ENV") != "off":
     pl = de.apply_defcon_environment(pl, xga27, REPO)

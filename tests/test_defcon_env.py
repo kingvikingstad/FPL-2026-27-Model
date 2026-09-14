@@ -5,6 +5,7 @@ import config
 import warnings; warnings.filterwarnings("ignore")
 import numpy as np, pandas as pd, sys; import os as _os, sys as _sys; _sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "src")); _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
 import core_insights as ci, bayes_model, signals as sg, starter_prior as sp, defcon_env as de
+import travel
 from bayes_model import TeamModel, project
 from roster import calibrate_cold_start, _coldstart_row
 from schedule_2627 import schedule
@@ -42,8 +43,15 @@ sched, long = schedule(); win = long[long.gameweek <= 10]
 xga27 = {}
 for t, g in win.groupby("team"):
     if t not in idx: continue
-    v = [np.exp(mu + (0.0 if r.is_home else home) + A[:, idx[r.opp]] - D[:, idx[t]]).mean()
-         for _, r in g.iterrows() if r.opp in idx]
+    v = []
+    for _, r in g.iterrows():
+        if r["opp"] not in idx: continue
+        # the opponent's home term as project() and gw_board build it (GW1-3 discount +
+        # travel shift), so this test conditions on the environment the board uses
+        ih = bool(r["is_home"])
+        trip = travel.fixture_shift(t, r["opp"], ih, S=len(home))
+        hopp = bayes_model._home_effect(home, r["gameweek"], not ih, trip)
+        v.append(np.exp(mu + hopp + A[:, idx[r["opp"]]] - D[:, idx[t]]).mean())
     xga27[t] = float(np.mean(v))
 
 pl_env = de.apply_defcon_environment(pl.copy(), xga27, REPO)
