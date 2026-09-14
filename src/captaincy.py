@@ -61,8 +61,8 @@ def point_draws(players, tm, tsamp, gw_lo, gw_hi, S=4000):
         lf, la = [], []
         for _, r in g.iterrows():
             if r.opp not in idx: continue
-            h = home if r.is_home else 0.0
-            ho = 0.0 if r.is_home else home
+            h, ho = bm.fixture_home_terms(home, getattr(r, "gameweek", None),
+                                          bool(r.is_home), team, r.opp)
             lf.append(np.exp(mu + h + A[:, idx[team]] - D[:, idx[r.opp]]))
             la.append(np.exp(mu + ho + A[:, idx[r.opp]] - D[:, idx[team]]))
         fix[team] = (np.array(lf), np.array(la))

@@ -42,8 +42,12 @@ sched, long = schedule(); win = long[long.gameweek <= 10]
 xga27 = {}
 for t, g in win.groupby("team"):
     if t not in idx: continue
-    v = [np.exp(mu + (0.0 if r.is_home else home) + A[:, idx[r.opp]] - D[:, idx[t]]).mean()
-         for _, r in g.iterrows() if r.opp in idx]
+    v = []
+    for _, r in g.iterrows():
+        if r.opp not in idx:
+            continue
+        _, hopp = bayes_model.fixture_home_terms(home, r.gameweek, bool(r.is_home), t, r.opp)
+        v.append(np.exp(mu + hopp + A[:, idx[r.opp]] - D[:, idx[t]]).mean())
     xga27[t] = float(np.mean(v))
 
 pl_env = de.apply_defcon_environment(pl.copy(), xga27, REPO)

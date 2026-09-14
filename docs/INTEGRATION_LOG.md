@@ -90,6 +90,59 @@ default view, from the construct that answers it. The selftest asserts the strin
 appears nowhere in the rendered page, so it cannot come back by accident.
 
 Profile axes are also filtered by availability now: an axis whose column the board does not
+## The five inline home terms are routed, and there is now one owner, 14 Sep 2026
+
+`docs/TRAVEL_DISTANCE_2026-09-10.md` had carried a "Not wired, and pre-dating this change"
+note since travel shipped. It is now wired. Five call sites built the fixture's home term
+inline as `0.0 if is_home else home`:
+
+  src/captaincy.py:65        point_draws, BOTH sides (h and ho)
+  scripts/cs_fixtures.py:36  lam_against for the CS ranking
+  scripts/gw_board.py:496    the xga27 block feeding the DefCon environment
+  scripts/run_final_board.py:70   same block
+  tests/test_defcon_env.py:45     same block
+
+That expression is the pre-2026-08 convention. It predates the GW1-3 home discount and the
+travel term, so those sites ignored **both** — the second silently, from the moment
+`FPL_TRAVEL` went on by default on 11 Sep.
+
+**One owner, not five copies.** `bayes_model.fixture_home_terms(home, gw, is_home, team,
+opp)` returns `(h, hopp)`: it fetches the fixture's travel shift once and applies
+`_home_effect` to both sides with the SAME trip. Routing each site to `_home_effect`
+directly would have left the three-line incantation — fetch the trip, remember it belongs
+to the fixture and not to a side, call twice — duplicated at six places, which is how the
+drift happened. `project()` was routed through the same helper so the engine and its
+consumers cannot diverge again.
+
+**The `project()` refactor is a verified no-op.** `LIVE_FPL=off SOLIO=off` makes the board
+reproducible (confirmed: two consecutive runs byte-identical). `gw_board_long.csv` is
+byte-identical across the refactor, so everything below is the correction, not the
+restructuring.
+
+**What the correction moves.** Both terms bite, at comparable size, partly offsetting. On
+the club-season xGA that feeds DefCon (GW1-10 mean): discount alone mean -0.0022 / max
+|0.031|; travel alone mean +0.0052 / max |0.035|; together mean +0.0030 / max |0.051|. The
+travel half has the predicted sign — the clubs whose own away trips are longest see xGA
+rise (Newcastle +0.019, Ipswich / Sunderland / Hull +0.020), the London clubs see it fall
+(Chelsea -0.035, Spurs -0.013).
+
+Board: 5,943 of 25,004 player-gw rows move, mean +0.0002, max |0.12|; largest season total
+0.90 pts (Thiaw, Newcastle). **Only defenders move** — with `project()` already correct,
+the sole remaining channel into the board was `xga27` -> DefCon, which touches DEF/CBIT
+only. That is a check on the change as much as a description of it.
+
+CS ranking (200 fixtures, GW1-10): 71 move P(CS) by more than 0.01, max 0.062. **The top-10
+table is unchanged in membership**; the churn is mid-table (178 fixtures move at least one
+rank, max 46 places). Biggest gainers are short away trips in GW1-3, where both corrections
+push the same way — Chelsea at Fulham (2 km) +0.062, Palace at Fulham (13 km) +0.052,
+Chelsea at Arsenal (10 km) +0.045. Biggest losers are GW1-3 HOME sides, and that half is
+the discount's away-side bonus rather than travel: `fixture_shift` adds the trip to the
+home side only, so it never enters a home team's goals-against.
+
+`.pl.ps1 test --quick`, run alone: ALL CHECKS PASSED (10/10, 56/56, 37/37, 7/7, 10/10).
+`--quick` skips the pipeline, so `cs_fixtures.py` and `run_final_board.py` were run
+directly as well.
+
 ## The market-vs-recon A/B was fitting the design the rank guard refuses, 14 Sep 2026
 
 **`src/ab_market_vs_recon.py` deleted.** It could not run on this machine, and routing its
@@ -164,7 +217,8 @@ the inline sites are `scripts/cs_fixtures.py:36`, `scripts/gw_board.py:496` (`xg
 Deleting `ab_market_vs_recon` removes a sixth and changes nothing about the other five,
 which are the ones that matter: with `FPL_TRAVEL` on by default they ignore the travel term
 and the GW1-3 home discount, so the CS fixture ranking and the captaincy tail metrics can
-disagree with the board. **That remains open and is unaffected by this entry.**
+disagree with the board. **That was still open when this entry was written; it was closed
+later the same day — see the entry above.**
 
 ## Travel distance: one real effect, one null, shipped off then switched on, 10-11 Sep 2026
 Pre-registered study `studies/travel_distance.py`, outcome-blind design pass first. 31

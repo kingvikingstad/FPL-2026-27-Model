@@ -446,6 +446,33 @@ def _home_effect(home, gameweek, is_home, trip=0.0):
     return np.maximum(home - half, 0.0) + trip if is_home else np.zeros_like(home) + half
 
 
+def fixture_home_terms(home, gameweek, is_home, team, opp):
+    """The (this side, opponent side) home terms for ONE fixture, in log space.
+
+    One owner for a three-line incantation that was being retyped at every call site,
+    and retyped wrongly: `_home_effect` on its own is not enough to get right, because
+    the caller must also fetch the fixture's travel shift and know that the trip belongs
+    to the FIXTURE rather than to a side, so both calls take the SAME `trip`.
+
+    Five call sites built the term inline as `0.0 if is_home else home` instead
+    (`captaincy.point_draws`, `cs_fixtures`, the `xga27` blocks in `gw_board`,
+    `run_final_board` and `tests/test_defcon_env`). That expression is the pre-2026-08
+    convention: it predates both the GW1-3 home discount and the travel term, so those
+    sites silently ignored BOTH — see docs/TRAVEL_DISTANCE_2026-09-10.md, "Not wired,
+    and pre-dating this change". They were routed through here on 2026-09-14. Call this
+    rather than reaching for `_home_effect` directly, so the next term added to a fixture
+    reaches every consumer instead of only `project()`.
+
+    `team`/`opp`/`is_home` describe the caller's row. Returns `(h, hopp)`, each shaped
+    like `home`, for
+        lam_for     = exp(mu + h    + A[:, ti] - D[:, oi])
+        lam_against = exp(mu + hopp + A[:, oi] - D[:, ti])
+    """
+    trip = travel.fixture_shift(team, opp, bool(is_home), S=len(home))
+    return (_home_effect(home, gameweek, bool(is_home), trip),
+            _home_effect(home, gameweek, not bool(is_home), trip))
+
+
 def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, seed=None, return_draws=False):
     """Posterior-predictive points per player over [gw_lo, gw_hi].
 
@@ -472,10 +499,7 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, seed=None, return_draws=Fa
                 continue
             ti, oi = idx2[team], idx2[r.opp]
             gw = getattr(r, "gameweek", None)
-            # one value for the fixture; _home_effect applies it to whichever side is home
-            trip = travel.fixture_shift(team, r.opp, bool(r.is_home), S=len(home))
-            h = _home_effect(home, gw, bool(r.is_home), trip)          # this team's side
-            hopp = _home_effect(home, gw, not bool(r.is_home), trip)   # the opponent's
+            h, hopp = fixture_home_terms(home, gw, bool(r.is_home), team, r.opp)
             lam_for = np.exp(mu + h + A[:, ti] - D[:, oi])
             lam_against = np.exp(mu + hopp + A[:, oi] - D[:, ti])
             lf.append(lam_for); la.append(lam_against)
