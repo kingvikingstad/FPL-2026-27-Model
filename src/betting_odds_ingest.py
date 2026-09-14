@@ -10,7 +10,7 @@ sides that have no PL history.
 
 Pipeline:  fixtures.csv  --de-vig 1X2 + O/U2.5-->  (P(H),P(D),P(A),P(over))
                           --Poisson inversion-->   (lambda_H, lambda_A)
-                          --write E0 rows-->        /tmp/E0_market.csv  --> fit(e0_path=...)
+                          --write E0 rows-->        SCRATCH/E0_market.csv --> fit(e0_path=..)
 
 Primary source : football-data.co.uk fixtures.csv  (free, no-auth, plain CSV).
 Consensus cols : Avg* / Max* (these already EXCLUDE the stale-since-Jul-2025 Pinnacle
@@ -24,7 +24,9 @@ Independent-Poisson match model by default; an optional Dixon-Coles low-score rh
 exposed but off by default (the O/U anchor already pins totals; DC mainly nudges draws).
 """
 from __future__ import annotations
+import os
 import numpy as np, pandas as pd
+import config
 from math import exp, factorial
 
 _FACT = np.array([factorial(k) for k in range(31)], float)
@@ -333,7 +335,7 @@ if __name__ == "__main__":
     ap.add_argument("--source", default="footballdata", choices=["footballdata", "oddsapi"])
     ap.add_argument("--fixtures", required=True,
                     help="footballdata: fixtures.csv path/URL | oddsapi: saved /odds JSON path")
-    ap.add_argument("--out", default="/tmp/E0_market.csv")
+    ap.add_argument("--out", default=os.path.join(config.SCRATCH, "E0_market.csv"))
     ap.add_argument("--consensus", default="avg", choices=list(_1X2))
     ap.add_argument("--method", default="multiplicative", choices=["multiplicative", "shin"])
     ap.add_argument("--rho", type=float, default=0.0, help="Dixon-Coles low-score rho (0=off)")

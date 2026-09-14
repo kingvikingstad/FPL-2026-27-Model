@@ -7,36 +7,52 @@ Feed swap, not new architecture. Two modules, one entry point.
   Handles **both** sources behind one call. Caveats baked in: Avg*/Max* consensus only
   (Pinnacle never read); events with no O/U at the line are dropped + counted; Dixon-Coles
   `rho` available but off by default.
-- `ab_market_vs_recon.py` — fits the model on `E0_recon` vs `E0_market`, reports the att/dfn
-  repricing per team, and rechecks the CS fixtures flagged as leaning on the stale Spurs prior
-  (Chelsea GW8, Everton GW4). `--selftest` validates its logic with no repo.
+- `oddsapi_feed.py` — the live half: fetch, snapshot accumulation, and the rank guard that
+  refuses a market-ONLY E0 until the accumulated fixture set identifies all 39 free
+  parameters. `--build --recon <E0_recon.csv>` emits the blended E0; that is the only
+  market-bearing E0 this repo will produce.
+
+- ~~`ab_market_vs_recon.py`~~ — **DELETED 2026-09-14.** It fitted the market-only E0 that
+  `oddsapi_feed` (3) refuses, at HALF the ClubElo weight, and reported the difference from
+  `E0_recon` as market repricing. See `INTEGRATION_LOG.md`, "The market-vs-recon A/B was
+  fitting the design the rank guard refuses".
 
 ## Operational commands
 ```bash
-# Primary weekly snapshot (immediate round):
-python betting_odds_ingest.py --source footballdata \
-       --fixtures https://www.football-data.co.uk/fixtures.csv --out /tmp/E0_market.csv
-
-# Forward horizon (GW1–6) for an identification-grade fit — save the /odds JSON first:
-#   GET /v4/sports/soccer_epl/odds?regions=uk&markets=h2h,totals&oddsFormat=decimal
-python betting_odds_ingest.py --source oddsapi --fixtures odds.json --out /tmp/E0_market.csv
-
-# Close the loop:
-python ab_market_vs_recon.py --recon /tmp/E0_recon.csv --market /tmp/E0_market.csv \
-       --clubelo-recon 0.45 --clubelo-market 0.20
+# Primary weekly snapshot (immediate round). --out defaults to SCRATCH/E0_market.csv:
+.\fpl.ps1 run src/betting_odds_ingest.py --source footballdata --fixtures https://www.football-data.co.uk/fixtures.csv
 ```
 
-## run_2627.py wiring (mirrors cs_fixtures.py:18)
+```bash
+# Forward horizon for an identification-grade fit (needs ODDS_API_KEY):
+.\fpl.ps1 run src/oddsapi_feed.py --fetch
+```
+
+```bash
+# Blend the accumulated market rows onto E0_recon; prints coverage + rank report:
+.\fpl.ps1 run src/oddsapi_feed.py --build --recon data/E0_recon.csv
+```
+
+There is no "close the loop" A/B step any more. `--build` prints the coverage and rank
+report, and refuses to emit a market-only E0 that cannot identify the fit; that check is
+the thing the old A/B was reaching for, done before the fit rather than after it.
+
+## Wiring (paths from `config`, never literals)
 ```python
+import os, config
 from betting_odds_ingest import build_market_e0
 
 # footballdata (path/URL) OR oddsapi (parsed events list). Confirm goal/xg cols first (below).
-build_market_e0("footballdata", FIXTURES_URL, out_path="/tmp/E0_market.csv",
+_mkt = os.path.join(config.SCRATCH, "E0_market.csv")
+build_market_e0("footballdata", FIXTURES_URL, out_path=_mkt,
                 goal_cols=("FTHG","FTAG"), xg_cols=("HxG","AxG"))
 
+# STACK, do not swap. A market E0 on its own is 19 columns short of the 39 free
+# parameters (identifiability.free_params(20)); fitting it yields numbers that are
+# almost entirely prior, and LOWERING clubelo_weight to "let the market drive" makes
+# that worse, not better. oddsapi_feed.build() does the stacking and the rank check.
 tm = TeamModel(promoted_per_club=pclub).fit(
-        e0_path="/tmp/E0_market.csv",   # was E0_recon.csv
-        clubelo=elo, clubelo_weight=0.20)   # was 0.45 — see note
+        e0_path=blended_e0, clubelo=elo, clubelo_weight=0.45)
 ```
 
 ## The one thing to confirm before trusting the swap

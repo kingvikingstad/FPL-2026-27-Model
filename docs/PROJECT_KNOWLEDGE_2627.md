@@ -495,6 +495,16 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
 - **δ regime mean-pull values** — unfitted `[JUDGMENT]`; wired but off. Turning them on shifts
   point estimates on assertion. Sweep against live data first.
 - **Recalibrating the team model on Solio** — it's already market-calibrated; that would overfit.
+- **A market-vs-recon team-strength A/B** (`src/ab_market_vs_recon.py`) — **DELETED
+  2026-09-14**, and not to be rebuilt in this form. Fitting `TeamModel` on a market-only E0
+  and diffing it against the `E0_recon` fit is not a repricing measurement: one round of
+  priced fixtures is 20 observations against `identifiability.free_params(20)` = 39
+  parameters, so the market arm is 19 columns short and its posterior is mostly prior.
+  Dropping `clubelo_weight` on that arm "so the market drives" amplifies the unidentified
+  directions rather than recovering signal. Forward-looking information now enters through
+  three calibrated channels instead (`market_odds`, `inseason.stack_e0`,
+  `solio_market.stack_e0`), and `oddsapi_feed` checks rank BEFORE the fit. Full reasoning in
+  `INTEGRATION_LOG.md`, 14 Sep 2026.
 - **Position-specific weight on realised starts** — pre-registered as H-POS in
   `studies/start_prior_strength.py`: goalkeepers should need realised evidence weighted more
   heavily than forwards, because a forward left out of two is rotation while a keeper left out

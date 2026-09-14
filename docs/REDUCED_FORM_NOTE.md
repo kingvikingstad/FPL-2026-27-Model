@@ -157,11 +157,15 @@ Either outcome is worth having documented. This is a diagnostic, not a proposed 
 
 ## 10. Standing caveats to carry
 
-- Team strength is still **last-season Opta xG + ClubElo**, not live odds. Until the odds feed lands
-  (`betting_odds_ingest.py` / `ab_market_vs_recon.py`), the reduced form inherits stale-prior risk
-  on the heavy-turnover clubs (Alonso/Chelsea, Iraola/Liverpool, De Zerbi/Spurs, promoted trio). The
-  reduced form is *more* exposed to this than the component model, because team strength does
-  proportionally more of its work.
+- Team strength is **no longer only last-season Opta xG + ClubElo** [UPDATED 2026-09-14].
+  `market_odds.py` blends the 26/27 outright market into the ClubElo path (on, weight 0.6),
+  `inseason.stack_e0` stacks realised 26/27 xG at fitted weights (on by default), and
+  `solio_market.stack_e0` stacks per-fixture market lambda (off, `SOLIO_MARKET=on`). Residual
+  stale-prior risk on the heavy-turnover clubs (Alonso/Chelsea, Iraola/Liverpool, De Zerbi/Spurs,
+  promoted trio) is therefore smaller than this note originally assumed, but not zero, and the
+  reduced form remains *more* exposed to it than the component model because team strength does
+  proportionally more of its work. `ab_market_vs_recon.py`, cited here as the pending check, was
+  deleted 2026-09-14 - see `INTEGRATION_LOG.md`.
 - A single round of priced fixtures is under-identified (~20 λ for ~40 att/dfn params). Any
   market-driven fit needs multi-GW stacking.
 - Rotation multipliers and mean-reversion remain tested-null. Do not reintroduce them here.

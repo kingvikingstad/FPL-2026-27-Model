@@ -90,6 +90,82 @@ default view, from the construct that answers it. The selftest asserts the strin
 appears nowhere in the rendered page, so it cannot come back by accident.
 
 Profile axes are also filtered by availability now: an axis whose column the board does not
+## The market-vs-recon A/B was fitting the design the rank guard refuses, 14 Sep 2026
+
+**`src/ab_market_vs_recon.py` deleted.** It could not run on this machine, and routing its
+paths through `config` would only have moved the failure later. Recorded here because the
+removal is the deliverable.
+
+**What it did.** Fitted `TeamModel` twice - once on `E0_recon`, once on a market-implied
+`E0_market` from `betting_odds_ingest` - and reported per-team `d_att` / `d_dfn` plus a
+clean-sheet recheck on two fixtures (Chelsea GW8 vs Spurs, Everton GW4 at Spurs), to close
+the loop on the pre-season stale-Spurs-prior finding.
+
+**Why it goes, in order of weight.**
+
+1. **It could not tell a rank-deficient fit from an identified one, and its defaults
+   assumed the rank-deficient case.** `--market` took any CSV. Fed the market-only E0 that
+   `INTEGRATION.md` told you to build (`betting_odds_ingest --out E0_market.csv`), fit B is
+   one round: 20 observations against `identifiability.free_params(20)` = **39** free
+   parameters, 19 columns short. `oddsapi_feed.py` exists partly to refuse exactly that
+   ("refuses to emit a market-ONLY E0 until the accumulated fixture set has full column
+   rank... fitting on it yields plausible-looking numbers that are almost entirely prior,
+   not market"). Fed a blended E0 instead, fit B is identified but is mostly `E0_recon`
+   rows — so the diff against fit A is dominated by the replication ratio, not by the
+   market. **The tool ran the same code path either way and never called `rank_report`.**
+   Worse, its default `--clubelo-market 0.20` against `--clubelo-recon 0.45` *halves the
+   shrinkage on fit B* on the theory that a lower prior weight lets the market drive. With
+   the design 19 columns short that is backwards: weakening the prior does not recover
+   market information, it lets the unidentified directions move. The headline `d_att` was
+   not a repricing estimate under either input.
+2. **The reported difference confounded two changes.** Even granting the design, fit A and
+   fit B differed in both the E0 *and* `clubelo_weight`. Nothing in the output said so, and
+   the two cannot be separated because the weight gap is there precisely to compensate for
+   the thin E0.
+3. **It was blind to the selection problem its successor refuses on.** `solio_market.stack_e0`
+   raises on incomplete coverage, because the source lists are top-10 truncations ranked by
+   clean-sheet and attacking output - a censored sample, selected on the dependent variable.
+   `ab_market_vs_recon` accepted any E0 and silently diffed whatever teams survived the
+   `set(aA) & set(bA)` intersection.
+4. **The question is now a calibrated channel, not a one-off A/B.** `market_odds.py`
+   (outright market into ClubElo, on at 0.6), `inseason.stack_e0` (realised 26/27 xG, on by
+   default at weights fitted in `studies/inseason_weight.py`), and `solio_market.stack_e0`
+   (per-fixture market lambda, gated) all answer "does forward-looking information reprice
+   att/dfn" on every run, with weights that were fitted rather than asserted.
+5. **Its two hardcoded fixtures are spent.** `CS_RECHECK` is GW4 Everton-at-Spurs and GW8
+   Chelsea-vs-Spurs. The GW4 deadline passed on 12 Sep (the board was locked 7 Sep,
+   `predictions/gw4_board_locked_2026-09-07_early.csv`; GW1-3 are in the scoring ledger and
+   GW4 is not yet), so that half is no longer a forward-looking recheck at all. A tool whose
+   headline is two hand-picked fixtures chosen pre-season, one of them now behind us, is a
+   pre-season artifact.
+6. Mechanically: it was a runner living in `src/`, it built `REPO` from a Linux literal, it
+   defaulted its inputs to `/tmp/` and wrote to `/mnt/user-data/outputs/`, and its output
+   `ab_team_strength.csv` was never a `manifest.py` node - so `doctor` could not have told
+   anyone it was stale.
+
+**Not replaced.** Nothing else diffs two fits' team strength, and nothing needs to: the
+question it asked is answered before the fit now (coverage + rank report) rather than after
+it (a diff of two posteriors). `ab_team_strength.csv` is consequently NOT added to the
+manifest and NOT re-homed to `outputs/plans/`; there is no producer left.
+
+**Kept, and fixed while adjacent.** `betting_odds_ingest.py` and `oddsapi_feed.py` stay -
+they are the de-vig/inversion and the fetch+rank-guard, both still the right tools. Their
+`--out` defaults were the same `/tmp/` violation and now resolve through `config.SCRATCH`.
+`oddsapi_feed --recon` deliberately still defaults to `None`, because `None` means
+"market-only" and triggers the rank refusal; that is a guard, not a path bug.
+
+**Correcting the record on the home term.** A note carried into this task said the other
+five inline home-term sites were routed through `bayes_model._home_effect` on 12 Sep, and
+that `ab_market_vs_recon` was the deliberate exception. **That did not happen.** There is no
+12 Sep commit and no 12 Sep entry; `docs/TRAVEL_DISTANCE_2026-09-10.md` ("Not wired, and
+pre-dating this change") still describes the routing as an open separate task. As of today
+the inline sites are `scripts/cs_fixtures.py:36`, `scripts/gw_board.py:496` (`xga27`),
+`scripts/run_final_board.py:70`, `src/captaincy.py:65` and `tests/test_defcon_env.py:45`.
+Deleting `ab_market_vs_recon` removes a sixth and changes nothing about the other five,
+which are the ones that matter: with `FPL_TRAVEL` on by default they ignore the travel term
+and the GW1-3 home discount, so the CS fixture ranking and the captaincy tail metrics can
+disagree with the board. **That remains open and is unaffected by this entry.**
+
 ## Travel distance: one real effect, one null, shipped off then switched on, 10-11 Sep 2026
 Pre-registered study `studies/travel_distance.py`, outcome-blind design pass first. 31
 seasons, team-season attack+defence FE, SEs clustered on the club pair.

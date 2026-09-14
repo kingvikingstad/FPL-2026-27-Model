@@ -29,14 +29,20 @@ Four things:
 Usage (networked box):
     export ODDS_API_KEY=...
     python oddsapi_feed.py --fetch                       # 4 credits, archives snapshot
-    python oddsapi_feed.py --build --recon /tmp/E0_recon.csv --out /tmp/E0_blend.csv
-    python ab_market_vs_recon.py --recon /tmp/E0_recon.csv --market /tmp/E0_blend.csv
+    python oddsapi_feed.py --build --recon <E0_recon.csv>   # -> SCRATCH/E0_blend.csv
+
+Pass `--recon` and you get the BLENDED E0 (market rows replicated onto E0_recon, which
+carries the identification). Omit it and (3) refuses unless the accumulated fixture set
+has full rank — a market-ONLY E0 is the underidentified design, not a stricter one.
+`ab_market_vs_recon.py` fitted that refused design and diffed it against E0_recon at a
+LOWER clubelo_weight; it was deleted on 2026-09-14. See docs/INTEGRATION_LOG.md.
 
 Offline wiring check (no network, no key):
     python oddsapi_feed.py --selftest
 """
 from __future__ import annotations
 import argparse, glob, json, os, sys, time
+import config
 import numpy as np
 import pandas as pd
 
@@ -272,7 +278,7 @@ if __name__ == "__main__":
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--payload", help="a saved Odds API JSON, instead of the cache")
     ap.add_argument("--recon", default=None, help="E0_recon.csv to stack onto")
-    ap.add_argument("--out", default="/tmp/E0_blend.csv")
+    ap.add_argument("--out", default=os.path.join(config.SCRATCH, "E0_blend.csv"))
     ap.add_argument("--market-share", type=float, default=0.35)
     ap.add_argument("--consensus", default="avg", choices=["avg", "max", "b365"])
     ap.add_argument("--method", default="shin", choices=["multiplicative", "shin"])
