@@ -104,8 +104,9 @@ refuses. What was missing was not a signal, it was the comparison.
   newly stored price makes `doctor` report it — and the explorer — STALE. It fires only on
   a genuinely new price: both fetchers dedupe, Solio on `generatedAt`, the books on
   content.
-- Not scheduled: the books fetch runs by hand. Putting it on the existing 4-hourly task
-  edits a standing scheduled job, so it is left as `SOLIO_MARKET_FEED` §9 item 4.
+- ~~Not scheduled~~ — **scheduled 2026-09-16** on the owner's decision: the books fetch
+  runs after the Solio fetch on the existing 4-hourly task, independently of it, and the
+  task exits non-zero if either fails (`SOLIO_MARKET_FEED` §9 item 4).
 
 ## Season-to-date facts labelled, and points-per-£m retired, 7 Sep 2026
 Two changes to the explorer's Players tab, both about the same failure: a table that puts

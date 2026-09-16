@@ -179,7 +179,8 @@ side is the part that was never available.
   `predictions/`, so the column stays usable when the week is scored.
 - **Second source.** `football-data.co.uk/fixtures.csv` — free, no key — de-vigged and
   Poisson-inverted through `betting_odds_ingest`, stored under `data/odds_snapshots`
-  (`python src/fixture_market.py --fetch`). It fills fixtures Solio did not price, PER
+  (`python src/fixture_market.py --fetch`, on the 4-hourly task since 2026-09-16). It
+  fills fixtures Solio did not price, PER
   FIXTURE rather than per gameweek, and where both priced one it is the only check that
   Solio still tracks the market: **λ MAE 0.032 on GW4's ten fixtures** (§PROJECT_KNOWLEDGE
   §5). Precedence is Solio first, for the three reasons in §2.
@@ -218,12 +219,16 @@ side is the part that was never available.
    predict residual model error at GW t+1, conditional on appearance?*
 3. **`W_FIXTURE` needs a sweep**, against held-out gameweeks, jointly with
    `MARKET_WEIGHT` — the two are substitutes, not complements.
-4. **The books snapshot is not scheduled.** `data/odds_snapshots` fills only when
-   `python src/fixture_market.py --fetch` is run by hand, and football-data's
-   `fixtures.csv` rolls a few days ahead and then drops the fixture — an unfetched day is
-   a price gone for good, exactly as for Solio. Adding the call to
-   `scripts/fetch_solio_snapshot.cmd` puts it on the existing 4-hourly task; that edits a
-   standing scheduled job, so it is left for a deliberate decision rather than done here.
+4. ~~**The books snapshot is not scheduled.**~~ **Resolved 2026-09-16, on the owner's
+   decision.** `scripts/fetch_solio_snapshot.cmd` now runs `fixture_market.py --fetch`
+   after the Solio fetch, on the same 4-hourly "FPL Solio Snapshot" task. It runs
+   whatever Solio did, so one source failing does not cost the other its observation,
+   and the task exits non-zero if EITHER failed — Task Scheduler's Last Result cannot
+   hide a dead books feed behind a healthy Solio one. Verified by triggering the task
+   (Last Result 0) and by a copy of the launcher logging both steps. football-data's
+   file rolls only a few days ahead: on a Wednesday before a Saturday gameweek it lists
+   no Premier League fixtures, so expect "0 E0 fixture(s)" early in the week — that is
+   not a failure.
 5. **The cross-source check is n=1 snapshot.** λ MAE 0.032 on GW4 says Solio and the book
    consensus agree today. Whether that holds, and whether the two diverge in a direction
-   that predicts anything, needs the series item 4 would accumulate.
+   that predicts anything, needs the series item 4 now accumulates.

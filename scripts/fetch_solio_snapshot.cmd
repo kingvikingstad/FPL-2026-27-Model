@@ -1,6 +1,7 @@
 @echo off
 REM ---------------------------------------------------------------------------
-REM fetch_solio_snapshot.cmd - store one Solio feed snapshot. No model change.
+REM fetch_solio_snapshot.cmd - store one Solio feed snapshot, and one bookmaker
+REM odds snapshot (football-data.co.uk, added 2026-09-16). No model change.
 REM
 REM Registered with Windows Task Scheduler to run every 4 hours, matching the
 REM feed's refresh cadence. The Solio endpoint publishes `latest` only and keeps
@@ -39,4 +40,19 @@ cd /d "%REPO%\src" || (
 "%PY%" solio_market.py --fetch >>"%LOG%" 2>&1
 set "RC=%ERRORLEVEL%"
 if not "%RC%"=="0" >>"%LOG%" echo [%DATE% %TIME%] ERROR exit %RC%
-exit /b %RC%
+
+REM Bookmaker odds, the second source for per-fixture market lambda
+REM (src/fixture_market.py). football-data.co.uk's fixtures.csv rolls a few days
+REM ahead and then drops a fixture, so an unfetched day is a price lost for good,
+REM exactly as for Solio. fetch_books() dedupes on content, so a poll that finds
+REM nothing new stores nothing. Run whatever Solio did: one source failing must
+REM not cost the other its observation. The task's exit code is non-zero if
+REM EITHER failed, so Task Scheduler's Last Result cannot hide a dead books feed
+REM behind a healthy Solio one.
+>>"%LOG%" echo [%DATE% %TIME%] fetch books
+"%PY%" fixture_market.py --fetch >>"%LOG%" 2>&1
+set "RC_BOOKS=%ERRORLEVEL%"
+if not "%RC_BOOKS%"=="0" >>"%LOG%" echo [%DATE% %TIME%] ERROR books exit %RC_BOOKS%
+
+if not "%RC%"=="0" exit /b %RC%
+exit /b %RC_BOOKS%
