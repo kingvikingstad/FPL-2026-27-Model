@@ -131,6 +131,15 @@ _NODES = [
          note="transfermarkt transcription; caveat in studies/late_form_carryover.py"),
     Node("solio_cache.md", config.SOLIO_CACHE, "committed",
          note="market feed cache; data/solio_snapshots are NOT regenerable"),
+    # The two market snapshot STORES, registered 2026-09-11 when `fixture_market` began
+    # reading them into the per-fixture table. Directories: their mtime moves when a
+    # snapshot is added (both writers dedupe, so only on a genuinely new price), which
+    # is exactly when the market column in team_projections goes out of date. Written
+    # by the scheduled fetch, not by a pipeline step — so committed, never built.
+    Node("solio_snapshots/", config.SOLIO_SNAPSHOTS, "committed",
+         note="Solio JSON, every 4h by the 'FPL Solio Snapshot' task; NOT regenerable"),
+    Node("odds_snapshots/", config.ODDS_SNAPSHOTS, "committed",
+         note="football-data E0 odds; `python src/fixture_market.py --fetch`; NOT regenerable"),
 
     # --- derived: reconstructed inputs --------------------------------------
     Node("E0_recon.csv", config.E0_RECON, "derived", producer="scripts/reconstruct_e0.py",

@@ -22,7 +22,12 @@ Two tables:
 
   team_projections_gw.csv       one row per team-gameweek — opponent, venue, the
     posterior lambda for and against with credible intervals, and the derived match
-    outcome distribution (win/draw/loss, clean sheet, both-teams-to-score).
+    outcome distribution (win/draw/loss, clean sheet, both-teams-to-score). Plus the
+    MARKET's lambda for the same fixture wherever a stored market priced it
+    (`mkt_*`, from `fixture_market`: Solio first, de-vigged book odds second, the last
+    price before that gameweek's deadline). Display only — it never reaches TeamModel,
+    which already sees the outright market through MARKET_WEIGHT. `mkt_p_clean_sheet`
+    is plug-in, so set it against `p_clean_sheet_plugin`, not `p_clean_sheet`.
 
 PROBABILITIES ARE POSTERIOR-PREDICTIVE, NOT PLUG-IN
 ---------------------------------------------------
@@ -46,6 +51,7 @@ Env:  GW_HI (10), DRAWS (3000), MARKET_ODDS=off, MARKET_WEIGHT (0.6)
 import warnings; warnings.filterwarnings("ignore")
 import numpy as np, pandas as pd
 import core_insights as ci, bayes_model
+import fixture_market
 import market_odds as mo
 import press_index as px
 from bayes_model import TeamModel
@@ -82,7 +88,7 @@ def odds_provenance():
 
 
 def build():
-    _d26, t26, _ = ci.load(base=config.repo("2026-2027"))
+    _d26, t26, gws = ci.load(base=config.repo("2026-2027"))
     elo_base = ci.to_elo_frame(t26)
     pclub = ci.promoted_prior_from_elo(t26)["per_club"]
 
@@ -149,6 +155,19 @@ def build():
         })
     G = pd.DataFrame(rows)
     G["exp_league_pts"] = 3 * G["p_win"] + G["p_draw"]
+
+    # The market's lambda beside the model's, wherever a stored market priced the
+    # fixture. An annotation, so a broken snapshot store degrades to empty columns and
+    # says so, rather than taking the team layer (and the explorer behind it) down.
+    try:
+        G, mrep = fixture_market.attach(G, deadlines=fixture_market.deadlines(gws))
+        for ln in fixture_market.describe(mrep):
+            print(f"[team] {ln}")
+    except Exception as e:                                    # noqa: BLE001
+        for c in fixture_market.MKT_COLS:
+            G[c] = np.nan
+        print(f"[team] !! market lambda UNAVAILABLE ({type(e).__name__}: {e}); "
+              f"mkt_* columns written empty")
 
     # ---------- per team, season layer ----------
     strength = pd.DataFrame({
@@ -221,6 +240,21 @@ def main():
     print(f"[team] wrote {len(G)} team-gameweeks -> {OUT_GW}")
     print(f"[team] Jensen gap on P(CS): mean +{jens.mean():.4f}, max +{jens.max():.4f} "
           f"(plug-in understates clean sheets)")
+
+    # Model vs market, UPCOMING gameweeks only. For a played week the market column is the
+    # pre-deadline price but the model column is today's posterior, which with INSEASON=on
+    # has already absorbed that match — comparing them would flatter the model.
+    now = pd.Timestamp.now(tz="UTC")
+    dl = fixture_market.feed_deadlines()
+    m = G[G["mkt_lam_for"].notna() & G["gw"].map(lambda g: dl.get(int(g), now) >= now)]
+    if len(m):
+        d_for = m["lam_for"] - m["mkt_lam_for"]
+        d_cs = m["p_clean_sheet_plugin"] - m["mkt_p_clean_sheet"]
+        print(f"[team] model vs market, {len(m)} upcoming team-fixtures "
+              f"(GW{','.join(str(g) for g in sorted(m['gw'].unique()))}): "
+              f"lambda MAE {d_for.abs().mean():.3f}, bias {d_for.mean():+.3f}; "
+              f"plug-in P(CS) MAE {d_cs.abs().mean():.3f}, bias {d_cs.mean():+.3f} "
+              f"(model - market)")
 
     print("\n" + "=" * 104)
     print(f"TEAM LAYER — betting-odds provenance and fitted strength (GW1-{GW_HI})")

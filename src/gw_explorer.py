@@ -234,8 +234,19 @@ def team_layer(gw_hi, outputs=None):
                 best = (n, fn)
     if best:
         t = pd.read_csv(os.path.join(outputs, best[1]))
+        # mkt_* is the market's lambda for the same fixture (fixture_market), present
+        # only where a stored market priced it. Carried for the fixtures tooltip; it is
+        # not a player metric, so it never reaches METRICS or the long CSV.
+        # `p_clean_sheet_plugin` and the lambda bands exist ONLY to make the market
+        # comparison honest: the market's P(CS) is plug-in, so it is shown against the
+        # model's plug-in figure, not against the posterior-predictive one; and the
+        # model's own 90% band is the scale that says whether a lambda gap is large.
         keep = [c for c in ("team", "gw", "lam_for", "lam_against", "p_clean_sheet",
-                            "p_win") if c in t.columns]
+                            "p_win", "p_clean_sheet_plugin",
+                            "lam_for_p5", "lam_for_p95", "lam_against_p5",
+                            "lam_against_p95", "mkt_lam_for", "mkt_lam_against",
+                            "mkt_p_clean_sheet", "mkt_source", "mkt_as_of")
+                if c in t.columns]
         per_gw = t[keep].copy()
         per_gw.attrs["source"] = best[1]
 
@@ -974,15 +985,24 @@ def _team_gw(df, gws):
     fixtures tab and the players tab can never show a different opponent for a week.
 
     `opp_defcon_fx` is emitted as `opp_defcon` — the view has no notion of the
-    blanked/unblanked split, which exists only to keep the player CSV honest."""
+    blanked/unblanked split, which exists only to keep the player CSV honest.
+
+    `mkt_src` is the market column's provenance as one label ("solio 2026-09-11T20:18Z"),
+    null wherever no market priced the fixture."""
     cols = [c for c in ("lam_for", "lam_against", "p_clean_sheet", "p_win",
-                        "opp_defcon_fx") if c in df.columns]
+                        "opp_defcon_fx", "p_clean_sheet_plugin", "lam_for_p5",
+                        "lam_for_p95", "lam_against_p5", "lam_against_p95",
+                        "mkt_lam_for", "mkt_lam_against",
+                        "mkt_p_clean_sheet") if c in df.columns]
+    has_src = "mkt_source" in df.columns
     fx = df.drop_duplicates(["team", "gw"]).set_index(["team", "gw"])
     out = {}
     for t in sorted(df["team"].dropna().unique()):
         row = {"opp": [], "h": [], "played": []}
         for c in cols:
             row[c] = []
+        if has_src:
+            row["mkt_src"] = []
         for g in gws:
             if (t, g) in fx.index:
                 r = fx.loc[(t, g)]
@@ -992,10 +1012,16 @@ def _team_gw(df, gws):
                 for c in cols:
                     v = r.get(c)
                     row[c].append(None if pd.isna(v) else round(float(v), 4))
+                if has_src:
+                    s, a = r.get("mkt_source"), r.get("mkt_as_of")
+                    row["mkt_src"].append(None if pd.isna(s) else
+                                          f"{s} {'' if pd.isna(a) else a}".strip())
             else:
                 row["opp"].append(None); row["h"].append(None); row["played"].append(0)
                 for c in cols:
                     row[c].append(None)
+                if has_src:
+                    row["mkt_src"].append(None)
         if "opp_defcon_fx" in row:
             row["opp_defcon"] = row.pop("opp_defcon_fx")
         out[str(t)] = row
@@ -1206,6 +1232,18 @@ def build(board_path=None, out_html=None, out_csv=None, verbose=True):
             f"GW_HI={gw_hi} python scripts/export_team_projections.py adds them.")
     else:
         notes.append(f"Per-fixture lambdas joined from {per_gw.attrs.get('source')}.")
+        if "mkt_lam_for" in per_gw.columns:
+            mk = per_gw[per_gw["mkt_lam_for"].notna()]
+            notes.append(
+                ("Market lambda (hover a fixture) for GW"
+                 + ", ".join(str(int(g)) for g in sorted(mk["gw"].unique()))
+                 + " from " + "+".join(sorted(set(mk["mkt_source"].dropna())))
+                 + "; the last price before each deadline. Beside the model, never in it. "
+                   "Compare lambdas: the market's P(clean sheet) is plug-in, and the "
+                   "model's is posterior-predictive, which sits higher for the same "
+                   "lambda by construction.")
+                if len(mk) else
+                "No stored market prices any fixture in this window.")
     if per_club is None:
         notes.append("No fitted club-strength export found; the opponent attack/defence "
                      "columns are absent from this build.")

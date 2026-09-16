@@ -160,7 +160,49 @@ python src/solio_market.py --movement
 MARKET_ODDS=off SOLIO_MARKET=on python scripts/gw_board.py
 ```
 
-## 8. Open
+## 8. Per-fixture market column — added 2026-09-11 (`src/fixture_market.py`)
+
+The λ pair above was, until now, parsed and thrown away unless the off-by-default E0
+re-anchor was switched on. It is now carried as an **annotation on the per-fixture
+table**: `team_projections_gw1_38.csv` gains `mkt_lam_for`, `mkt_lam_against`,
+`mkt_p_clean_sheet`, `mkt_source`, `mkt_as_of`, and the explorer's fixture tooltip shows
+them beside the model's with the signed gap.
+
+This is **display only and changes no projection**. §6.1 still holds: the market is
+already in the team layer through `MARKET_WEIGHT=0.6`, so feeding per-fixture λ into
+`TeamModel` would count it twice, and `stack_e0` still refuses. Reading the two side by
+side is the part that was never available.
+
+- **Which observation.** The last price at or before that gameweek's deadline
+  (`deadlineIso`, falling back to `gameweek_summaries.deadline_time` looked up by id —
+  that file is not sorted). For a played week that is the same information cut as
+  `predictions/`, so the column stays usable when the week is scored.
+- **Second source.** `football-data.co.uk/fixtures.csv` — free, no key — de-vigged and
+  Poisson-inverted through `betting_odds_ingest`, stored under `data/odds_snapshots`
+  (`python src/fixture_market.py --fetch`). It fills fixtures Solio did not price, PER
+  FIXTURE rather than per gameweek, and where both priced one it is the only check that
+  Solio still tracks the market: **λ MAE 0.032 on GW4's ten fixtures** (§PROJECT_KNOWLEDGE
+  §5). Precedence is Solio first, for the three reasons in §2.
+- **Double gameweeks are refused, not averaged.** A Solio record listing two fixtures
+  carries one λ pair for both, and whether that is a sum or a mean is undocumented, so
+  `fixture_lambdas` drops it and reports `ambiguous`. The opposing single-fixture record
+  still recovers the match.
+- **Clean sheets.** `mkt_p_clean_sheet` is exp(−λ_against) for every source — one
+  definition, and within 0.003 of Solio's own `csProb` on every stored snapshot. Compare
+  it with `p_clean_sheet_plugin`, never with `p_clean_sheet`. The explorer enforces that
+  rather than trusting the reader to remember it: the tooltip pairs the market's figure
+  with the model's PLUG-IN one and says so, because the two definitions round to the same
+  2dp in 8 of 60 priced cells and that coincidence reads as agreement (`ux-reviewer`,
+  2026-09-12).
+- **Is a gap large?** The tooltip marks the market's λ inside or outside the model's own
+  90% band for that fixture (`lam_for_p5`/`p95`, already exported). A signed difference
+  with no scale invites treating any gap as signal.
+- **Staleness.** `data/solio_snapshots` and `data/odds_snapshots` are manifest nodes and
+  inputs to the per-fixture table, so a newly stored price makes `doctor` report the table
+  (and the explorer behind it) STALE. That is the intended signal, and it fires only when
+  a genuinely new price arrives — both fetchers dedupe.
+
+## 9. Open
 
 1. **[CHECK] Polling at the feed's own period is marginal.** We poll every 4h; Solio
    publishes every 4h. Each published version survives ~4h, so an on-cadence poll does
@@ -176,3 +218,12 @@ MARKET_ODDS=off SOLIO_MARKET=on python scripts/gw_board.py
    predict residual model error at GW t+1, conditional on appearance?*
 3. **`W_FIXTURE` needs a sweep**, against held-out gameweeks, jointly with
    `MARKET_WEIGHT` — the two are substitutes, not complements.
+4. **The books snapshot is not scheduled.** `data/odds_snapshots` fills only when
+   `python src/fixture_market.py --fetch` is run by hand, and football-data's
+   `fixtures.csv` rolls a few days ahead and then drops the fixture — an unfetched day is
+   a price gone for good, exactly as for Solio. Adding the call to
+   `scripts/fetch_solio_snapshot.cmd` puts it on the existing 4-hourly task; that edits a
+   standing scheduled job, so it is left for a deliberate decision rather than done here.
+5. **The cross-source check is n=1 snapshot.** λ MAE 0.032 on GW4 says Solio and the book
+   consensus agree today. Whether that holds, and whether the two diverge in a direction
+   that predicts anything, needs the series item 4 would accumulate.

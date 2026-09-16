@@ -49,6 +49,64 @@ empirical result for each. Companion to `PROJECT_KNOWLEDGE_2627.md`.
   clean-sheet expected points, making DefCon auditable/A-B-able (§4.1a of the DefCon handoff).
 - **Solio name collision** — alignment made team-aware (name+team).
 
+## The market's lambda, per fixture, beside the model's, 11 Sep 2026
+`src/fixture_market.py` — the per-fixture table now carries what the market says about
+the same fixture (`mkt_lam_for`, `mkt_lam_against`, `mkt_p_clean_sheet`, `mkt_source`,
+`mkt_as_of`), and the explorer's fixture tooltip shows it with the signed model − market
+gap. **Nothing enters `TeamModel`**: the market is already in the team layer at
+`MARKET_WEIGHT=0.6`, so an E0 re-anchor would count it twice and `stack_e0` still
+refuses. What was missing was not a signal, it was the comparison.
+- **Two sources, precedence per FIXTURE.** Solio's λ pair first (no de-vig or inversion
+  choice on our side — `SOLIO_MARKET_FEED` §2); football-data.co.uk's market-average 1X2 +
+  O/U 2.5, Shin de-vigged, second. Free, no key, stored in `data/odds_snapshots` by
+  `python src/fixture_market.py --fetch`. A fixture Solio missed is filled by the books
+  rather than left empty because its neighbours were priced.
+- **Which price: the last one at or before that gameweek's deadline.** For a played week
+  that is the same information cut as `predictions/`, so the column stays honest when the
+  week is scored. Deadlines come from the payload's own `deadlineIso`, else from
+  `gameweek_summaries` **by id** — that feed is not sorted.
+- **Cross-source check, and it is the only one there can be.** Solio is Solio's estimate
+  of the market, not the market. Against the independent de-vig on GW4's ten fixtures:
+  **λ MAE 0.032, bias +0.011, max |Δ| 0.069**, the two observed 0.3h apart. [VERIFIED] on
+  one book snapshot.
+  The same statistic read **0.055** the next morning on *no new book price at all* — the
+  Solio side had moved 13h. So the report carries the median observation gap beside the
+  MAE: part of any cross-source difference is movement, not disagreement, and without the
+  gap the number silently mixes the two.
+- **Solio's `csProb` is plug-in exp(−λ)** to within 0.003 on all 22 stored snapshots
+  [VERIFIED], so `mkt_p_clean_sheet` uses that one definition for every source. Set
+  against the engine's posterior-predictive `p_clean_sheet` it would read the Jensen gap
+  (mean +0.018) as a disagreement.
+- **The tooltip's first draft walked into exactly that trap, and `ux-reviewer` caught it.**
+  Printing the market's plug-in P(CS) beside the model's posterior-predictive one made the
+  two round to the **same 2dp in 8 of 60 priced cells** — including Arsenal at Sunderland,
+  where a real λ disagreement (0.72 vs 0.69 against) and the +0.011 Jensen bump cancelled
+  and the pair read as the market confirming the model. Fixed by showing the market's
+  figure only against the model's **plug-in** P(CS), on its own line that names what the
+  headline number above it is. The signed λ gap now also carries the model's own 90% band
+  for that fixture — inside/outside is the scale that says whether a gap exceeds the
+  model's uncertainty, and it needed no new machinery: `lam_for_p5`/`p95` were already in
+  the export.
+- **Model vs market, GW4:** λ MAE 0.121, bias −0.010, plug-in P(CS) MAE 0.026 against
+  Solio's 11 Sep 20:18Z price; 0.107 / −0.029 / 0.023 against its 12 Sep 10:51Z one, the
+  last before the deadline. Quote the price with the statistic — the market moved more
+  between those two snapshots than the two statistics differ. Printed for UPCOMING weeks
+  only: on a played one the model column is today's posterior, which with `INSEASON=on`
+  has already absorbed that match, so the comparison would flatter the model. The largest
+  single gap at the earlier price, Arsenal at Sunderland (model λ 1.52 vs market 1.81),
+  had closed to −0.19 and back inside the model's 90% band by the deadline.
+- **Double gameweeks refused, not averaged.** A Solio record listing two fixtures carries
+  one λ pair for both; whether that is a sum or a mean is undocumented, so
+  `fixture_lambdas` drops it and reports `ambiguous` (the opponent's single-fixture record
+  still recovers the match). This also tightens the off-by-default E0 path, which would
+  previously have written that λ to both fixtures.
+- **Both snapshot stores are manifest nodes** and inputs to the per-fixture table, so a
+  newly stored price makes `doctor` report it — and the explorer — STALE. It fires only on
+  a genuinely new price: both fetchers dedupe, Solio on `generatedAt`, the books on
+  content.
+- Not scheduled: the books fetch runs by hand. Putting it on the existing 4-hourly task
+  edits a standing scheduled job, so it is left as `SOLIO_MARKET_FEED` §9 item 4.
+
 ## Season-to-date facts labelled, and points-per-£m retired, 7 Sep 2026
 Two changes to the explorer's Players tab, both about the same failure: a table that puts
 an exact fact and a modelled quantity side by side, unlabelled, invites reading one as the

@@ -248,6 +248,24 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
   player_code keying matched 41 incumbents (was 2 under a player_id bug); **market agreement** —
   boosted incumbents avg 6.9% own vs cut 1.7% (moves in the direction the market confirms).
 - **Team CS engine:** GA r=0.89, CS% r=0.93 vs Solio, bias ≈ 0.
+- **Solio tracks an independent de-vig (2026-09-11):** Solio's per-fixture λ against
+  football-data.co.uk market-average 1X2 + O/U 2.5, Shin de-vigged and Poisson-inverted —
+  all 10 GW4 fixtures, **λ MAE 0.032, bias +0.011 (Solio − books), max |Δ| 0.069**,
+  observed 0.3h apart. [VERIFIED] as arithmetic on one book snapshot; it says Solio's
+  estimate of the market is not drifting from the market, and nothing about either being
+  right. **Read it only with the observation gap** — the same statistic was 0.055 at a
+  12.9h gap with no new book price, so the gap is movement, not disagreement.
+  `fixture_market`.
+- **Solio `csProb` is plug-in, not posterior-predictive (2026-09-11):** |csProb −
+  exp(−prGoalsAgainst)| ≤ 0.003 on all 22 stored snapshots [VERIFIED]. So the market's
+  clean-sheet figure belongs beside `p_clean_sheet_plugin`; set against the engine's
+  posterior-predictive `p_clean_sheet` it reads the Jensen gap (mean +0.018) as a
+  disagreement.
+- **Model vs market, GW4 (Solio's 2026-09-12T10:51Z price, ~1.5h before the deadline):**
+  on the 20 upcoming team-fixtures, λ MAE 0.107, bias −0.029; plug-in P(CS) MAE 0.023,
+  bias +0.006 (the 2026-09-11T20:18Z price gave 0.121 / −0.010 / 0.026). Comparable only on
+  UNPLAYED weeks — for a played one the model column is today's posterior, which with
+  `INSEASON=on` has already absorbed that match, while the market column is pre-deadline.
 - **Projected set-piece duty (2026-08-11):** FFS 26/27 takers for all 20 clubs, resolved
   within-club (126/130; the 4 misses are players absent from the FPL squad). Overrides FPL's
   `penalties_order` by default since that is a carryover at pre-season —

@@ -39,7 +39,9 @@ src/        all importable modules (flat, so cross-imports resolve)
                 defcon_roles (CB/FB split of the DefCon prior), lineups (XI ingestion),
                 predicted_xi (projected XIs), injury_impact (an absence weakens the TEAM),
                 team_overrides, set_piece_takers, solio_ensemble (benchmark + ensemble),
-                external_projections (FFS comparator)
+                external_projections (FFS comparator),
+                fixture_market (the MARKET's lambda per fixture, beside the model's —
+                an annotation on the per-fixture table, never an input to it)
   decisions     solver (squad/XI/captain/transfers as a MILP through HiGHS),
                 player_value (value above replacement — for pruning, not for picking),
                 squad_tracker (your squad vs the model's, and the scored ledger)

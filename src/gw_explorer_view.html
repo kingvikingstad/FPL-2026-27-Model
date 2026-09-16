@@ -3084,11 +3084,47 @@ document.addEventListener("mouseover", e=>{
   const c=e.target.closest("[data-fx]"); if(!c) return;
   const [t,i]=c.dataset.fx.split("|"); const g=TGW[t]; const ix=+i;
   const num=(v,d)=>v===null||v===undefined?"—":(+v).toFixed(d===undefined?2:d);
+  const at=(k)=>g[k]?g[k][ix]:null;
+  const sgn=(a,b)=>a===null||b===null?"—":((a-b)>=0?"+":"−")+Math.abs(a-b).toFixed(2);
+  /* The market's lambda for this fixture (fixture_market): the last stored price before
+     the deadline, Solio first, book odds second. Shown beside the model, never blended
+     into it — fxRaw/fxValue, which drive the colour, the sort and every ranked view,
+     read lam_* only. Keep it that way.
+     Two things this tooltip must not do, both measured on the live build:
+       * Print the market's P(CS) next to the model's headline one. The market's is
+         plug-in exp(−λ) and the model's is posterior-predictive, ~0.018 higher for the
+         same λ, and they round to the SAME 2dp in 8 of 60 priced cells — including
+         Arsenal-Sunderland GW4, where two real disagreements cancel and the pair reads
+         as confirmation. So the market's P(CS) is shown only against the model's
+         PLUG-IN figure, on its own like-for-like line.
+       * Print a bare lambda gap with no scale. The model's own 90% band for that
+         fixture is the scale, and it is already computed — inside/outside it says
+         whether a gap is larger than the model's own uncertainty.
+     On a PLAYED week the model's number is today's posterior, which has already seen
+     the match, while the market's is pre-deadline — so the gap there flatters the model. */
+  const mf=at("mkt_lam_for"), ma=at("mkt_lam_against");
+  const band=(v,lo,hi)=> (v===null||v===undefined||lo===null||lo===undefined||hi===null||hi===undefined)
+    ? "" : (v>=lo&&v<=hi ? " (inside the model's 90% band)"
+                         : " (OUTSIDE the model's 90% band "+num(lo)+"–"+num(hi)+")");
+  const mplug=at("p_clean_sheet_plugin"), mcs=at("mkt_p_clean_sheet");
+  const mkt = mf===null||mf===undefined
+    ? "<br><span style='opacity:.7'>Market: no stored price for this fixture</span>"
+    : "<br>Market xG for "+num(mf)+" · against "+num(ma)+
+      "<br><span style='opacity:.7'>model − market: for "+sgn(at("lam_for"),mf)+
+      band(mf,at("lam_for_p5"),at("lam_for_p95"))+
+      ", against "+sgn(at("lam_against"),ma)+
+      band(ma,at("lam_against_p5"),at("lam_against_p95"))+"</span>"+
+      (mplug===null||mplug===undefined||mcs===null||mcs===undefined ? ""
+        : "<br><span style='opacity:.7'>P(clean sheet), both plug-in: model "+num(mplug)+
+          " · market "+num(mcs)+" — NOT the 'P(clean sheet)' above, which is "+
+          "posterior-predictive and runs higher for the same lambda</span>")+
+      "<br><span style='opacity:.7'>"+esc(at("mkt_src")||"")+
+      (g.played&&g.played[ix]?" · played: the model has seen this result":"")+"</span>";
   showTip("<b>"+esc(t)+" — GW"+GWS[ix]+"</b>"+
     esc((g.h[ix]?"vs ":"away to ")+g.opp[ix])+"<br>xG for "+num(g.lam_for&&g.lam_for[ix])+
     " · against "+num(g.lam_against&&g.lam_against[ix])+
     "<br>P(clean sheet) "+num(g.p_clean_sheet&&g.p_clean_sheet[ix])+
-    " · P(win) "+num(g.p_win&&g.p_win[ix])+
+    " · P(win) "+num(g.p_win&&g.p_win[ix])+mkt+
     "<br><span style='opacity:.7'>vs own average: "+num(fxValue(t,ix))+
     " · absolute: "+num(fxRaw(t,ix))+"</span>", e); });
 document.addEventListener("mouseout", e=>{ if(e.target.closest("[data-fx]")) hideTip(); });
