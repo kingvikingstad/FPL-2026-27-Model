@@ -196,6 +196,22 @@ _NODES = [
          producer="scripts/run_solio_ensemble.py",
          inputs=("gw_board_long.csv", "solio_cache.md"),
          note="model x market ensemble"),
+    # The per-fixture team export. It carries the market's lambda beside the model's
+    # (fixture_market), so a new snapshot in either store must mark it stale. The explorer
+    # reads it. Inputs are the reads export_team_projections performs.
+    Node("team_projections_gw1_38.csv", _out("team_projections_gw1_38.csv"), "derived",
+         producer="scripts/export_team_projections.py",
+         inputs=("players.csv", "playerstats.csv", "teams.csv", "team_elo_2627.csv",
+                 "gameweek_summaries.csv", "E0_recon.csv", "solio_snapshots/",
+                 "odds_snapshots/"),
+         min_rows=700,
+         # mkt_* are required PRESENT, not non-null: the market prices a gameweek or two,
+         # so most of GW1-38 is legitimately empty.
+         columns=("team", "gw", "opponent", "lam_for", "lam_against", "p_clean_sheet",
+                  "p_win", "mkt_lam_for", "mkt_lam_against", "mkt_source"),
+         nonnull=("team", "gw", "lam_for", "lam_against"),
+         note="per-fixture posterior lambdas GW1-38, plus market lambda where priced; "
+              "the explorer accepts no narrower file"),
 
     # --- derived: registered 2026-09-08 -------------------------------------
     # These three were durable, tracked in git, and invisible to the graph, so a tree

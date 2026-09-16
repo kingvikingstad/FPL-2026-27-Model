@@ -46,25 +46,32 @@ the engine does not correct it either, and introducing it in the export only wou
 make the two disagree. Flagged, not silently patched.
 
 Run:  python scripts/export_team_projections.py
-Env:  GW_HI (10), DRAWS (3000), MARKET_ODDS=off, MARKET_WEIGHT (0.6)
+Env:  GW_HI (38), DRAWS (3000), MARKET_ODDS=off, MARKET_WEIGHT (0.6)
+
+GW_HI defaults to 38, the board's horizon, since 2026-09-10. The explorer accepts only an
+export covering the board's whole window, so with the old default of 10 the file it
+actually reads (`team_projections_gw1_38.csv`) could be refreshed only by remembering an
+env var — and `doctor`'s plan, which runs the producer bare, would have rewritten the
+wrong file forever. NB the season table's window sums (`exp_pts`, `exp_cs`, `xga_env`)
+are over GW1-GW_HI, so they change meaning with it.
 """
 import warnings; warnings.filterwarnings("ignore")
 import numpy as np, pandas as pd
 import core_insights as ci, bayes_model
+import travel
 import fixture_market
 import market_odds as mo
 import press_index as px
 from bayes_model import TeamModel
 from schedule_2627 import schedule, PROMOTED
 
-GW_HI = int(_os.environ.get("GW_HI", "10"))
+GW_HI = int(_os.environ.get("GW_HI", "38"))
 S = int(_os.environ.get("DRAWS", "3000"))
 MARKET_WEIGHT = float(_os.environ.get("MARKET_WEIGHT", "0.6"))
 USE_MARKET = _os.environ.get("MARKET_ODDS") != "off"
 
 OUT_SEASON = _os.path.join(config.OUTPUTS, "team_projections_season.csv")
 OUT_GW = _os.path.join(config.OUTPUTS, f"team_projections_gw1_{GW_HI}.csv")
-import travel
 
 
 def odds_provenance():
