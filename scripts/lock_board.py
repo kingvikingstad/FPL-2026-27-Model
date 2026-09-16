@@ -7,7 +7,7 @@ lock_board.py — preserve the projection for one gameweek BEFORE its deadline.
 ==============================================================================
 `predictions/` is the only directory in this repo whose contents cannot be rebuilt. Once
 a deadline passes, the availability, ownership and team-news inputs that produced a
-projection are gone, and PROJECT_KNOWLEDGE §6.6 — score the model against real gameweeks
+projection are gone, and CLAUDE.md open item 6 — score the model against real gameweeks
 — is unanswerable for that week forever. GW2 has only a reconstruction and GW3 has
 nothing, because this was a manual step nobody performed in time. This makes it one
 command.
@@ -256,17 +256,49 @@ def rebuild_board(gw=None, verbose=True):
     return True
 
 
+def _default_team_lock(**kw):
+    import lock_team
+    return lock_team.lock_team(**kw)
+
+
+def _team_lock(team_lock, gw, out_dir, now, season, base, verbose):
+    """The TEAM lock (`scripts/lock_team.py`), taken in the same run as the board lock.
+
+    The model-vs-market study (docs/MODEL_VS_MARKET_PREREG_2026-09-16.md §10) needs the
+    model's and the market's per-fixture lambda as they stood before the deadline, and
+    the board lock never kept them — which is why GW2-GW4 are unusable. It NEVER raises:
+    by the time it runs the board lock is on disk, and a failure here must not look like
+    a failed board lock to the scheduler. It says so loudly instead, and the next
+    in-window run retries it (see `auto`).
+    """
+    try:
+        return team_lock(gw=gw, label="deadline", out_dir=out_dir, now=now, season=season,
+                         base=base, verbose=verbose)
+    except (SystemExit, Exception) as e:                          # noqa: BLE001
+        print("*" * 74)
+        print(f"[auto] TEAM LOCK FAILED for GW{gw}: {str(e)[:300]}")
+        print(f"       The board lock stands. Run `python scripts/lock_team.py --gw {gw}` "
+              f"before the deadline, or the model-vs-market study loses GW{gw}.")
+        print("*" * 74)
+        return None
+
+
 def auto(out_dir=None, season=SEASON, base=None, now=None, verbose=True,
-         board_path=None, fetch=fetch_lineups, rebuild=rebuild_board):
+         board_path=None, fetch=fetch_lineups, rebuild=rebuild_board, team_lock=None):
     """Lock the next gameweek IF its deadline is close, it is not already locked, and
     either team news exists or the deadline is inside `LAST_CHANCE_H`.
 
     Returns the path written, or None. Never raises on the quiet paths — outside the
     window, already locked, waiting for team news: a scheduler must see exit 0 on runs
     where there is nothing to do. A failed rebuild still raises, so nothing is written.
-    `fetch` and `rebuild` are injectable so the selftest never touches the network or
-    the real board.
+    `fetch`, `rebuild` and `team_lock` are injectable so the selftest never touches the
+    network, the real board or the real team model.
+
+    Straight after the board lock it writes the TEAM lock (`_team_lock`). If a board lock
+    exists but its team lock does not — a team build that failed on the locking run — a
+    later in-window run writes the team lock alone, without rebuilding the board.
     """
+    team_lock = team_lock or _default_team_lock
     out_dir = out_dir or config.PREDICTIONS
     # With the real clock, `lock` reads the clock again at write time instead of reusing
     # this one: a fetch plus a rebuild takes ~15 minutes, and a run that starts just
@@ -301,8 +333,16 @@ def auto(out_dir=None, season=SEASON, base=None, now=None, verbose=True,
               f"{DEADLINE_WINDOW_H:.0f}h window. Nothing to do.")
         return None
     if existing:
-        print(f"[auto] GW{gw} already has a deadline lock "
-              f"({_os.path.basename(existing[-1])}). Nothing to do.")
+        team = [p for p in _glob.glob(_os.path.join(out_dir,
+                                                    f"gw{gw}_team_locked_*_deadline.csv"))]
+        if team:
+            print(f"[auto] GW{gw} already has a deadline lock "
+                  f"({_os.path.basename(existing[-1])}) and its team lock. Nothing to do.")
+            return None
+        print(f"[auto] GW{gw} has a board lock ({_os.path.basename(existing[-1])}) but NO "
+              f"team lock — writing the team lock now.")
+        _team_lock(team_lock, gw, out_dir, None if live_clock else now, season, base,
+                   verbose)
         return None
     # Order matters: team news first, THEN the board, because `gw_board` folds the
     # predicted XI into the projection it is about to build. Fetching after the rebuild
@@ -326,6 +366,7 @@ def auto(out_dir=None, season=SEASON, base=None, now=None, verbose=True,
     path = lock(gw=gw, label="deadline", board_path=board_path, out_dir=out_dir,
                 season=season, base=base, now=None if live_clock else now,
                 verbose=verbose, team_news=n_xi)
+    _team_lock(team_lock, gw, out_dir, None if live_clock else now, season, base, verbose)
     if verbose:
         print(f"\n[auto] locked GW{gw} "
               + (f"WITH team news ({n_xi} source(s))" if n_xi
@@ -561,7 +602,20 @@ def selftest():
         calls.append(f"rebuild GW{gw}")
         raise SystemExit("REFUSING: the board rebuild failed")
 
-    A = dict(base=base, board_path=bp, verbose=False, rebuild=rebuilt)
+    teamed = []
+
+    def team_ok(gw=None, label=None, out_dir=None, now=None, **_):
+        teamed.append((gw, label))
+        stamp = (now or _dt.datetime.now(_dt.timezone.utc)).strftime("%Y-%m-%d")
+        p = _os.path.join(out_dir, f"gw{gw}_team_locked_{stamp}_{label}.csv")
+        open(p, "w").close()
+        return p
+
+    def team_broken(**kw):
+        teamed.append((kw.get("gw"), "broken"))
+        raise SystemExit("REFUSING: the team build lacks ['mkt_source']")
+
+    A = dict(base=base, board_path=bp, verbose=False, rebuild=rebuilt, team_lock=team_ok)
 
     def fresh(name):
         o = _os.path.join(d, name); _os.makedirs(o); calls.clear()
@@ -580,8 +634,13 @@ def selftest():
     # and it treats an existing deadline lock as done
     open(_os.path.join(out2, "gw4_board_locked_2026-09-12_deadline.csv"), "w").close()
     inside = _dt.datetime(2026, 9, 12, 6, 0, tzinfo=_dt.timezone.utc)
+    teamed.clear()
     assert auto(out_dir=out2, now=inside, fetch=news, **A) is None, (
         "auto must not overwrite an existing deadline lock")
+    # ...but a board lock without its TEAM lock gets the team lock alone, no rebuild
+    assert teamed == [(4, "deadline")], teamed
+    assert auto(out_dir=out2, now=inside, fetch=news, **A) is None
+    assert teamed == [(4, "deadline")], "a present team lock must not be retried"
     # ...including after the deadline, where it must not report a miss that did not happen
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
@@ -609,6 +668,9 @@ def selftest():
     assert _os.path.basename(p) == "gw4_board_locked_2026-09-11_deadline.csv", p
     assert calls == ["fetch", "rebuild GW4"], calls
     assert set(pd.read_csv(p)["team_news_sources"]) == {2}
+    # the team lock is taken in the same run, as the PRIMARY, after the board lock
+    assert teamed[-1] == (4, "deadline"), teamed
+    assert _os.path.exists(_os.path.join(o, "gw4_team_locked_2026-09-11_deadline.csv"))
     calls.clear()
     assert auto(out_dir=o, now=last, fetch=news, **A) is None and calls == [], (
         "once locked, later runs do nothing")
@@ -634,6 +696,14 @@ def selftest():
         except SystemExit:
             pass
         assert not _os.listdir(o), "nothing may be written over a failed rebuild"
+
+    # 5. a failed TEAM lock does not cost the board lock, does not raise, and says so
+    o = fresh("team_broken")
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        p = auto(out_dir=o, now=waiting, fetch=news, **dict(A, team_lock=team_broken))
+    assert p is not None and _os.path.exists(p), "the board lock must survive"
+    assert "TEAM LOCK FAILED" in buf.getvalue(), buf.getvalue()
 
     shutil.rmtree(d, ignore_errors=True)
     print("SELFTEST OK: picks is_next, dry run writes nothing, refuses to overwrite, "

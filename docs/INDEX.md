@@ -30,6 +30,7 @@ Everything below is the evidence behind those two.
 | Which external source contributes what, and what duplicates | `DATA_SOURCE_AUDIT_2026-08-19.md` |
 | The Solio market feed — what it actually publishes | `SOLIO_MARKET_FEED_2026-08-27.md` |
 | Where the market's lambda for a single fixture comes from, and why it is beside the model rather than in it | `SOLIO_MARKET_FEED_2026-08-27.md` §8 (`src/fixture_market.py`) |
+| Does the model's per-fixture lambda beat the market's on realised goals? What is locked each week, when the study may look, and what each answer changes | `MODEL_VS_MARKET_PREREG_2026-09-16.md` — a PRE-REGISTRATION, no results; the lock is `scripts/lock_team.py` |
 | Live odds integration | `INTEGRATION.md` |
 | Has the model ever been scored against a real gameweek? | `GW1_SCORING_2026-08-26.md`, then `GW2_REVIEW_2026-09-06.md`, then `GW3_REVIEW_2026-09-08.md`. The scored rows themselves are `predictions/scoring_ledger.csv` |
 | What happened in a specific gameweek? | `GW1_REVIEW_2026-08-26.md`, `GW2_REVIEW_2026-09-06.md`, `GW3_REVIEW_2026-09-08.md` |

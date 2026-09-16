@@ -87,7 +87,15 @@ def odds_provenance():
     })
 
 
-def build():
+def build(keep_draws_gw=None):
+    """Returns (season table, per team-gameweek table).
+
+    `keep_draws_gw`: also keep the paired posterior draws (lam_home, lam_away) for every
+    fixture of that gameweek, as `G.attrs["draws"]`. Used by `scripts/lock_team.py`, which
+    locks them before the deadline for the model-vs-market study
+    (docs/MODEL_VS_MARKET_PREREG_2026-09-16.md §10). Taken from the same loop and the
+    same samples as the table, so the locked draws cannot disagree with the locked means.
+    """
     _d26, t26, gws = ci.load(base=config.repo("2026-2027"))
     elo_base = ci.to_elo_frame(t26)
     pclub = ci.promoted_prior_from_elo(t26)["per_club"]
@@ -123,6 +131,7 @@ def build():
     _, long = schedule()
     orng = np.random.default_rng(11)     # one stream, so the table is reproducible
     rows = []
+    draws = []
     for _, r in long[long.gameweek <= GW_HI].iterrows():
         if r.team not in idx or r.opp not in idx:
             continue
@@ -132,6 +141,10 @@ def build():
         ho = bayes_model._home_effect(home, gw, not bool(r.is_home), trip)
         lf = np.exp(mu + he + A[:, idx[r.team]] - D[:, idx[r.opp]])   # (S,)
         la = np.exp(mu + ho + A[:, idx[r.opp]] - D[:, idx[r.team]])
+        if keep_draws_gw is not None and gw == int(keep_draws_gw) and bool(r.is_home):
+            draws.append(pd.DataFrame({"gw": gw, "home": r.team, "away": r.opp,
+                                       "draw": np.arange(len(lf)),
+                                       "lam_home": lf, "lam_away": la}))
         # match outcome: independent Poisson per posterior draw (engine's assumption)
         g_for = orng.poisson(lf)
         g_ag = orng.poisson(la)
@@ -227,6 +240,12 @@ def build():
         print(f"[team] DefCon opponent rating unavailable ({e}); column omitted")
 
     T = T.sort_values("att_strength", ascending=False).reset_index(drop=True)
+    if keep_draws_gw is not None:
+        G.attrs["draws"] = (pd.concat(draws, ignore_index=True) if draws
+                            else pd.DataFrame(columns=["gw", "home", "away", "draw",
+                                                       "lam_home", "lam_away"]))
+        G.attrs["draws_S"] = int(len(home))
+        G.attrs["seed"] = 7
     return T, G
 
 
