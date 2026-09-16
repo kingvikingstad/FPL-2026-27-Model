@@ -433,6 +433,45 @@ statistic had been computed; no GW4 or GW5 outcome had been joined to either for
    can join outcomes yet; it must exist, with the refusal, before the interim threshold
    I ≥ 5.55 can be reached.
 
+**2026-09-16 (later the same day) — `studies/model_vs_market.py` built. Implementation
+choices where this document left room. No outcome-joined statistic had been computed; at
+the time of writing no admissible gameweek had kicked off (the study's status run read
+I = 0, 10 pending GW5 matches, no look due).** Supersedes item 6 above.
+
+1. **"Weaker of the two classifications" (§6)** is the region of the WIDER interval.
+   Both CIs share β̂, so they are nested, and the wider one excludes a subset of what the
+   narrower excludes. The recorded region uses max(SE_match, SE_gameweek); both regions
+   are reported.
+2. **An interim that does not stop records and prints only `continue`** — look, time, I,
+   match count, gameweeks, decision. No β̂, CI or D̄ is printed or stored, so §6's "no
+   other interim reading triggers any action or any write-up" is enforced by there being
+   no reading.
+3. **Exclusions are applied per MATCH.** One inadmissible side excludes its match; the
+   first reason found is logged. Lock-level reasons (flags, timing, missing λ) apply as
+   soon as the lock exists. The finished-inside-its-gameweek test waits for the gameweek
+   to complete, and until then the match is `pending`. I sums over admissible matches
+   in COMPLETED gameweeks only.
+4. **Lock-selection ties:** two locks of the same label for one gameweek → the later
+   date.
+5. **The harness.** `test_all.py` discovers selftests only in `src/` and `scripts/`, and
+   runs each study with no arguments. So a bare run executes the §7-based selftest first
+   (β unbiased at ½: +0.010; repeated-CI coverage 0.950 over 500 synthetic seasons), then
+   the gated status, and takes a look only if one is due. `--status` never takes a look,
+   even when one is due: inspecting the gate must not be what opens it.
+6. **Manifest registration is DEFERRED (deviation from §10).** The study CSV and the
+   looks marker do not exist until the first look, and `src/manifest.py` reports a
+   missing non-derived node as MISSING. That would hold `doctor` red for months, which is
+   the permanently-red-check failure the manifest is written to avoid. Register both at
+   the first look, when they exist.
+7. **Spec epochs (secondary 8)** are keyed on the recorded flag vector plus
+   `repo_head_sha`. The diff hash is not part of the key: concurrent sessions keep the
+   tree dirty, which would make every lock its own epoch.
+8. **Secondaries fail independently.** One that is not identified on the data at hand
+   records its error; the primary never waits on a secondary.
+9. **Other routes to a peek, closed:** the `forecast-scorer` agent definition now embargoes
+   any model-vs-market team-λ comparison on outcomes. The `fpl-lock-board` scheduled task
+   is told not to run this study or any ad hoc comparison.
+
 ## 13. Contamination disclosed at registration, and its consequences
 
 - **What was seen:** model-vs-market λ gaps on unplayed weeks — GW4 MAE 0.121 then 0.107;

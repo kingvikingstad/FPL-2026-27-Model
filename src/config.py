@@ -130,6 +130,12 @@ os.makedirs(SOLIO_SNAPSHOTS, exist_ok=True)
 # source for per-fixture market lambda — see src/fixture_market.py.
 ODDS_SNAPSHOTS = os.path.join(DATA, "odds_snapshots")
 os.makedirs(ODDS_SNAPSHOTS, exist_ok=True)
+# The pre-registered model-vs-market study (docs/MODEL_VS_MARKET_PREREG_2026-09-16.md).
+# The LOOKS marker is one-way: each entry records a look that has been taken and can
+# never be taken again. The CSV is written ONLY at a look, never on a status run, so its
+# existence means outcomes have been joined.
+MODEL_VS_MARKET_LOOKS = os.path.join(ROOT, "studies", "model_vs_market_looks.json")
+MODEL_VS_MARKET_CSV = os.path.join(ROOT, "studies", "model_vs_market.csv")
 
 # --- optional legacy input (only used if present) ---
 FPL_DATA_STATS = os.environ.get("FPL_DATA_STATS") or os.path.join(DATA, "fpl-data-stats.csv")

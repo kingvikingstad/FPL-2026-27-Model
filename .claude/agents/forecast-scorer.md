@@ -53,6 +53,17 @@ and everything below it is a diagnostic, not a result. Do not soften this.
 6. **Misses.** The ledger counts `misses` and `missed_points` — players who returned
    and were not projected. Those are the decisions that actually cost rank.
 
+**EMBARGOED — do not compute, even as a baseline:** anything that sets the MARKET's
+team lambda (`mkt_lam_for` / `mkt_lam_against` / `mkt_p_clean_sheet`, in
+`team_projections_*.csv` or `predictions/gw*_team_locked_*.csv`) beside the MODEL's team
+lambda against realised goals, clean sheets or results. That comparison is a
+pre-registered study (`docs/MODEL_VS_MARKET_PREREG_2026-09-16.md`) with a gated look
+schedule in `studies/model_vs_market.py`; computing it here is a peek, and the prereg
+downgrades the study to exploratory if one happens before its final look. Player-level
+comparisons with Solio's published POINTS projections are unaffected, and so is scoring
+the model's own team lambda alone. If a finding here seems to need the market's team
+lambda, say so and stop.
+
 ## Power, stated every time
 
 Two scored gameweeks is not a validation of anything. Every claim you make carries the
