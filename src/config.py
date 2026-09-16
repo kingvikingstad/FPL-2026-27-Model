@@ -125,6 +125,11 @@ SOLIO_CACHE = os.path.join(DATA, "solio_cache.md")
 # Lives in DATA (committed) for the same reason PREDICTIONS does — see src/solio_market.py.
 SOLIO_SNAPSHOTS = os.path.join(DATA, "solio_snapshots")
 os.makedirs(SOLIO_SNAPSHOTS, exist_ok=True)
+# Timestamped bookmaker-odds snapshots (football-data.co.uk fixtures.csv, E0 rows). The
+# source is rolling and keeps no history either, so the same reasoning applies. Second
+# source for per-fixture market lambda — see src/fixture_market.py.
+ODDS_SNAPSHOTS = os.path.join(DATA, "odds_snapshots")
+os.makedirs(ODDS_SNAPSHOTS, exist_ok=True)
 
 # --- optional legacy input (only used if present) ---
 FPL_DATA_STATS = os.environ.get("FPL_DATA_STATS") or os.path.join(DATA, "fpl-data-stats.csv")

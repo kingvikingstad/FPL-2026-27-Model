@@ -190,10 +190,13 @@ def team_lambdas(payload):
             team = canon_team(r["team"])
             for f in fixtures:
                 opp = canon_team(f["opponent"])
+                # n_fx > 1 is a double gameweek: ONE lambda pair for two matches, so it is
+                # not a per-fixture lambda. Kept here (movement reads it), dropped by
+                # fixture_lambdas.
                 rec = dict(team=team, opponent=opp, is_home=bool(f["isHome"]),
                            lam_for=float(r["prGoalsFor"]),
                            lam_against=float(r["prGoalsAgainst"]),
-                           cs_prob=float(r["csProb"]), src=key)
+                           cs_prob=float(r["csProb"]), n_fx=len(fixtures), src=key)
                 k = (team, opp, rec["is_home"])
                 if k in seen:
                     prev = seen[k]
@@ -219,8 +222,18 @@ def fixture_lambdas(payload, expect_fixtures=None):
     fixture. `covered` is the count of distinct fixtures recovered; `complete` compares
     it to `expect_fixtures` when given. Read the docstring at the top of this module
     before using an incomplete set for anything.
+
+    A record listing more than one fixture (a double gameweek) carries one
+    prGoalsFor/prGoalsAgainst for both matches. Whether that is a sum, a mean or
+    something else is not documented [CHECK], so it is not a per-fixture lambda and is
+    dropped rather than assigned to each match. The fixture can still be recovered from
+    the OPPONENT's record if that is single-fixture; `ambiguous` counts what was dropped.
     """
     d = team_lambdas(payload)
+    n_amb = 0
+    if len(d):
+        n_amb = int((d["n_fx"] > 1).sum())
+        d = d[d["n_fx"] == 1]
     fx = {}
     for _, r in d.iterrows():
         home, away = (r["team"], r["opponent"]) if r["is_home"] else (r["opponent"], r["team"])
@@ -234,7 +247,7 @@ def fixture_lambdas(payload, expect_fixtures=None):
                         for (h, a), (lh, la) in sorted(fx.items())])
     teams = set(out["home"]) | set(out["away"]) if len(out) else set()
     rep = dict(gw=payload.get("gameweek"), generated_at=payload.get("generatedAt"),
-               covered=len(out), teams=len(teams),
+               covered=len(out), teams=len(teams), ambiguous=n_amb,
                expected=expect_fixtures,
                complete=(None if expect_fixtures is None else len(out) == expect_fixtures))
     return out, rep
@@ -433,6 +446,16 @@ def selftest():
     row = fx[fx["home"] == "Aston Villa"].iloc[0]
     assert abs(row["lam_home"] - 0.85) < 1e-9 and abs(row["lam_away"] - 1.90) < 1e-9
     # Villa appears in neither list yet its lambda is exact.
+
+    # --- a double-gameweek record is not a per-fixture lambda ---------------------
+    dgw = _synthetic()
+    dgw["bestCleanSheets"].append(
+        {"team": "Chelsea", "fixtures": [{"opponent": "BHA", "isHome": True},
+                                         {"opponent": "EVE", "isHome": False}],
+         "prGoalsFor": 3.60, "prGoalsAgainst": 2.10, "csProb": 0.12})
+    fx, rep = fixture_lambdas(dgw)
+    assert rep["ambiguous"] == 2 and rep["covered"] == 2, rep
+    assert "Chelsea" not in set(fx["home"]) | set(fx["away"]), fx
 
     # --- an inconsistent payload raises rather than picking a side ---------------
     bad = _synthetic()
