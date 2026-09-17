@@ -510,6 +510,19 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
    per-match composition beside `concp` and drawn from the SAME shot realisation. Then a
    board A/B, same seed, and a `stats-referee` pass — this moves the GK layer's mean AND
    its variance, and the CS engine beside it is market-validated at CS r=0.93.
+12. **DEF DefCon per-match overdispersion — OFF BY DEFAULT, awaiting 26/27 replication.**
+   [VERIFIED 2026-09-17, `docs/DEFCON_THRESHOLD_CALIBRATION_2026-09-17.md`] Pre-registered.
+   - φ ≈ 0.05 and real (three splits, not explained by the opponent).
+   - A gamma frailty improves the count log score (z +4.1) but not held-out Brier, so it ships
+     behind `FPL_DEFCON_FRAILTY` (φ = 0.0494).
+   - The registered replication (forecast-scorer) needs ≥ 1,500 26/27 DEF 60+ min player-gameweeks.
+     Default it on only if deployed Brier is non-inferior AND integrated Brier does not worsen;
+     delete the path if it is still off at the end of 26/27.
+   - **Found on the way, larger and unregistered:** the deployed DefCon prior (k0 = 3,
+     revert 0.70) scores Brier 0.1695 held out within 25/26, against 0.1638 for an EB-fitted prior,
+     and over-predicts the top-rate quintile (0.563 vs 0.491). The pre-registered G0 trigger did not
+     fire, and revert is a between-season parameter, so this needs its own registration before
+     anyone touches k0.
 
 ---
 

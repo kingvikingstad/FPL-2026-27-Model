@@ -34,6 +34,7 @@ from scipy import stats
 from fpl_xp_model import (GOAL_POINTS, CLEAN_SHEET_PTS, ASSIST_POINTS,
                           DEFCON_THRESHOLD, DEFCON_PTS)
 import bayes_model as bm
+import defcon_frailty as dfr
 
 rng = np.random.default_rng(11)
 
@@ -104,7 +105,8 @@ def point_draws(players, tm, tsamp, gw_lo, gw_hi, S=4000):
             csp = cs * (CLEAN_SHEET_PTS[pos] + bm.BONUS_PER_CS[pos])
             concp = np.where(np.isin(pos, ["GK", "DEF"]) & p60, -np.floor(conc / 2), 0.0)
             thr = DEFCON_THRESHOLD.get(pos, 999)
-            dcp = np.where(rng.poisson(np.maximum(dc * m90, 0)) >= thr, DEFCON_PTS, 0.0)
+            # same composition as bayes_model.project, frailty included (off by default)
+            dcp = np.where(dfr.draw_count(rng, dc, m90, dfr.phi_for(pos)) >= thr, DEFCON_PTS, 0.0)
             app = np.where(p60, 2.0, np.where(played, 1.0, 0.0))
             pts += app + gp + ap + csp + concp + dcp
         names.append({"player": p.web_name, "pos": pos, "team": p.team,

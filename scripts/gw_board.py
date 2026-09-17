@@ -176,6 +176,9 @@ _INSEASON = _flag("INSEASON", "on", on_values=("on", "1", "true"))
 # happened when these two were first added and INSEASON=off. The banner caught it, which
 # is what it is for; the fix is to resolve here and act below.
 _EXP_MINUTES = _flag("INSEASON_EXP_MINUTES", "off", on_values=("on", "1", "true"))
+# Read inside bayes_model (defcon_frailty.enabled), resolved here ONLY so the banner reports it:
+# a board with per-match DefCon overdispersion switched on must not look like a default one.
+_flag("FPL_DEFCON_FRAILTY", "off", on_values=("on", "1", "true", "yes"))
 _kap = os.environ.get("INSEASON_KAPPA", "").strip()
 _FLAGS.append(("INSEASON_KAPPA", "ON " if _kap else "off", _kap or "inf"))
 _lam = os.environ.get("INSEASON_LAM", "").strip()

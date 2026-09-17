@@ -169,6 +169,13 @@ The referee's verdict was that the board path is sound and the study record carr
 
 ## 6. Still open
 
+- **CLOSED 2026-09-17 → `DEFCON_THRESHOLD_CALIBRATION_2026-09-17.md`.** Most of the quintile
+  pattern below was regression to the mean: banded on held-out empirical-Bayes predictions, the
+  Poisson arm's calibration slope is 0.98. Per-match overdispersion is real (φ ≈ 0.05, replicated
+  on three splits), but a gamma frailty does not improve held-out Brier. It ships **off by default**
+  (`FPL_DEFCON_FRAILTY`); on the board it moves DefCon points from high-rate CBs to low-rate FBs
+  (level +0.1%). The larger miscalibration is the deployed prior (Brier 0.1695 vs 0.1638). The
+  −21% headline stands. Original text:
 - **Poisson threshold calibration** `[CHECK]`, pre-existing. P(≥10) is composed as
   Poisson(rate × m90). With leave-one-out own rates it predicts 0.267 against 0.275
   observed, but by rate quintile it under-predicts low-rate defenders (0.043 vs 0.088) and

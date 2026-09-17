@@ -32,6 +32,7 @@ import betting_features as bf
 from schedule_2627 import schedule, PROMOTED
 from fpl_xp_model import (GOAL_POINTS, CLEAN_SHEET_PTS, ASSIST_POINTS,
                           DEFCON_THRESHOLD, DEFCON_PTS)
+import defcon_frailty as dfr
 
 rng = np.random.default_rng(7)
 # Seed for the PER-PLAYER generators used inside project(). Runners already rebind
@@ -464,6 +465,9 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, seed=None, return_draws=Fa
         # this player's own stream — see _player_rng
         prng = _player_rng(p, seed, gw_lo)
         drng = _defcon_rng(p, seed, gw_lo)                  # DefCon count only
+        # per-match DefCon overdispersion; 0 (plain Poisson) unless FPL_DEFCON_FRAILTY=on,
+        # and DEF only — see defcon_frailty
+        dc_phi = dfr.phi_for(pos)
         # availability draws (shared across the window -> nailed/rotation risk)
         p_start = prng.beta(p.start_a, p.start_b, S)         # (S,)
         # attacking involvement rate (per 90) and defcon rate draws
@@ -517,7 +521,7 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, seed=None, return_draws=Fa
                              -np.floor(conc / 2), 0.0)
             # defensive contribution threshold (per match)
             thr = DEFCON_THRESHOLD.get(pos, 999)
-            dc_cnt = drng.poisson(np.maximum(dc_rate * m90, 0))
+            dc_cnt = dfr.draw_count(drng, dc_rate, m90, dc_phi)
             dcp = np.where(dc_cnt >= thr, DEFCON_PTS, 0.0)
             appp = np.where(played60, 2.0, np.where(played, 1.0, 0.0))
             pts += appp + gp + ap + csp + concp + dcp
