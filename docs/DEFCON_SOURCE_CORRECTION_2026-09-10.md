@@ -177,7 +177,8 @@ The referee's verdict was that the board path is sound and the study record carr
   market gate cannot test. It needs a within-player negative-binomial dispersion for DEF
   CBIT and a held-out calibration by shrunk-rate band (fit GW1-19, score GW20-38). The −21%
   board headline passes through this composition.
-- ~~**`defcon_env` on prior-only players**~~ **Closed 2026-09-16, §7.**
+- **`defcon_env` on prior-only players** — split implemented 2026-09-16 but **HELD, not
+  validated**: the stats-referee showed it amplifies an unfitted DEF xGA beta (§7.1).
 - **Backfill the null rows from FPL's official value.** Optional and lossless: 275 of 293
   rows are joinable through the audit's own join, and the January arrivals would stop
   falling to the prior.
@@ -201,6 +202,8 @@ The referee's verdict was that the board path is sound and the study record carr
   is harmless, but it is why a DefCon-only change moves GK rows by MC noise.
 
 ## 7. `defcon_env` references each share of alpha to where it was measured (2026-09-16)
+
+**Status: HELD — do not merge as a validated correction.** See §7.1.
 
 **The bias** `[DERIVED]`. `apply_defcon_environment` scaled the whole DefCon alpha by
 xGA_27[club] / xGA_25/26[25/26 club] (press: the same ratio of `press_factor`). Alpha is
@@ -242,3 +245,39 @@ PL club (e.g. Mfuni, listed at Man City, now Coventry: 1.88/1.16 clipped to 1.6 
 `RATE_DEF_POOLED` pools appearances (minutes-weighted). The evidence reference is the
 player's end-of-season 25/26 club; a January mover with measured DefCon at two clubs is
 referenced to one. Both pre-existing in kind.
+
+### 7.1 Stats-referee pass (2026-09-16): biased as shipped
+
+The split is the right *form*, and the A/B verifies the *implementation*: nothing moves
+except `defcon_ev`. Nothing in it shows the new numbers are *accurate*. What decides that
+is an elasticity that was never fitted:
+
+- **`XGA_BETA["DEF"] = 1.0` is a judgment (regime handoff §4.2), and the data the prior
+  was pooled from contradict it** `[VERIFIED, reproduced]`. On `studies/defcon_matchups.csv`
+  (2,934 DEF appearances of 60+ minutes), the club CBIT rate regressed on log 25/26 club xGA
+  (weighted by exposure) gives beta **0.174**, club bootstrap 95% CI **(-0.002, 0.488)**, and
+  **0.221** after adjusting for the CB/FB mix. The rate at Arsenal (xGA 0.75) is 7.04
+  against 7.68 pooled. beta=1 predicts 4.1.
+- Before the split, beta only acted on club *movers*: a player who stayed had a factor of
+  about 1. The split applies it to every prior share as a cross-club elasticity. For
+  Arsenal the prior-share error goes from about +17% (old) to **-32%** (new, clipped at
+  0.6). It is larger and has changed sign, so the headline movers (Gabriel, White,
+  Hincapie) are mostly over-steep beta, not a corrected bias. The prior clip binds on 21 of
+  215 DEF rows (Arsenal 8, Hull 13). Movers' evidence share was already over-scaled by
+  the same beta.
+- **Press league reference is not 1** `[VERIFIED]`. The mean of `press_factor` over the 20
+  PPDA_2526 clubs is 1.0234 (1.0117 after the square root), so MID/FWD prior shares sit about
+  1.2% high. Fix: divide by the empirical club mean, as DEF does.
+- xGA denominator `[VERIFIED]`: unweighted 1.4142 against 1.4195 exposure-weighted (CB
+  1.4114, FB 1.4298). Negligible. Including relegated clubs is right.
+- Splitting alpha against the exact form r27*(a0+c)/(k0+m*r26) `[DERIVED]`: median
+  difference +0.02% for regulars. The large gaps come from the clip, not the split.
+- Cold-start `dc90` is an unweighted mean over players with 450+ minutes, not
+  price-calibrated. Its seasons are `[CHECK]`. MID 8.4 / FWD 4.7 have no recorded source.
+
+**What turns this into a validated correction.** First a pre-registered fit of DEF beta:
+a Poisson GLM `dc ~ role FE + beta*log(xGA_club)`, offset log(mins_dc/90), SEs clustered by
+club, plus a within-player version and a planted-beta simulation (0.2, 1.0) on real
+exposures. The decision rule is fixed before the fit. Then the press reference fix, then a
+same-seed A/B, scored on 26/27 GW1-4 DEF CBIT by club tercile. If beta refits near 0.2,
+the split is the correct estimator and its board effect shrinks by roughly 5x.
