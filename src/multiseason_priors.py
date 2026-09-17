@@ -358,6 +358,9 @@ def to_priors(ev, revert=0.70, k0=3.0, pen_xg=0.79, deep_starts=None):
             # in 24/25, and inverted the ordering so cold-start defenders (on the 7.6
             # prior) out-rated established ones (diluted to 6.31).
             "defcon_alpha": dc_prior * k0 + revert * r.defcon,
+            # The prior's share of that alpha. defcon_env references it to the LEAGUE
+            # environment it was pooled in, and only the evidence to the 25/26 club.
+            "defcon_prior_alpha": dc_prior * k0,
             "defcon_beta": k0 + revert * (getattr(r, "mins_dc", r.mins) / 90.0),
             "start_a": 2.0 + revert * (r.starts + d_st),
             "start_b": 2.0 + revert * (max(r.games - r.starts, 0)

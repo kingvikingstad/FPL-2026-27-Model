@@ -158,7 +158,9 @@ _NODES = [
     # transitive path through pms_panel.pkl.
     Node("ms_priors.pkl", config.MS_PRIORS, "derived", producer="scripts/build_all.py",
          inputs=("pms_panel.pkl", "players.csv"),
-         note="two-season pooled priors, older_weight=0.5"),
+         note="two-season pooled priors, older_weight=0.5; carries defcon_prior_alpha "
+              "(the prior share of defcon_alpha) since 2026-09-16 — defcon_env raises "
+              "on a pickle without it, since this node's columns are not checked"),
     # NOT derived, and deliberately not an input edge anywhere. `starter_prior.
     # calibrate_ownership_start()` REWRITES this pickle every time it is called, and it
     # is called by build_all, gw_board (line 107), export_projection_detail (line 70)

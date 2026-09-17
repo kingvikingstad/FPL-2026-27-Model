@@ -177,10 +177,7 @@ The referee's verdict was that the board path is sound and the study record carr
   market gate cannot test. It needs a within-player negative-binomial dispersion for DEF
   CBIT and a held-out calibration by shrunk-rate band (fit GW1-19, score GW20-38). The −21%
   board headline passes through this composition.
-- **`defcon_env` on prior-only players** `[JUDGMENT]`, pre-existing, widened by the
-  exposure fix. The whole alpha (prior plus evidence) is scaled by
-  xGA_27[club] / xGA_25/26[club]. For the 22 January arrivals whose 25/26 DefCon is all
-  null, the pooled prior should be referenced to league xGA, not the 25/26 club's.
+- ~~**`defcon_env` on prior-only players**~~ **Closed 2026-09-16, §7.**
 - **Backfill the null rows from FPL's official value.** Optional and lossless: 275 of 293
   rows are joinable through the audit's own join, and the January arrivals would stop
   falling to the prior.
@@ -202,3 +199,46 @@ The referee's verdict was that the board path is sound and the study record carr
 - `src/pms_priors.py` has no consumer. Only its column name was updated.
 - A GK's DefCon gamma is still drawn (and consumes RNG) although it can never pay. This
   is harmless, but it is why a DefCon-only change moves GK rows by MC noise.
+
+## 7. `defcon_env` references each share of alpha to where it was measured (2026-09-16)
+
+**The bias** `[DERIVED]`. `apply_defcon_environment` scaled the whole DefCon alpha by
+xGA_27[club] / xGA_25/26[25/26 club] (press: the same ratio of `press_factor`). Alpha is
+prior plus evidence. The evidence was produced at the 25/26 club; the prior (a pooled,
+role, position, re-listed or cold-start price-calibrated rate) was pooled over the
+league. Referencing the prior to one club over-credits it at a club that conceded less
+than average and under-credits it at one that conceded more, by the full club/league
+ratio for a player who is all prior. Players with no 25/26 club already used the league
+reference, so two identical priors got different factors depending on whether FPL had
+ever listed the player at a PL club.
+
+**The fix.** `to_priors` and `roster._coldstart_row` carry `defcon_prior_alpha`
+(= prior rate x k0). `defcon_env` scales that share by xGA_27[club] / mean xGA_25/26 and
+`press_factor^beta` (the league press factor is 1 by construction), and the remainder by
+the club ratio as before; each factor is clipped separately. A frame without the column
+raises instead of reverting to whole-alpha scaling. Selftest: a pure prior with a known
+high-xGA club equals the same prior with no club; pure evidence at an unchanged club is
+unchanged; mixed, press and per-share clip cases.
+
+**Scope is wider than the January arrivals.** The same bias applied to every prior share:
+40 DEF in `ms_priors` whose 25/26 DefCon is all null, the prior share of every established
+player (board DEF not on a cold start: median 17%, upper quartile 29%), and 111 cold-start rows that FPL had listed at a 25/26
+PL club (e.g. Mfuni, listed at Man City, now Coventry: 1.88/1.16 clipped to 1.6 -> 1.33).
+
+**Board A/B** `[VERIFIED]`, same seed, `LIVE_FPL=off`, model `mean`, GW1-38 (next GW 5):
+- `ms_priors` identical in every existing column; only `defcon_prior_alpha` is new.
+- Isolation: 0 players whose `mean` moved without `defcon_ev` moving; GK bit-identical.
+- `defcon_ev` per GW, GW1-6: DEF 0.2439 -> 0.2404 (-1.4%), MID 0.0972 -> 0.0984,
+  FWD 0.0040 -> 0.0042. Whole-board GW1-6 total rank rho 0.9998, top-50 50/50; DEF rho
+  0.9996, top-20 20/20. New/old factor: DEF median 1.000, range 0.82-1.11.
+- Movers, GW1-6 points: Gabriel -0.63, Mfuni -0.57, White -0.44, Vuskovic -0.41, Hincapie
+  -0.34 (Arsenal's prior shares were referenced to xGA 0.75); Yalcouye +0.30, A.Garcia
+  +0.24, Cook +0.21, Branthwaite +0.20. Disasi +0.03 (factor 0.92 -> 1.02; he barely plays).
+- Level check: mean 26/27 projected xGA 1.457 against the 25/26 league 1.414 is
+  composition (three promoted for three relegated); on the 17 common clubs it is
+  1.348 -> 1.355. The evidence ratio carries the same level, so no new shift.
+
+**Still `[JUDGMENT]`.** The league reference is the unweighted club mean of xGA, while
+`RATE_DEF_POOLED` pools appearances (minutes-weighted). The evidence reference is the
+player's end-of-season 25/26 club; a January mover with measured DefCon at two clubs is
+referenced to one. Both pre-existing in kind.
