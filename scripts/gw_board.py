@@ -24,7 +24,9 @@ Env: GW_HI (default 38 = full season), SOLIO_W_OURS (default 0.5), SOLIO=off, MA
      SOLIO_MARKET_GW, XI_CONSTRAINT=off,
      FPL_SETPIECE=fpl|override|fill|observed (default fpl; `observed` is the
        unshrunk n=1 channel withdrawn on 2026-09-08 — see the note at its use),
-     INJURY_IMPACT=on (default off), TEAM_OVERRIDES=on (default off).
+     INJURY_IMPACT=on (default off), TEAM_OVERRIDES=on (default off),
+     FPL_DEFCON_FRAILTY=on (default off; per-match DefCon overdispersion for DEF,
+       read in src/defcon_frailty.py — see docs/DEFCON_THRESHOLD_CALIBRATION_2026-09-17.md).
 
 INSEASON: fold 26/27 results back into the priors — realised starts into the Beta
 minutes prior, and finished matches' xG (not scorelines) into the team model's E0

@@ -601,7 +601,7 @@ def main():
     print(f"phi GW1-19 {phi_tr:+.4f}  band [{band_tr[0]:+.4f}, {band_tr[1]:+.4f}]  S1={S1}")
     print(f"phi GW20-38 {phi_te:+.4f}  band [{band_te[0]:+.4f}, {band_te[1]:+.4f}]  S1-rep={S1rep}")
     # The SHIPPING constant (pre-registration §3.4.5: phi fitted on all of 25/26). Reported,
-    # never gating; bayes_model.DEFCON_FRAILTY_PHI must equal this value.
+    # never gating; defcon_frailty.PHI_DEF must equal this value.
     all60 = rows[rows["mins"] >= 60]
     phi_all = phi_moment(all60["y"], all60["mins"] / 90, all60["player_code"])
     band_all, _ = poisson_null_band(all60["y"], all60["mins"] / 90, all60["player_code"], seed=4)
