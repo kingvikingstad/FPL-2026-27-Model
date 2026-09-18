@@ -104,6 +104,15 @@ TRANSFER_COUNTS = os.path.join(DATA, "transfer_counts.csv")
 # English clubs that played July/August European qualifying ties, per PL season
 # (see studies/euro_qualifying_fade.py for provenance).
 EUROPEAN_QUALIFYING = os.path.join(DATA, "european_qualifying.csv")
+# Studies and their evidence CSVs. Nothing on the board path may read from here — a study
+# CSV is rewritten by every `test_all` run, so its mtime says nothing and a live read of
+# one is an input the manifest cannot track. Promote what the pipeline needs into DATA.
+STUDIES = os.path.join(ROOT, "studies")
+DEFCON_MATCHUPS_STUDY = os.path.join(STUDIES, "defcon_matchups.csv")
+# Centre-back / full-back label per player_code, FROZEN from DEFCON_MATCHUPS_STUDY by
+# `python src/defcon_roles.py --freeze`. An input to the DefCon prior (ms_priors.pkl).
+# Committed rather than read from the study so a prior build has a declared, stable input.
+DEFCON_ROLES = os.path.join(DATA, "defcon_roles.csv")
 # Projected set-piece duty (Fantasy Football Scout), used to fill clubs where FPL
 # declares no taker — see src/set_piece_takers.py.
 SET_PIECE_TAKERS = os.path.join(DATA, "set_piece_takers.csv")

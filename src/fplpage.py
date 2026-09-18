@@ -129,6 +129,86 @@ def _text(fragment):
     return _html.unescape(re.sub(r"<[^>]+>", "", fragment)).strip()
 
 
+# --- the article is no longer served as HTML  [BROKE SILENTLY, FIXED 2026-09-18] -------
+#
+# fpl.page moved to a Next.js App Router build that streams the article as an RSC
+# "flight" payload inside one `self.__next_f.push([1, "..."])` call. The club headings
+# that `parse_blocks` keys on are no longer <h2> tags — they are not tags at all, but
+# JSON element nodes: ["$","p",null,{"children":[["$","strong",null,{"children":
+# "CHELSEA"}],": (80%)"]}]. Exactly one real <h2> survives in the served markup, the
+# publication date.
+#
+# The failure mode is the one this module's docstring warns about everywhere else: it
+# does not raise. `parse_blocks` finds one heading, classifies it as the date, returns
+# ZERO clubs, and `scrape` reports "0/0 clubs accepted" and exits 0. `lock_board` then
+# reads "no predicted-XI source" as "the preview is not published yet", waits, and locks
+# without team news. Both the GW4 and GW5 deadline locks carry team_news_sources=0, which
+# is how long this had been dark.
+#
+# The flight payload is line-oriented JSON, so it is parsed rather than regexed: each
+# `<hexid>:<json>` line is one React element tree, rendered back to the HTML shape the
+# rest of this module already handles. The legacy path is tried first and is unchanged,
+# so an article served as plain HTML — including every fixture in the selftest — parses
+# exactly as before.
+_FLIGHT_PUSH = re.compile(r"self\.__next_f\.push\(\[1,\s*")
+_JSON_STR = re.compile(r'"(?:[^"\\]|\\.)*"')
+_FLIGHT_LINE = re.compile(r"(?m)^[0-9a-f]+:(\[.*)$")
+# A club heading, once rendered: a paragraph that is one ALL-CAPS <strong> and nothing
+# else but an optional confidence figure. Structural, not a whitelist of club names — a
+# spelling CLUB_NORM does not know must still produce a block (it gets .title()d below,
+# as it always did), rather than vanish.
+_CLUB_HEAD = re.compile(r"<p><strong>([A-Z][A-Z0-9'&.\- ]{2,})</strong>"
+                        r"(:?\s*(?:\((\d{1,3})%\))?\s*)</p>")
+
+
+def _rsc_render(node):
+    """One RSC element tree -> the HTML fragment the legacy parser expects."""
+    if isinstance(node, str):
+        # "$L20", "$Sreact.suspense", "$undefined" are references, not text
+        return "" if node.startswith("$") else node
+    if isinstance(node, dict):
+        return _rsc_render(node.get("children"))
+    if isinstance(node, list):
+        if len(node) == 4 and node[0] == "$" and isinstance(node[1], str):
+            tag = node[1]
+            props = node[3] if isinstance(node[3], dict) else {}
+            if tag.startswith("$"):            # a client component; the XI graphic is one
+                src = props.get("src")
+                return f'<img src="{src}"/>' if src else _rsc_render(props.get("children"))
+            if tag in ("hr", "br", "img"):
+                src = props.get("src")
+                return f'<img src="{src}"/>' if src else f"<{tag}/>"
+            return f"<{tag}>{_rsc_render(props.get('children'))}</{tag}>"
+        return "".join(_rsc_render(x) for x in node)
+    return ""
+
+
+def _flight_to_html(html):
+    """Rebuild article HTML from the RSC payload. Returns None if there is no payload."""
+    import json
+    m = _FLIGHT_PUSH.search(html)
+    if not m:
+        return None
+    lit = _JSON_STR.match(html, m.end())
+    if not lit:
+        return None
+    try:
+        payload = json.loads(lit.group(0))
+    except ValueError:
+        return None
+    parts = []
+    for line in _FLIGHT_LINE.finditer(payload):
+        try:
+            node = json.loads(line.group(1))
+        except ValueError:
+            continue                            # a truncated or non-element row
+        parts.append(_rsc_render(node))
+    out = "".join(parts)
+    # Promote club paragraphs to the <h2> headings parse_blocks splits on.
+    out = _CLUB_HEAD.sub(lambda mm: f"<h2>{mm.group(1)}{mm.group(2)}</h2>", out)
+    return out or None
+
+
 def fetch(gw, url=None, timeout=40):
     """Raw HTML for one gameweek's article."""
     u = url or URL_TEMPLATE.format(gw=int(gw))
@@ -143,8 +223,23 @@ def parse_blocks(html):
     <h2> is the publication date; the rest are clubs. `author_confidence` is the figure
     in the heading ("ARSENAL: (87%)") — the writer's own confidence in that XI, absent
     for the promoted clubs — and is carried through for provenance rather than used.
+
+    Served markup is tried first; if it yields no clubs, the RSC flight payload is
+    rebuilt into the same shape (see `_flight_to_html`). An article with genuinely no
+    clubs in it — a stub published before the previews land — costs one extra parse and
+    still returns [].
     """
     heads = [(m.start(), _text(m.group(1))) for m in H2_RE.finditer(html)]
+    if not [t for _, t in heads if not DATE_RE.match(t)]:
+        rebuilt = _flight_to_html(html)
+        if rebuilt:
+            # The publication date stays in the served markup — it is the one real <h2>
+            # left — while the clubs come from the payload. Carry it across, or `as_of`
+            # is None and `predicted_xi` silently falls back to the file's mtime, which
+            # dates the SCRAPE rather than the preview and so mis-weights the source.
+            dates = "".join(f"<h2>{t}</h2>" for _, t in heads if DATE_RE.match(t))
+            html = dates + rebuilt
+            heads = [(m.start(), _text(m.group(1))) for m in H2_RE.finditer(html)]
     as_of = None
     for _, t in heads:
         if DATE_RE.match(t):
@@ -470,6 +565,46 @@ def selftest():
     assert blocks[0]["image_url"].endswith("name=large"), "thumbnails must be upsized"
     assert pd.isna(blocks[2]["author_confidence"]), "promoted clubs carry no percentage"
     assert blocks[2]["image_url"] is None
+
+    # --- the RSC payload path, on the markup fpl.page actually serves now ---
+    # Built to the shape measured off the GW5 article (2026-09-17): one
+    # `self.__next_f.push([1,"..."])` whose payload is `<hexid>:<element-json>` lines,
+    # club headings as <p><strong>CLUB</strong>: (NN%)</p>, the XI as a client-component
+    # image. The legacy assertions above run on the same fixtures they always did, so
+    # this asserts the two paths agree rather than replacing one with the other.
+    import json as _json
+    # The date deliberately is NOT in the flight lines: on the real article it survives
+    # as the one served <h2>, and `as_of` has to come from there.
+    _flight = "\n".join([
+        '1:"$Sreact.fragment"',
+        '31:["$","p",null,{"children":[["$","strong",null,{"children":"ARSENAL"}],'
+        '": (87%)"]}]',
+        '32:["$","p",null,{"children":["\\u26a0\\ufe0f  ",'
+        '["$","strong",null,{"children":"Bruno G"}],", ",'
+        '["$","strong",null,{"children":"Saliba"}]]}]',
+        '33:["$","p",null,{"children":["$","$L20",null,'
+        '{"src":"https://pbs.twimg.com/media/AAA?format=jpg&name=small","alt":""}]}]',
+        '34:["$","hr",null,{}]',
+        '35:["$","p",null,{"children":[["$","strong",null,{"children":"COVENTRY"}]]}]',
+        '36:["$","p",null,{"children":"no percentage for promoted clubs"}]',
+        'not-a-flight-line',
+    ])
+    rsc = ('<html><body><h2>Fri 21 August 2026</h2><script>self.__next_f.push([1,'
+           + _json.dumps(_flight) + '])</script></body></html>')
+    as_of_r, blocks_r = parse_blocks(rsc)
+    assert as_of_r == "2026-08-21", as_of_r
+    assert [b["club"] for b in blocks_r] == ["Arsenal", "Coventry"], \
+        f"RSC club headings must survive: {[b['club'] for b in blocks_r]}"
+    assert blocks_r[0]["author_confidence"] == 0.87
+    assert blocks_r[0]["doubts"] == ["Bruno G", "Saliba"], blocks_r[0]["doubts"]
+    assert blocks_r[0]["image_url"].endswith("name=large"), "RSC image must upsize"
+    assert pd.isna(blocks_r[1]["author_confidence"]), "promoted clubs carry no percentage"
+    assert blocks_r[1]["image_url"] is None
+    # served HTML still wins outright — the flight path must not fire when it parses
+    assert _CLUB_HEAD.search("<p><strong>Palmer</strong> starts</p>") is None, \
+        "a prose paragraph must never be promoted to a club heading"
+    assert parse_blocks('<h2>Fri 21 August 2026</h2>')[1] == [], \
+        "an article with no clubs must return [], not raise"
 
     # --- noise filtering: the graphic's furniture must never reach the CSV ---
     for junk in ("4-3-3", "1-4-4-2", "85-99%", "<50%", "%66", "Arsena", "Arsenal"):

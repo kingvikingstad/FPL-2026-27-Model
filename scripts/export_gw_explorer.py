@@ -9,11 +9,16 @@ A thin runner. All the logic, and its selftest, live in `src/gw_explorer.py`; th
 exists so the view is regenerated the same way every other output is.
 
 It is a READER. It does not run the model, so it costs seconds rather than the board's
-minutes, and it can be re-run freely after any board change. It also cannot disagree
-with the board: every number it displays came out of `gw_board_long.csv`.
+minutes, and it can be re-run freely after any board change. It is NOT a reader of the
+board alone, though: the per-fixture lambdas and club table come from
+`team_projections_gw1_38.csv` / `team_projections_season.csv`, and the wildcard fifteens
+from `wildcard_xi.csv`. Each is built by its own script and can be older than the board,
+which is why all three are manifest inputs of the explorer (2026-09-10) and `doctor`
+reports the page STALE when any of them lags.
 
-  python scripts/gw_board.py                       # produces the board (GW_HI=38 for a full season)
-  GW_HI=38 python scripts/export_team_projections.py   # optional: adds the per-fixture lambdas
+  python scripts/gw_board.py                       # produces the board (GW1-38)
+  python scripts/export_team_projections.py        # per-fixture lambdas + club table (GW1-38)
+  python scripts/export_wildcard_xi.py             # wildcard fifteens, from the board
   python scripts/export_gw_explorer.py             # builds the view
 
   --board PATH   read a different board (e.g. .cache/boardbak/gw_board_long.gw18.csv)

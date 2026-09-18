@@ -112,7 +112,9 @@ gw_board_long.csv / gw_board_wide.csv. Horizon-aggregate runner: `scripts/run_fi
 **Studies (null/validation record):** `rotation`, `pit_ownership`, `variance`, `edge_study`,
 `multihorizon`, `retest`, `matchup_design` (style constructs — not built, see §7),
 `deep_history_study` (8 extra seasons of player-GW minutes — **tested null**, 0.0017 MAE
-vs the existing baseline; see docs/DEEP_HISTORY_FINDINGS.md), `setpiece_study`
+vs the existing baseline; see docs/DEEP_HISTORY_FINDINGS.md. Re-run 2026-09-16 after the 22/23
+zero-`starts` fix in `fpl_history`: +0.0010 MAE, "no material gain" in every group, best
+half-life still 1.5 — the null holds), `setpiece_study`
 (component reliability measured; persistence **inconclusive** — see docs/SOCCERDATA_FINDINGS.md),
 `late_form_carryover` (late-season surge → next-season start: **tested null**, +0.0000 r²
 over full-season strength; new-manager interaction collapses with sample size; a
@@ -371,38 +373,50 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
   cold start, p_start 0.97 from the ownership calibration, 2 starts from 2, 120 minutes across
   them, still projecting top-10 for his position.
 
-- **The minutes likelihood is exchangeable and should not be** `[VERIFIED 2026-09-07]`
-  (`studies/start_persistence.py`, `studies/start_recency.py`; full writeup
-  `docs/START_PERSISTENCE_2026-09-07.md`). 113,571 player-matches, 22/23–25/26, native `starts`.
-  **Lag-1:** P(start | started) 0.798 vs P(start | benched) 0.076, pooled gap +0.722 — but the
-  *within-player-season* gap is **+0.493** (proxy seasons +0.405). Two-thirds real state
-  dependence, one-third frailty. **Duration:** against a permutation null that holds each
-  player's own start count fixed and destroys only the ORDER, the excess in P(start at t+1 |
-  k consecutive starts) is +0.190 at k=1, +0.153 at k=3, +0.080 at k=6, +0.030 at k=8, and
-  indistinguishable from zero from k=10 on (k=20: obs 0.959, null 0.936, CI [0.926, 0.980]).
-  Raw h(k) rises to 0.96 by k=20 **and so does the null** — a long streak is a filter that
-  selects high-p players, so `h(k) = const` is the WRONG null and testing against it would
-  "find" a streak effect that is entirely frailty. **Asymmetry, the usable half:** P(start next
-  | k consecutive non-starts) = 0.276 / 0.114 / 0.046 / 0.014 at k = 1 / 3 / 8 / 20. Being
-  dropped is far more informative than being picked and saturates far more slowly.
-  *Consequence:* NOT a streak covariate — the excess is already zero past k≈8, so one would
-  re-encode the base rate the Beta prior holds. The indictment is of the LIKELIHOOD: a
-  conjugate Beta update reads a count, so start-start-bench and bench-start-start give an
-  identical posterior. Fix is a geometric recency weight `u_d = λ^d` on the estimator's own
-  observations, renormalised to the raw match count so it moves only the order and does not
-  confound with the `W_MINUTES`/κ ridge. **λ is a function of FORECAST HORIZON** (LOSO, κ=4):
-  λ* = 0.40/0.50/0.55/0.65/**0.75**/0.82 at h = 1/2/3/5/**10**/rest, gains +7.9%/+5.6%/+4.0%/
-  +2.6%/**+1.2%**/+0.3%, positive in 4/4 folds to h=10. Short horizon, short memory. The
-  pre-registered gate (h=1) fires ADOPT at +3.5% but **cannot pin λ** — the gain is monotone to
-  the grid floor there, because the last match nearly suffices for the next; that limit is
-  right at h=1 and ruinous for a ten-week board. Rest-of-season fails the 1% gate. Shipped OFF
-  (`INSEASON_LAM=0.75` with `INSEASON_KAPPA=4`); `[CHECK]` on points, see §6.9.
-  *Board effect, GW1-38, decomposed so neither flag is credited with the other's movement:*
-  κ=4 alone moves 497/653 players (mean |Δ| 7.75 season points, max 38.1); λ=0.75 **on top of
-  κ=4** moves 102 (mean 0.73, max 8.8). κ is by far the bigger lever and the two must never be
-  reported jointly. The recency-only moves have the right shape — same-club rotation pairs move
-  in OPPOSITE directions (Enzo +8.8 vs O'Reilly −8.8, Foden −8.4 at Man City) — which is the
-  exchangeability failure being corrected, visible directly on the board.
+- **The minutes likelihood is exchangeable; ordering carries information over ~6 matches**
+  `[DERIVED 2026-09-07, CORRECTED 2026-09-16]` (`studies/start_persistence.py`,
+  `studies/start_recency.py`; full writeup and correction record
+  `docs/START_PERSISTENCE_2026-09-07.md`). **Correction first:** the 22/23 `starts` column is a
+  literal 0 for GW1-15 (FPL began publishing it at GW16; `fpl_history.empty_native_gws` now finds
+  it), and it had pushed every number here UP; figures below are corrected, with 22/23 observed
+  from GW16 (105,080 player-matches). **Lag-1:** P(start | started) 0.798 vs P(start | benched)
+  0.082, pooled gap +0.717; *within-player-season* gap **+0.436** (proxy seasons +0.405). That is
+  PERSISTENCE — state dependence + within-season drift + availability — measured on
+  rotation-zone player-seasons only, not identified state dependence; the earlier "two-thirds
+  real, one-third frailty" split is withdrawn `[JUDGMENT]`. **Duration:** against a permutation
+  null that holds each player-season's start count fixed and destroys only the order, the excess
+  in P(start at t+1 | k consecutive starts) is +0.164 at k=1, +0.122 at k=3, +0.060 at k=6, +0.015
+  at k=8 (z=1.2), +0.002 at k=10. Raw h(k) rises to 0.96 by k=20 **and so does the null** — a long
+  streak selects high-p players, so `h(k) = const` is the WRONG null. The null conditions on the
+  FULL-season count, which a forecaster cannot see, so "no excess past k≈8" means no information
+  beyond the player's own season rate — NOT beyond the forecaster's prior; whether a streak term
+  helps a real forecast is **untested, not a null**. The non-start curve (0.290 / 0.126 / 0.054 at
+  k = 1 / 3 / 8) has no null and is descriptive only `[CHECK]`; "being dropped is far more
+  informative" is withdrawn. *Response:* a geometric recency weight `u_d = λ^d` on the Beta
+  update's own observations, renormalised to sum to the match count. **That renormalisation does
+  NOT isolate order** `[DERIVED]`: it fixes the nominal count, not the information (ESS caps at
+  (1+λ)/(1−λ) = 7 at λ=0.75 while the Beta is charged k), so the posterior is over-concentrated
+  and multi-gameweek start variance understated, and λ trades off against κ/W (λ* at h=10 is 0.25
+  uncapped vs 0.75 at κ=4). Proper estimator: a discounted Beta-Bernoulli filter fitted jointly
+  with κ — not built, needs its own pre-registration. **λ by horizon** (LOSO, κ=4): λ* =
+  0.35/0.45/0.55/0.60/**0.75**/0.82 at h = 1/2/3/5/**10**/rest, gains +10.9/+7.8/+5.5/+3.4/
+  **+1.6**/+0.5%, 4/4 folds to h=10, 3/4 rest. The pre-registered gate (h=1, ≥1%, ≥3 folds) holds:
+  ADOPT at +10.9% (κ=4) and +5.5% (uncapped). λ=0.75 is `[DERIVED]` only under (h=10, κ=4, W=1,
+  previous-season prior, k≤12, match grain) on a fold set including the mid-season 22/23 fold,
+  which pulls λ* down — on the three season-start folds alone λ* at h=10 is 0.70 (+1.5%, 3/3),
+  the gate still ADOPTs (+10.3%, 3/3) and rest-of-season is 2/3 folds; as a board constant it is
+  `[JUDGMENT]`. At fixed
+  λ=0.75, κ=4 the latest season gains +0.81% at h=10 and −0.42% rest-of-season, and the board now
+  defaults to `GW_HI=38`. **Stays OFF** (`INSEASON_LAM=0.75` with `INSEASON_KAPPA=4` reproduces
+  the study); `[CHECK]` on points, see §6.9. κ=4 survived the data fix (`start_prior_strength`
+  re-run: ADOPT at every cutoff, w=1 single-lever optimum κ = 3/4/4/4). *Board effect, measured
+  2026-09-08 through GW3, GW1-38 totals, per flag:* κ=4 alone moves 497/653 players (mean |Δ| 7.75
+  season points, max 38.1); λ=0.75 on top of κ=4 moves 102 (mean 0.73, max 8.8). The equal and
+  opposite moves of same-club pairs (Enzo +8.8, O'Reilly −8.8) are mechanical under any
+  reweighting of complementary sequences and are **not** validation. `recency_starts` was also
+  renormalising over the club's history rather than the player's charged window — fixed
+  2026-09-16; it moves 0 of 658 players through GW4 because `team_at_gw` fills every player's club
+  across the season `[VERIFIED]`.
 
 ---
 
@@ -436,7 +450,27 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
    because the study validates the parameter and not the projection built on it. Blocked on
    nothing; the denominator it needs (`inseason.appearances().start_minutes`, minutes accrued
    in started matches only) already exists.
-9. **Re-fit the start-prior strength against the REAL prior, then A/B it.** §5 shows the
+9. **(a) DONE 2026-09-17** (`studies/start_prior_production.py`; INTEGRATION_LOG entry of
+   that date). On a replica of the installed prior that passes a fidelity gate: dominated
+   6.3-7.3%, 3/3 folds at every cutoff; **the CAP beats the weight** (+0.6-1.0% Brier, 3/3,
+   all cutoffs), so the lever is identified; **κ=4 pinned**.
+   **(b) DONE 2026-09-17 — CLOSED, and κ is ON by default** (`scripts/ab_inseason_starts.py`,
+   evidence `outputs/ab_inseason_starts.csv`). Out of sample on GW2/3/4, every pre-registered
+   condition met: start-probability Brier **+15.4%** pooled (12.0/17.0/17.4 by week), better
+   in 3/3 weeks, points squared error **+4.0%** against a −2% guardrail. Power was computed
+   first (24/24 historical season-gameweeks positive, mean 21.4%), and points were declared a
+   guardrail rather than the endpoint because three weeks cannot resolve them [DERIVED].
+   **The denominator worry from (a) is settled, and in the reassuring direction:** in every
+   arm the mean projected start probability equalled the realised start rate to three
+   decimals, because the XI constraint pins each club to eleven — so the appearance-denominator
+   bias never reaches the board's level, and κ's gain is DISCRIMINATION, not calibration. The
+   denominator remains a prior-layer defect worth fixing on its own terms (it would change
+   `p_start_prior` in the detail export, and the optimum κ moves to 5-8 once fixed), but it
+   does not confound this adoption. `INSEASON_LAM` was run in the same A/B, added +1.2pp on
+   top of κ, and stays OFF — declared non-adopting in advance for want of a power calculation.
+   §6.8 (`exp_minutes`) moved the start endpoint by 0.0%, as its mechanism implies, and still
+   needs a design that scores minutes-per-start. Original text follows.
+   **Re-fit the start-prior strength against the REAL prior, then A/B it.** §5 shows the
    current `W_MINUTES = 1.0` against an uncapped Beta is dominated by ~11% on Brier, but the
    study fits a previous-season prior and only the ratio w/κ is identified. Two jobs, in
    order: (a) re-run the sweep against the actual two-season pooled prior as installed, which
@@ -449,6 +483,12 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
    κ=4 and reallocates the very evidence whose total weight (a) is re-fitting, so run apart
    each would be credited with the other's gain — the same argument that already ties §6.8 to
    this item. Three levers, one A/B: `INSEASON_W_MIN`, `INSEASON_KAPPA`, `INSEASON_LAM`.
+   **Before that A/B is worth running, the λ leg needs refitting [2026-09-16, stats-referee]:**
+   the renormalised geometric weight fixes the nominal count but not the information, so λ is
+   not separable from κ/W and the posterior is over-concentrated (§5). The pre-registration
+   should name the endpoint the board is actually scored on (it defaults to `GW_HI=38`; λ=0.75
+   came from h=10 and fails rest-of-season), fit (w/κ, λ) JOINTLY — ideally as a discounted
+   Beta-Bernoulli filter — and extend cutoffs to k≈30. Until then `INSEASON_LAM` stays off.
    The prerequisite that used to sit here — a `gw_panel` correction the λ leg needed — is
    **CLOSED [2026-09-08]**, and the diagnosis first recorded for it was WRONG, which is
    worth carrying because the wrong version is the plausible one. The 22 starts that
@@ -535,14 +575,17 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
   register exists to refuse. It is a hypothesis a future study may register, not a finding.
   Note this null does NOT weaken the main result: the overall direction passed its own rule,
   and goalkeepers still show the largest gain of any position — just not via `w`.
-- **A `streak_k` covariate on the start prior** — NOT built, and the study that could have
-  motivated one is the reason (§5, 2026-09-07). Measured against a frailty-preserving
-  permutation null, the streak excess is zero from k=10 on, so a streak term would mostly
-  re-encode the player's own base rate — which the Beta prior already holds. That is double
-  counting, and it is why the raw h(k) curve rising to 0.96 by k=20 is a **diagnosis and not
-  a finding**. `INSEASON_LAM` is not this under another name: it re-weights the ORDER of the
-  estimator's own observations and adds no predictor. Nor is it a rotation multiplier — it
-  carries no fixture-conditional term, and congestion stays dead three ways over.
+- **A `streak_k` covariate on the start prior** — NOT built, under `inseason`'s standing rule
+  (no form, streaks, momentum or confidence terms). **It is not a tested null** [CORRECTED
+  2026-09-16]. This entry first argued that the streak excess vanishing past k≈8 meant a streak
+  term "would mostly re-encode the base rate the Beta prior holds". That does not follow: the
+  permutation null in `start_persistence` conditions on each player's FULL-season start count,
+  hindsight a forecaster never has, so it shows no information beyond the season rate, not beyond
+  the forecaster's prior (§5). Whether a streak term improves a real forecast is untested; do not
+  cite it as dead. The raw h(k) curve rising to 0.96 by k=20 is still a diagnosis and not a
+  finding. `INSEASON_LAM` is not a streak term under another name: it re-weights the estimator's
+  own observations and adds no predictor. Nor is it a rotation multiplier — it carries no
+  fixture-conditional term, and congestion stays dead three ways over.
 
 ---
 

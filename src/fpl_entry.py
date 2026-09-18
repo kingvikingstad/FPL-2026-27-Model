@@ -34,10 +34,29 @@ does give the true aggregate — `value` is the sum of selling prices and `bank`
 so the TOTAL is right even though the split across players is not, and that is the number
 the budget constraint actually needs.
 
+[CHECK, 2026-09-10] The claim above that `value` is the sum of selling prices did NOT
+reproduce. Selling prices rebuilt from public purchase prices (`element_in_cost` on
+`entry/{id}/transfers/`, start price otherwise) and FPL's half-the-rise-rounded-down rule sum
+to 100.3 for GW3; `entry_history.value` said 100.7 and current prices sum to 101.1. So
+per-player selling prices stay unmodelled, and `value + bank` is used as the budget because
+it is FPL's own number, not because its definition is established.
+
+PENDING TRANSFERS — THE PUBLIC FEED CANNOT SEE THEM
+----------------------------------------------------
+`entry/{id}/event/{gw}/picks/` publishes a gameweek's picks only once its deadline has
+passed, and `entry/{id}/transfers/` lists only confirmed transfers. A transfer made for the
+NEXT gameweek is therefore invisible until that deadline, and a plain re-fetch in the
+meantime silently REVERTS it. So pending transfers live in `data/my_squad_pending.json`
+(PENDING, below), typed once, and `load()` applies them over the fetched picks. They are
+dropped automatically as soon as a fetch returns picks for their gameweek or later, because
+from then on the feed carries them. Until 2026-09-10 the one pending transfer lived inside
+the meta JSON as an `overlay` that the next fetch would have overwritten.
+
 Run:  python src/fpl_entry.py --team-id 1234567
       python src/fpl_entry.py --team-id 1234567 --write-tracker   (also rewrite my_squad.csv)
-Out:  data/my_squad_live.csv
+Out:  data/my_squad_live.csv, data/my_squad_live_meta.json
 """
+import datetime as _dt
 import json
 import os
 import urllib.request
@@ -47,6 +66,8 @@ import pandas as pd
 
 API = "https://fantasy.premierleague.com/api"
 LIVE_SQUAD = os.path.join(config.DATA, "my_squad_live.csv")
+LIVE_META = os.path.splitext(LIVE_SQUAD)[0] + "_meta.json"
+PENDING = os.path.join(config.DATA, "my_squad_pending.json")
 ID_FILE = os.path.join(config.DATA, "fpl_entry_id.txt")
 POS = {1: "GK", 2: "DEF", 3: "MID", 4: "FWD"}
 
@@ -151,8 +172,14 @@ def fetch(team_id=None, gw=None, verbose=True):
         "overall_rank": entry.get("summary_overall_rank"),
         "transfers_made": hist.get("event_transfers"),
         "transfer_cost": hist.get("event_transfers_cost"),
+        # the chip played IN `gw`, not one active for the gameweek being planned
         "active_chip": picks.get("active_chip"),
         "unmapped": unmapped,
+        # the tab showed a mid-gameweek snapshot for four days with nothing on the page
+        # saying when it was taken; everything above is as of this instant
+        "fetched_at": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "gw_finished": bool(next((e.get("finished") for e in boot.get("events", [])
+                                  if e.get("id") == gw), False)),
     }
     if verbose:
         print(f"[fpl-entry] {meta['entry_name']} (id {tid}) — GW{gw}: "
@@ -188,15 +215,59 @@ def write(sq, meta, path=None, write_tracker=False, verbose=True):
     return path
 
 
-def load(path=None):
-    """The last fetched squad, or None. Lets the explorer build offline."""
+def apply_pending(sq, meta, pending):
+    """Fold pending next-gameweek transfers over the fetched picks. Pure.
+
+    Each incoming player takes the outgoing player's slot, XI place and armband, which is
+    what FPL does. Bank after a pending sale is a RANGE — the selling price is between the
+    purchase and the list price and the public feed cannot say where — so `bank` becomes the
+    LOW end (a transfer that fits at the low end fits in the game) and `bank_hi` the high
+    end; `squad_value` is adjusted so `squad_value + bank` still equals FPL's own total.
+    Returns (sq, meta) unchanged when there is nothing to apply, or when the fetched picks
+    are already for the pending gameweek or later (the feed then carries the transfers).
+    """
+    meta = dict(meta or {})
+    if not pending or not pending.get("transfers"):
+        return sq, meta
+    if int(meta.get("gw") or 0) >= int(pending["gw"]):
+        meta["pending_superseded"] = int(pending["gw"])
+        return sq, meta
+    sq = sq.copy()
+    sq["pending_in"] = False
+    applied = []
+    for t in pending["transfers"]:
+        o, i = t["out"], t["in"]
+        hit = sq.index[sq["player_code"] == int(o["player_code"])]
+        if not len(hit):
+            raise ValueError(f"pending transfer sells {o.get('web_name')} "
+                             f"({o['player_code']}), who is not in the fetched GW{meta.get('gw')} "
+                             f"squad — the pending file is out of date")
+        k = hit[0]
+        sq.loc[k, ["player_code", "web_name", "pos", "team", "now_cost"]] = [
+            int(i["player_code"]), i["web_name"], i["pos"], i["team"], float(i["price"])]
+        sq.loc[k, "pending_in"] = True
+        applied.append(f"{o.get('web_name')} -> {i['web_name']}")
+    lo, hi = pending.get("bank_bounds", [meta.get("bank") or 0.0] * 2)
+    total = float(meta.get("squad_value") or 0) + float(meta.get("bank") or 0)
+    meta.update({"bank": float(lo), "bank_hi": float(hi),
+                 "squad_value": round(total - float(lo), 1),
+                 "pending_gw": int(pending["gw"]), "pending": applied,
+                 "pending_note": pending.get("note", "")})
+    return sq, meta
+
+
+def load(path=None, pending_path=None):
+    """The last fetched squad with any pending transfers applied, or (None, None).
+    Offline, so the explorer and the wildcard solver build without a network."""
     path = path or LIVE_SQUAD
     if not os.path.exists(path):
         return None, None
     sq = pd.read_csv(path)
     meta_p = os.path.splitext(path)[0] + "_meta.json"
-    meta = json.load(open(meta_p)) if os.path.exists(meta_p) else None
-    return sq, meta
+    meta = json.load(open(meta_p, encoding="utf-8")) if os.path.exists(meta_p) else None
+    pp = pending_path or PENDING
+    pending = json.load(open(pp, encoding="utf-8")) if os.path.exists(pp) else None
+    return apply_pending(sq, meta, pending)
 
 
 def selftest():
@@ -232,6 +303,33 @@ def selftest():
         write(sq, {}, path=p, verbose=False)
         back = pd.read_csv(p)
         assert len(back) == 1 and back["player_code"].iloc[0] == 111111
+    # pending transfers: applied over an older gameweek's picks, keep the slot and armband,
+    # turn bank into a range whose low end is used, and preserve FPL's total budget
+    base = pd.DataFrame({"player_code": [1, 2], "web_name": ["Out", "Keep"],
+                         "pos": ["MID", "FWD"], "team": ["A", "B"], "now_cost": [7.8, 9.0],
+                         "slot": [7, 11], "in_xi": [True, True],
+                         "is_captain": [True, False], "is_vice": [False, True]})
+    m0 = {"gw": 3, "bank": 0.0, "squad_value": 100.7}
+    pend = {"gw": 4, "bank_bounds": [0.0, 0.3], "transfers": [
+        {"out": {"player_code": 1, "web_name": "Out"},
+         "in": {"player_code": 3, "web_name": "In", "pos": "MID", "team": "C", "price": 7.5}}]}
+    s1, m1 = apply_pending(base, m0, pend)
+    r = s1[s1["player_code"] == 3].iloc[0]
+    assert 1 not in set(s1["player_code"]) and r["slot"] == 7 and bool(r["is_captain"])
+    assert bool(r["pending_in"]) and r["now_cost"] == 7.5
+    assert m1["bank"] == 0.0 and m1["bank_hi"] == 0.3 and m1["pending_gw"] == 4
+    assert abs(m1["squad_value"] + m1["bank"] - 100.7) < 1e-9, "budget total must be kept"
+    assert m0 == {"gw": 3, "bank": 0.0, "squad_value": 100.7}, "meta must not be mutated"
+    # superseded: once the feed returns picks for the pending gameweek, nothing is applied
+    s2, m2 = apply_pending(base, {**m0, "gw": 4}, pend)
+    assert s2.equals(base) and m2["pending_superseded"] == 4 and "pending" not in m2
+    # a pending sale of someone not in the squad is an out-of-date file, not a silent no-op
+    try:
+        apply_pending(base, m0, {**pend, "transfers": [
+            {"out": {"player_code": 99, "web_name": "Gone"}, "in": pend["transfers"][0]["in"]}]})
+        raise AssertionError("stale pending file was applied silently")
+    except ValueError:
+        pass
     # resolve_team_id precedence
     old = os.environ.pop("FPL_TEAM_ID", None)
     try:
@@ -259,9 +357,19 @@ if __name__ == "__main__":
         selftest(); sys.exit(0)
     sq, meta = fetch(a.team_id, a.gw)
     write(sq, meta, write_tracker=a.write_tracker)
-    with open(os.path.splitext(LIVE_SQUAD)[0] + "_meta.json", "w") as fh:
-        json.dump(meta, fh, indent=1)
+    with open(LIVE_META, "w", encoding="utf-8") as fh:
+        json.dump(meta, fh, indent=1, ensure_ascii=False)
     if a.team_id:
         remember(a.team_id)
+    # show what the CONSUMERS will see: the fetched picks with pending transfers applied
+    sq, meta = load()
+    if meta.get("pending"):
+        print(f"[fpl-entry] pending GW{meta['pending_gw']} transfers applied from "
+              f"{PENDING}: {'; '.join(meta['pending'])}; bank {meta['bank']:.1f}-"
+              f"{meta['bank_hi']:.1f}")
+    elif meta.get("pending_superseded"):
+        print(f"[fpl-entry] the feed now carries GW{meta['pending_superseded']} picks, so "
+              f"{PENDING} is superseded and ignored — empty its `transfers` list (keep "
+              f"the file: it is a manifest node)")
     print(sq[["slot", "web_name", "pos", "team", "now_cost", "in_xi",
               "is_captain"]].to_string(index=False))

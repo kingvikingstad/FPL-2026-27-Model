@@ -117,14 +117,23 @@ OUT = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "start_prior_s
 
 
 def usable_seasons(panel):
+    """Seasons with READ starts. `starts_derived` is per row since 2026-09-16: 22/23 is
+    read from GW16 and derived before it, because FPL published a literal 0 for GW1-15
+    (src/fpl_history.py, SCHEMA ERAS). Testing the season with `.any()` would discard it
+    outright and take the 23/24 fold with it; testing for read rows keeps the rule this
+    study registered — every count is read, none inferred — and `build` enforces it per
+    row. Identical to the old test for every season that is wholly read or wholly derived."""
     return sorted(s for s, g in panel.groupby("season")
-                  if not bool(g["starts_derived"].any()))
+                  if bool((~g["starts_derived"].astype(bool)).any()))
 
 
 def build(panel, seasons):
-    """One row per (player_code, season, cutoff)."""
-    panel = panel.sort_values(["player_code", "season", "gw"])
+    """One row per (player_code, season, cutoff). Read starts only: derived rows are
+    dropped before anything is counted, so a partly-read season (22/23) supplies a prior
+    from the gameweeks it actually reports."""
     order = {s: i for i, s in enumerate(sorted(panel["season"].unique()))}
+    panel = panel[~panel["starts_derived"].astype(bool)]
+    panel = panel.sort_values(["player_code", "season", "gw"])
 
     per = (panel.groupby(["player_code", "season"])
                 .agg(st=("is_start", "sum"), n=("is_start", "size")).reset_index())

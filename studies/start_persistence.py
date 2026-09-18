@@ -12,8 +12,11 @@ Two different questions live inside "how much does starting last week matter":
       The naive between-player contrast is almost entirely FRAILTY: nailed-on players
       supply nearly all the 1->1 transitions and fringe players nearly all the 0->0
       ones, so the gap measures who the players are, not what last week did. The
-      within-player-season contrast (a fixed-effects estimator: each player is his own
-      control) is the identified quantity.
+      within-player-season contrast (each player is his own control) removes that
+      between-player frailty. It is NOT identified state dependence [corrected
+      2026-09-16, stats-referee]: it is estimated only on rotation-zone player-seasons
+      (>=5 of each state), a fixed-count sequence biases it DOWN by ~1/(n-1), and
+      within-season drift in a player's rate biases it UP. Read it as persistence.
 
   Q2  DURATION DEPENDENCE.  Does h(k) = P(start at t+1 | k consecutive starts through t)
       keep rising in k? Raw h(k) rises under a pure mover-stayer process with ZERO true
@@ -25,18 +28,25 @@ NULL — a within-player-season permutation of the outcome sequence. It preserve
 player-season's start COUNT exactly (so all frailty survives) and destroys only the
 order. Excess = h_obs(k) - h_perm(k) is the part of the streak profile that ordering
 buys. Following the project's permutation guard, the OUTCOME is permuted, not labels.
+The count it holds fixed is the FULL season's, including matches after t, so "no excess"
+means no information beyond the player's own season rate — not beyond a forecaster's
+prior. It does not test whether a streak term improves a forecast.
 
-CONFOUND, stated up front: h_obs - h_perm bundles two channels that this data cannot
-separate — (a) selection state dependence (a manager keeps a settled XI) and (b)
+CONFOUND, stated up front: h_obs - h_perm bundles channels that this data cannot
+separate — (a) selection state dependence (a manager keeps a settled XI), (b)
 availability persistence (a fit player stays fit; an injury is a BLOCK of zeros, and
-clustered zeros mechanically cluster the ones too). Both are real for forecasting; only
-(a) is "trust". The `nogap` scope re-runs on player-seasons with no absence block of
+clustered zeros mechanically cluster the ones too) and (c) within-season drift in role.
+All are real for forecasting; only (a) is "trust". The non-start hazards this study also
+prints have NO null and are descriptive only. The `nogap` scope re-runs on player-seasons with no absence block of
 GAP+ consecutive non-appearances, which strips most injury spells.
 
 DEFINITIONS
   unit          one player-season match sequence, ordered by kickoff_time (so a double
                 gameweek is two ordered matches, not one)
-  start         native `starts` column (2022/23 on). The mins>=60 proxy needed for
+  start         native `starts` column, read from 2022/23 GW16 on — FPL published a
+                literal 0 for GW1-15 (fpl_history.empty_native_gws), and before the
+                2026-09-16 fix those zeros entered as non-starts, pushing every
+                persistence number here UP. The mins>=60 proxy needed for
                 earlier seasons spuriously BREAKS streaks whenever a starter is hooked
                 before the hour, so it is reported as a separate scope, not pooled in.
   streak k      run length of consecutive starts ending at match t, reset each season
@@ -78,14 +88,20 @@ def _season_seq(season):
     d = d[d["player_code"].notna()].copy()
     d["player_code"] = d["player_code"].astype(int)
     d["mins"] = pd.to_numeric(d.get("minutes"), errors="coerce").fillna(0.0)
+    d["gw"] = pd.to_numeric(d.get("GW", d.get("round")), errors="coerce")
     if "starts" in d.columns:
+        # A present column is not a populated one: 22/23 carries a literal 0 in GW1-15.
+        # Those gameweeks are DROPPED, not proxied — the proxy is kept out of the native
+        # scope precisely because it breaks streaks, so the season is observed from GW16.
+        gap = fh.empty_native_gws(d, "starts")
+        if gap:
+            d = d[~d["gw"].isin(gap)].copy()
         d["is_start"] = (pd.to_numeric(d["starts"], errors="coerce").fillna(0) > 0)
         native = True
     else:
         d["is_start"] = d["mins"] >= fh.START_MINUTES
         native = False
     d["ko"] = pd.to_datetime(d.get("kickoff_time"), errors="coerce", utc=True)
-    d["gw"] = pd.to_numeric(d.get("GW", d.get("round")), errors="coerce")
     if "fixture" in d.columns:
         d = d.drop_duplicates(subset=["player_code", "fixture"])
     d["season"] = season

@@ -1,0 +1,12 @@
+{
+ "gw": 4,
+ "applied": "2026-09-06",
+ "transfers": [
+  {
+   "out": {"player_code": 466052, "web_name": "Cherki", "list_price": 7.8, "purchase_price": 7.5},
+   "in": {"player_code": 244850, "web_name": "Rogers", "pos": "MID", "team": "Chelsea", "price": 7.5}
+  }
+ ],
+ "bank_bounds": [0.0, 0.3],
+ "note": "Typed by hand: FPL's public feed does not publish a gameweek's picks until its deadline passes, so a pending transfer is invisible to fpl_entry. Bank is a RANGE: Cherki was bought for 7.5 (entry/transfers, 2026-08-28) and listed at 7.8 when sold, so he sold for 7.5-7.8 and the public feed cannot say which. Moved here from the meta JSON's `overlay` on 2026-09-10; fpl_entry.load() applies it until a fetch returns GW4 picks, then ignores it."
+}

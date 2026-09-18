@@ -47,6 +47,7 @@ import warnings; warnings.filterwarnings("ignore")
 import numpy as np, pandas as pd
 import core_insights as ci, signals as sg, starter_prior as sp
 import bayes_model
+import inseason
 from roster import calibrate_cold_start, _coldstart_row
 
 # Must match the board's draw count. The team sampler is seeded (rng=default_rng(7)) but
@@ -54,8 +55,10 @@ from roster import calibrate_cold_start, _coldstart_row
 S = int(_os.environ.get("DRAWS", "3000"))
 GW_HI = int(_os.environ.get("GW_HI", "10"))
 # Must match the board. gw_board applies predicted XIs to ONE gameweek and this
-# export exists to explain that board, so it has to name the same week.
-PRED_XI_GW = int(_os.environ.get("PRED_XI_GW", "1"))
+# export exists to explain that board, so it has to name the same week — derived by the
+# SAME function. This was a hardcoded 1 until 2026-09-10, so on a GW4 board the
+# `p_start_prior_predxi` column described GW1's team news.
+PRED_XI_GW = int(_os.environ.get("PRED_XI_GW") or inseason.next_open_gw())
 OUT = _os.path.join(config.OUTPUTS, f"projection_detail_gw1_{GW_HI}.csv")
 PRIOR_COLS = ["npxgi_alpha", "npxgi_beta", "xa_alpha", "xa_beta",
               "defcon_alpha", "defcon_beta", "start_a", "start_b",
@@ -109,21 +112,30 @@ def player_priors():
         # export explains the board, so a lever the board applied and this did not would
         # produce a p_start_prior column describing a run that never happened. The cap was
         # previously missing, which made the two diverge whenever INSEASON_KAPPA was set.
-        _k = _os.environ.get("INSEASON_KAPPA", "").strip()
+        # ON by default since 2026-09-17, mirroring gw_board.py — see the note at its
+        # `_kap` resolution and PROJECT_KNOWLEDGE §6.9. `INSEASON_KAPPA=off` disables it
+        # in both places, and this export must follow the board or the p_start_prior
+        # column it publishes describes a run that never happened.
+        _k = _os.environ.get("INSEASON_KAPPA", str(_ins.START_KAPPA)).strip()
+        if _k.lower() in ("off", "0", "none", "inf"):
+            _k = ""
         if _k:
             pl, _ = _ins.cap_start_prior(pl, kappa=float(_k), verbose=False)
         _l = _os.environ.get("INSEASON_LAM", "").strip()
+        _apps = _ins.appearances(upto_gw=_upto, verbose=False,
+                                 lam=float(_l) if _l else _ins.RECENCY_LAM)
         pl, _ = _ins.update_minutes(
-            pl, _ins.appearances(upto_gw=_upto, verbose=False,
-                                 lam=float(_l) if _l else _ins.RECENCY_LAM),
-            weight=float(_os.environ.get("INSEASON_W_MIN", _ins.W_MINUTES)),
+            pl, _apps, weight=float(_os.environ.get("INSEASON_W_MIN", _ins.W_MINUTES)),
             verbose=False)
+        if _os.environ.get("INSEASON_EXP_MINUTES", "off").lower() in ("on", "1", "true"):
+            pl, _ = _ins.update_exp_minutes(
+                pl, _apps, k_half=float(_os.environ.get("INSEASON_EXP_K",
+                                                        _ins.EXP_MINUTES_K)),
+                verbose=False)
         pl, _ = _ins.update_rates(
             pl, _ins.rates(upto_gw=_upto, verbose=False),
             weight=float(_os.environ.get("INSEASON_W_RATE", _ins.W_RATE)),
             verbose=False)
-    if _os.environ.get("XI_CONSTRAINT", "on").lower() not in ("off", "0"):
-        pl, _ = sp.apply_xi_constraint(pl, verbose=False)
     # Same availability source as the board, or the exported p_start_prior describes a
     # simulation that never ran. See gw_board.py for why live is preferred.
     sig["player_code"] = d26["player_code"].values
@@ -137,16 +149,31 @@ def player_priors():
         except Exception as e:
             print(f"[export] live availability unavailable ({type(e).__name__}); snapshot")
     pl = sg.apply_availability(pl, sig, lineups=None)
-    _spt = _os.environ.get("FPL_SETPIECE", "observed").lower()
+    # AFTER availability, with the ruled-out held — the board's order since 2026-09-08.
+    # This ran BEFORE availability until 2026-09-10, the ordering the board abandoned
+    # because it normalised each club to eleven and then let injuries delete players out
+    # of that eleven (league 220.0 -> 184.9 expected starters). So every p_start_prior
+    # here was deflated at exactly the clubs with the most team news.
+    if _os.environ.get("XI_CONSTRAINT", "on").lower() not in ("off", "0"):
+        pl, _ = sp.apply_xi_constraint(pl, hold=pl.get("avail_ruled_out"), verbose=False)
+    # Default "fpl", the board's since 2026-09-08. This still defaulted to "observed" —
+    # the n=1 estimator studies/penalty_assignment.py argues against, which let a single
+    # realised penalty overturn a declared taker — so the exported pen_xg90 credited
+    # penalties to players the board did not.
+    _spt = _os.environ.get("FPL_SETPIECE", "fpl").lower()
     import set_piece_takers as spt
     if _spt not in ("off", "0", "fpl", "observed"):
         sig = spt.apply_to_signals(sig, d26[["web_name", "team", "player_code"]],
-                                   mode="override", verbose=False)
-    # player_code, not web_name — see set_piece_takers.pen1_codes
+                                   mode="fill" if _spt == "fill" else "override",
+                                   verbose=False)
+    # player_code, not web_name — see set_piece_takers.pen1_codes. Same window as the
+    # board: 38 means "no cut", which press_measured and observed_takers read as None.
+    _upto_all = int(_os.environ.get("INSEASON_UPTO", "38"))
     _pen_src = d26[["web_name", "team", "player_code"]].copy()
     if "penalties_order" in d26.columns:
         _pen_src["penalties_order"] = d26["penalties_order"]
-    pen1 = spt.pen1_codes(_pen_src, mode=_spt)
+    pen1 = spt.pen1_codes(_pen_src, mode=_spt,
+                          upto_gw=None if _upto_all >= 38 else _upto_all)
     pl["pen_xg90"] = np.where(pl.player_code.isin(pen1),
                               pl.pen_xg90.fillna(0).clip(lower=0.10), 0.0)
     # Cold-start players carry no exp_minutes, so `_minutes_if_start` falls back to the
@@ -178,6 +205,8 @@ def player_priors():
                 _plp, _ = pxi.apply_soft(
                     pl, pxi.resolve(pxi.load(gw=PRED_XI_GW), _sq, verbose=False),
                     verbose=False)
+            # the board caps a lineup source at what the injury feed permits; mirror it
+            _plp, _ = pxi.apply_injury_ceiling(_plp, sig, verbose=False)
             _plp, _ = pxi.apply_minutes_caps(_plp, gw=PRED_XI_GW, verbose=False)
             pl["p_start_prior_predxi"] = (_plp["start_a"] /
                                           (_plp["start_a"] + _plp["start_b"]))
@@ -200,6 +229,10 @@ def fixtures():
 
     Returns (per team-gameweek frame, per-team season frame)."""
     import export_team_projections as etp
+    # Pin the team layer to THIS export's window. The two used to agree only because both
+    # read GW_HI with the same default; that default is 38 there and 10 here since
+    # 2026-09-10, and the season table's window sums (xga_env, exp_pts) depend on it.
+    etp.GW_HI = GW_HI
     T, G = etp.build()
 
     keep_gw = ["team", "gw", "opponent", "is_home", "lam_for", "lam_for_p5",

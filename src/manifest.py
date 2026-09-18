@@ -140,6 +140,31 @@ _NODES = [
          note="Solio JSON, every 4h by the 'FPL Solio Snapshot' task; NOT regenerable"),
     Node("odds_snapshots/", config.ODDS_SNAPSHOTS, "committed",
          note="football-data E0 odds; `python src/fixture_market.py --fetch`; NOT regenerable"),
+    # The manager's squad, registered 2026-09-10 after the squad tab showed a four-day-old
+    # mid-gameweek snapshot and doctor could not say so. Fetched by `src/fpl_entry.py`
+    # from the public FPL API — not the upstream data repo, and not a pipeline build step,
+    # so `committed`: checked, never built. Refreshing it marks the explorer and the
+    # wildcard solve STALE, which is the point. The pending file is typed by hand and
+    # applied over the fetch by `fpl_entry.load()` (see its docstring).
+    Node("my_squad_live.csv", _dat("my_squad_live.csv"), "committed", min_rows=15,
+         columns=("gw", "player_code", "web_name", "pos", "team", "now_cost", "slot",
+                  "in_xi", "is_captain"),
+         nonnull=("player_code", "slot"),
+         note="last published picks; refresh with `python src/fpl_entry.py`"),
+    Node("my_squad_live_meta.json", _dat("my_squad_live_meta.json"), "committed",
+         note="bank, value, rank, chip and fetched_at for the fetch above"),
+    Node("my_squad_pending.json", _dat("my_squad_pending.json"), "committed",
+         note="next-gameweek transfers the public feed cannot see yet; hand-entered"),
+    # Registered 2026-09-10. Until then `defcon_roles.role_map()` read the STUDY file
+    # `studies/defcon_matchups.csv` at prior-build time: a live input to ms_priors.pkl that
+    # this graph could not see, rewritten by every test_all run (so its mtime was noise),
+    # and silently replaced by an empty map when absent. Frozen here by
+    # `python src/defcon_roles.py --freeze`; committed, because nothing in the pipeline
+    # rebuilds it and re-freezing is a deliberate act, not a build step.
+    Node("defcon_roles.csv", config.DEFCON_ROLES, "committed", min_rows=100,
+         columns=("player_code", "role", "n_role", "n_apps"),
+         nonnull=("player_code", "role"),
+         note="CB/FB label per player_code, 25/26; sets the DEF DefCon prior mean only"),
 
     # --- derived: reconstructed inputs --------------------------------------
     Node("E0_recon.csv", config.E0_RECON, "derived", producer="scripts/reconstruct_e0.py",
@@ -157,7 +182,7 @@ _NODES = [
          inputs=("players.csv", "playerstats.csv", "team_history.csv"),
          note="25/26 per-match panel (build_pms)"),
     Node("ms_priors.pkl", config.MS_PRIORS, "derived", producer="scripts/build_all.py",
-         inputs=("pms_panel.pkl",),
+         inputs=("pms_panel.pkl", "defcon_roles.csv"),
          note="two-season pooled priors, older_weight=0.5"),
     # NOT derived, and deliberately not an input edge anywhere. `starter_prior.
     # calibrate_ownership_start()` REWRITES this pickle every time it is called, and it
@@ -196,9 +221,23 @@ _NODES = [
          producer="scripts/run_solio_ensemble.py",
          inputs=("gw_board_long.csv", "solio_cache.md"),
          note="model x market ensemble"),
-    # The per-fixture team export. It carries the market's lambda beside the model's
-    # (fixture_market), so a new snapshot in either store must mark it stale. The explorer
-    # reads it. Inputs are the reads export_team_projections performs.
+    # THE EXPLORER'S OWN OUTPUTS, which were never registered. `doctor` therefore called
+    # the tree clean while `gw_explorer.html` could be arbitrarily older than the board it
+    # claims to display — the exact failure the manifest exists to prevent, and a costly
+    # one here because this page is the surface the weekly decision is actually read off.
+    # Registered 10 Sep 2026, when the captaincy panel made it more decision-bearing still.
+    # The CSV carries the schema check; the HTML is the same build and is checked for
+    # existence and staleness only, since a 3.6MB self-contained page has no columns to
+    # verify and parsing it to prove that would cost more than it establishes.
+    #
+    # AND ITS INPUTS, registered 10 Sep 2026 — the same gap one level up. `gw_explorer`
+    # also reads the three files below, none of which was a node, so the page could show
+    # today's board beside a wildcard fifteen and fixture lambdas from a board that no
+    # longer existed (wildcard_xi.csv predated all four 2026-09-08 board corrections) and
+    # doctor still said `ok`. Inputs are the reads the producers perform:
+    # export_team_projections fits its own TeamModel from the feed + pinned Elo + E0 and
+    # stacks realised 26/27 matches (the By Gameweek match files are not nodes;
+    # gameweek_summaries.csv stands in for "the feed moved", as it does for the board).
     Node("team_projections_gw1_38.csv", _out("team_projections_gw1_38.csv"), "derived",
          producer="scripts/export_team_projections.py",
          inputs=("players.csv", "playerstats.csv", "teams.csv", "team_elo_2627.csv",
@@ -212,6 +251,39 @@ _NODES = [
          nonnull=("team", "gw", "lam_for", "lam_against"),
          note="per-fixture posterior lambdas GW1-38, plus market lambda where priced; "
               "the explorer accepts no narrower file"),
+    Node("team_projections_season.csv", _out("team_projections_season.csv"), "derived",
+         producer="scripts/export_team_projections.py",
+         inputs=("players.csv", "playerstats.csv", "teams.csv", "team_elo_2627.csv",
+                 "gameweek_summaries.csv", "E0_recon.csv"),
+         min_rows=20,
+         columns=("team", "att_strength", "def_strength", "exp_pts", "exp_cs",
+                  "defcon_opponent_category"),
+         nonnull=("team", "att_strength", "def_strength"),
+         note="per-club table; exp_pts/exp_cs/xga_env are sums over GW1-GW_HI"),
+    Node("wildcard_xi.csv", _out("wildcard_xi.csv"), "derived",
+         producer="scripts/export_wildcard_xi.py",
+         inputs=("gw_board_long.csv", "my_squad_live.csv", "my_squad_live_meta.json", "my_squad_pending.json"),
+         min_rows=15,
+         columns=("gw", "player_code", "player", "pos", "team", "price", "ep", "in_xi",
+                  "is_captain"),
+         nonnull=("gw", "player_code", "ep"),
+         note="optimal fifteen per gameweek, next 12, solved off the board"),
+    Node("gw_explorer.csv", _out("gw_explorer.csv"), "derived",
+         producer="scripts/export_gw_explorer.py",
+         inputs=("gw_board_long.csv", "team_projections_gw1_38.csv",
+                 "team_projections_season.csv", "wildcard_xi.csv",
+                 "my_squad_live.csv", "my_squad_live_meta.json", "my_squad_pending.json"),
+         min_rows=400, columns=("player_code", "player", "pos", "team", "gw", "blended"),
+         nonnull=("player_code", "gw", "blended"),
+         note="the explorer's table, tidy long, for pivoting elsewhere"),
+    Node("gw_explorer.html", _out("gw_explorer.html"), "derived",
+         producer="scripts/export_gw_explorer.py",
+         inputs=("gw_board_long.csv", "team_projections_gw1_38.csv",
+                 "team_projections_season.csv", "wildcard_xi.csv",
+                 "my_squad_live.csv", "my_squad_live_meta.json", "my_squad_pending.json"),
+         note="the interactive page. It projects nothing, so it is cheap to rebuild and "
+              "should be rebuilt after every board change — but it reads three files "
+              "besides the board, and each must be current too"),
 
     # --- derived: registered 2026-09-08 -------------------------------------
     # These three were durable, tracked in git, and invisible to the graph, so a tree

@@ -49,6 +49,83 @@ empirical result for each. Companion to `PROJECT_KNOWLEDGE_2627.md`.
   clean-sheet expected points, making DefCon auditable/A-B-able (§4.1a of the DefCon handoff).
 - **Solio name collision** — alignment made team-aware (name+team).
 
+## The start-prior cap is ON by default — scored out of sample (§6.9b), 17 Sep 2026
+`scripts/ab_inseason_starts.py`, evidence `outputs/ab_inseason_starts.csv`. The rule, the
+power calculation and the endpoint were written into the file before the first run.
+
+- **The old harness could not answer this, and its flaws all pointed one way.**
+  `ab_inseason_minutes.py` scored only players who FEATURED — removing exactly the case the
+  cap fixes, and selecting on a collider, since the arms disagree about who will feature. It
+  scored a MEAN forecast with MAE, which is minimised by the median and so rewards shading
+  down a right-skewed target. And `INSEASON_UPTO` never truncated `playerstats.csv`, so a
+  board "built on GW1" still read GW4 ownership and injury flags. Kept as the record of its
+  arms; superseded for this question.
+- **Design.** Arm built with `INSEASON_UPTO=t-1`, scored on GW t, with the feed copied to
+  scratch and `playerstats.csv` truncated to `gw <= t-1`. Every listed player at a club that
+  played is scored — no filter on whether he appeared. Primary endpoint Brier on the realised
+  native start; points squared error as a GUARDRAIL, because a per-player-gameweek squared
+  error difference has sd ~1.1 against an expected effect of ~0.04 [DERIVED] and cannot be
+  decisive in three weeks. Power for the primary came first: on 23/24-25/26, kappa=4 improved
+  the next match's start prediction in **24 of 24 season-gameweeks**, mean 21.4%.
+- **RESULT, GW2/3/4, all three pre-registered conditions met.** Brier **+15.4%** pooled
+  (12.0 / 17.0 / 17.4 by week), better in **3/3** weeks, points squared error **+4.0%**
+  (better, against a −2% guardrail). Players projected above 0.5 who did not start fell from
+  29/33/35 to 22/26/30. `INSEASON_KAPPA` now defaults to 4 in `gw_board.py` and
+  `export_projection_detail.py`; `INSEASON_KAPPA=off` restores the uncapped prior.
+- **The level bias from §6.9(a) is absorbed downstream, and the A/B shows it.** In EVERY arm
+  the mean projected start probability equals the realised start rate to three decimals
+  (0.357 / 0.337 / 0.335) — the XI constraint pins the league to eleven per club, so the
+  appearance-denominator bias cannot reach the board's level. What kappa buys is therefore
+  DISCRIMINATION between players, not calibration in the large. That also answers the open
+  question left in §6.9(a): fixing the denominator is a prior-layer correction, not a board
+  one, and it does not confound this adoption.
+- **The other two arms, non-adopting by prior declaration.** `INSEASON_LAM=0.75` on top of
+  kappa added +1.2pp (18.2% / 19.8% in GW3/GW4) — promising, but it had no power calculation
+  and stays OFF. `INSEASON_EXP_MINUTES` moved the start endpoint by 0.0% at every week, as
+  expected since it touches minutes-per-start rather than selection; its points effect was
+  +0.1%, far inside noise. §6.8 still needs its own design.
+- One board change came with this: `DUMP_FRAME=<path>`, off by default, writes each
+  gameweek's start prior as projected. Without it the board exposes no p_start at all and an
+  A/B could only score points, where this effect is invisible.
+
+## Start-prior strength re-fit on the production prior (§6.9a), 17 Sep 2026
+`studies/start_prior_production.py`, evidence `studies/start_prior_production.csv`. It
+reruns `start_prior_strength.py`'s sweep (same grids, same Brier, same leave-one-season-out
+over 23/24-25/26) on a replica of the prior `gw_board.py` actually installs: two-season
+pooled minutes-based starts, revert 0.7 + Beta(2,2), then the ownership shrink with live
+ownership at the deadline after match k. Rules were pre-registered in the file before it
+was run. No flag changed.
+
+- **Fidelity gate.** The first run FAILED it and scored nothing (median strength 43.9
+  replica vs 26.6 installed). The fix was to the replica, not to the gate: see the
+  denominator finding below. Second run: r of prior means 0.962, median strength error 0%.
+- **Q1: replicates, smaller.** The current setting (w=1, κ=∞) is beaten at every cutoff, 3/3
+  folds: **6.3 / 6.7 / 7.3 / 7.2%** at k = 2/3/5/8, against 8.4-11.5% on the stand-in prior.
+- **Q2: the lever is now identified, and it is the CAP.** On the stand-in prior, capping the
+  prior and up-weighting evidence could not be told apart (S3 reproduces that on the same
+  rows: mixed signs). On the installed prior the cap beats the weight by **+0.64% to +1.01%**
+  of baseline Brier, 3/3 folds, at all four cutoffs. The margin is small next to the gain
+  itself.
+- **Q3: κ = 4 pinned** as the `INSEASON_KAPPA` value. It is interior; the per-cutoff LOSO
+  optima are 4/4/5/5; κ=4 and κ=5 are 0.1pp apart pooled. `inseason.START_KAPPA` already
+  held 4. **The flag stays OFF**: this is §6.9(a) only, and (b), the points A/B, is not done.
+- **FINDING, bigger than the question: the installed start prior is biased UP by ~12
+  points.** `two_season_evidence` counts `games` as rows of match-sheet panels (24/25: no
+  zero-minute rows; 25/26: 9.9%), so `start_b` counts sub appearances, not matches missed.
+  The prior estimates P(start | appeared); the in-season update and the board both need
+  P(start | club match). Prior mean **0.548** against a realised **0.424**. Rebuilt with
+  every listed match as the denominator (S5), the mean is **0.434** and the uncapped
+  baseline Brier falls 0.2253 → 0.2109 (−6.4%) before any cap, roughly the cap's whole gain.
+  With the denominator fixed, the cap still helps (+4.1-5.7%) and its optimum moves to κ=5-8.
+  **So part of what κ=4 "fixes" is this mean bias.** Two caveats: [VERIFIED] at the prior
+  level only. The board's XI constraint and availability run after the update and may absorb
+  part of the level bias, and this study replicates neither. And S5 was declared
+  non-decision-bearing, so it licenses a new pre-registered item, not a change.
+- Declared sensitivities, reported only: mins≥60 target (S1) matches the primary; removing
+  the ownership shrink (S2) raises baseline Brier to 0.270, i.e. the shrink is already
+  correcting much of the denominator bias; a 10-match horizon (S4) prefers κ = 2-3. GK-only
+  gain at κ=4: +18.0%, descriptive (H-POS is a recorded null).
+
 ## The market's lambda, per fixture, beside the model's, 11 Sep 2026
 `src/fixture_market.py` — the per-fixture table now carries what the market says about
 the same fixture (`mkt_lam_for`, `mkt_lam_against`, `mkt_p_clean_sheet`, `mkt_source`,
@@ -108,6 +185,88 @@ refuses. What was missing was not a signal, it was the comparison.
   runs after the Solio fetch on the existing 4-hourly task, independently of it, and the
   task exits non-zero if either fails (`SOLIO_MARKET_FEED` §9 item 4).
 
+## Travel distance: one real effect, one null, shipped off then switched on, 10-11 Sep 2026
+Pre-registered study `studies/travel_distance.py`, outcome-blind design pass first. 31
+seasons, team-season attack+defence FE, SEs clustered on the club pair.
+- **Traveller goals against: real.** +0.0323 per log-km, z = +4.62, the same in 2016-26
+  alone. A derby roughly halves home advantage; the longest trips add ~4% to home goals.
+- **Traveller goals for: null.** No code path.
+- **Failed the market gate** (score z = +1.73), so `src/travel.py` ships **off by default**
+  (`FPL_TRAVEL=on`). It is hooked into `_home_effect`, home side only, centred on the 25/26
+  mean trip, with b drawn per posterior draw. The guard's premise (double-counting odds)
+  does not hold mechanically here, because the per-fixture λ ingests no match odds. That is
+  raised for a decision in `docs/TRAVEL_DISTANCE_2026-09-10.md` §6, not acted on.
+- `style_matchup.market_score_test` split out of `beats_the_market`, so any covariate uses
+  the one gate implementation; `beats_the_market` behaviour is unchanged.
+- A/B, same seed: per-fixture CS moves −1.4pp to +3.6pp; season CS ±0.12 per club.
+  Player-level deltas sit at the Monte Carlo floor. A changed λ desynchronises numpy's
+  small-λ Poisson stream, so a same-seed A/B of a λ change is not common random numbers.
+- **11 Sep 2026: switched ON by default** on the owner's explicit decision. It is a scoped
+  override of the market gate, recorded in the CLAUDE.md guard row; `FPL_TRAVEL=off`
+  disables it. The board and everything downstream were rebuilt. The GW4 deadline lock
+  predates the change.
+
+## The five inline home terms are routed, and there is now one owner, 14 Sep 2026
+**Two sessions did this independently on the same day and their numbers agree to the
+decimal place.** Both are recorded here as one entry, because it is one change. The
+measurement below is the more thorough of the two A/Bs; the structural half beneath it is
+from the other. Dated 14 Sep: an earlier draft of this entry and of
+`TRAVEL_DISTANCE_2026-09-10.md` said 12 Sep, but there is no 12 Sep commit — both landed
+on the 14th (`a48f4fd`, `e105a30`, merged at `b5a3547`).
+
+`captaincy.point_draws`, `cs_fixtures.py`, and the `xga27` loops in `gw_board.py`,
+`run_final_board.py` and `tests/test_defcon_env.py` built λ with their own
+`home if is_home else 0`. They skipped the GW1-3 discount, and once `FPL_TRAVEL` went on
+(11 Sep) the travel term as well, so the captaincy tails, the CS ranking and the DefCon
+environment each read a different home term from the board's own mean for the same fixture.
+Each now goes through `bayes_model.fixture_home_terms`, which fetches the fixture's trip
+once and applies `_home_effect` to both sides with the SAME trip, as `project()` does.
+A/B on one frozen tree `[VERIFIED]`:
+- **The refactor is exact.** With `FPL_TRAVEL=off`, all 700 GW4-38 team-fixtures give
+  bitwise-identical `lam_for` and `lam_against`; `point_draws` over GW4, GW4-6 and GW7-10 is
+  bitwise equal; `cs_fixtures_gw1_10.csv` GW4-10 is identical in all 140 rows. So everything
+  below is the discount and the travel term arriving, not a changed formula.
+- **GW1-3, from the discount alone** (travel off): home sides' xGA ×1.079, away ×0.927
+  (e^±0.076 exactly), P(CS) −2.5pp home and +2.4pp away on all 60 rows.
+- **GW4-10, from the travel term** (default on): 70 of 140 rows move — every away side, mean
+  |ΔP(CS)| 0.35pp, max **+3.3pp** (GW4 Man City at Man United), +3.0pp (GW5 Chelsea at
+  Brentford), down to −1.4pp on the longest trips (Brighton at Sunderland). Home sides are
+  unchanged by construction: the shift is on the home side's λ_for, which is the away side's
+  λ_against. GW1-10 CS totals move ≤0.09 per club (Chelsea); the top 10 fixtures are the same
+  set in a slightly different order.
+- **The boards are not bitwise unchanged at GW4+, and should not be.** `xga27` is one scalar
+  per club averaged over a window starting at GW1, so both terms reach it and then scale every
+  DEF's `defcon_alpha` in every gameweek. Ratio new/old, travel on: 0.9917-1.0140 over the
+  board's GW1-38 window, 0.932-1.026 over `run_final_board`'s GW1-6. `gw_board` with
+  `LIVE_FPL=off`: **only DEF rows change** — 6,681 of 24,852, GW4-38 mean +0.0007/gw, max
+  0.132/gw; GK, MID and FWD are bitwise identical at float64 in the GW4 draws (440/440), and
+  174 of 214 DEFs move. Season top 30 is the same set. Player-level deltas are mostly the
+  desynchronised-stream noise noted above; the systematic part is ≤1.4% of a DEF's DefCon EV.
+- A same-seed board A/B needs `LIVE_FPL=off`: with it on, one player's status changed between
+  two runs 20 min apart (168 → 169 ruled out) and moved 570 non-DEF rows that had nothing to
+  do with the change under test.
+
+**One owner, not five copies.** Routing each site to `_home_effect` directly leaves the
+incantation — fetch the trip, remember it belongs to the FIXTURE and not to a side, call
+twice — duplicated at six places, which is the duplication that produced this bug. The
+merged implementation adds `bayes_model.fixture_home_terms(home, gw, is_home, team, opp)
+-> (h, hopp)` and routes `project()` through it too, so the engine and its consumers
+cannot diverge again. The board is BYTE-IDENTICAL across that `project()` refactor, so
+nothing above is the restructuring. Row access at every touched site is bracket-indexed
+per CLAUDE.md; the four `import travel` lines the inlined version needed are gone, the
+helper owning that call now.
+
+**Decomposition, on the club-season xGA that feeds DefCon (GW1-10 mean).** Discount alone
+mean -0.0022 / max |0.031|; travel alone mean +0.0052 / max |0.035|; together mean +0.0030
+/ max |0.051| — comparable size, partly offsetting. The travel half has the predicted
+sign: the clubs whose own away trips are longest see xGA rise (Newcastle +0.019,
+Ipswich / Sunderland / Hull +0.020), the London clubs see it fall (Chelsea -0.035, Spurs
+-0.013). CS ranking cross-check from the second implementation: 71 of 200 fixtures move
+P(CS) by more than 0.01, max 0.062, and the top-10 table is unchanged in membership.
+
+`ab_market_vs_recon.py` was the sixth such site. It is not routed — it was deleted the
+same day; see the entry below.
+
 ## Season-to-date facts labelled, and points-per-£m retired, 7 Sep 2026
 Two changes to the explorer's Players tab, both about the same failure: a table that puts
 an exact fact and a modelled quantity side by side, unlabelled, invites reading one as the
@@ -149,59 +308,6 @@ default view, from the construct that answers it. The selftest asserts the strin
 appears nowhere in the rendered page, so it cannot come back by accident.
 
 Profile axes are also filtered by availability now: an axis whose column the board does not
-## The five inline home terms are routed, and there is now one owner, 14 Sep 2026
-
-`docs/TRAVEL_DISTANCE_2026-09-10.md` had carried a "Not wired, and pre-dating this change"
-note since travel shipped. It is now wired. Five call sites built the fixture's home term
-inline as `0.0 if is_home else home`:
-
-  src/captaincy.py:65        point_draws, BOTH sides (h and ho)
-  scripts/cs_fixtures.py:36  lam_against for the CS ranking
-  scripts/gw_board.py:496    the xga27 block feeding the DefCon environment
-  scripts/run_final_board.py:70   same block
-  tests/test_defcon_env.py:45     same block
-
-That expression is the pre-2026-08 convention. It predates the GW1-3 home discount and the
-travel term, so those sites ignored **both** — the second silently, from the moment
-`FPL_TRAVEL` went on by default on 11 Sep.
-
-**One owner, not five copies.** `bayes_model.fixture_home_terms(home, gw, is_home, team,
-opp)` returns `(h, hopp)`: it fetches the fixture's travel shift once and applies
-`_home_effect` to both sides with the SAME trip. Routing each site to `_home_effect`
-directly would have left the three-line incantation — fetch the trip, remember it belongs
-to the fixture and not to a side, call twice — duplicated at six places, which is how the
-drift happened. `project()` was routed through the same helper so the engine and its
-consumers cannot diverge again.
-
-**The `project()` refactor is a verified no-op.** `LIVE_FPL=off SOLIO=off` makes the board
-reproducible (confirmed: two consecutive runs byte-identical). `gw_board_long.csv` is
-byte-identical across the refactor, so everything below is the correction, not the
-restructuring.
-
-**What the correction moves.** Both terms bite, at comparable size, partly offsetting. On
-the club-season xGA that feeds DefCon (GW1-10 mean): discount alone mean -0.0022 / max
-|0.031|; travel alone mean +0.0052 / max |0.035|; together mean +0.0030 / max |0.051|. The
-travel half has the predicted sign — the clubs whose own away trips are longest see xGA
-rise (Newcastle +0.019, Ipswich / Sunderland / Hull +0.020), the London clubs see it fall
-(Chelsea -0.035, Spurs -0.013).
-
-Board: 5,943 of 25,004 player-gw rows move, mean +0.0002, max |0.12|; largest season total
-0.90 pts (Thiaw, Newcastle). **Only defenders move** — with `project()` already correct,
-the sole remaining channel into the board was `xga27` -> DefCon, which touches DEF/CBIT
-only. That is a check on the change as much as a description of it.
-
-CS ranking (200 fixtures, GW1-10): 71 move P(CS) by more than 0.01, max 0.062. **The top-10
-table is unchanged in membership**; the churn is mid-table (178 fixtures move at least one
-rank, max 46 places). Biggest gainers are short away trips in GW1-3, where both corrections
-push the same way — Chelsea at Fulham (2 km) +0.062, Palace at Fulham (13 km) +0.052,
-Chelsea at Arsenal (10 km) +0.045. Biggest losers are GW1-3 HOME sides, and that half is
-the discount's away-side bonus rather than travel: `fixture_shift` adds the trip to the
-home side only, so it never enters a home team's goals-against.
-
-`.pl.ps1 test --quick`, run alone: ALL CHECKS PASSED (10/10, 56/56, 37/37, 7/7, 10/10).
-`--quick` skips the pipeline, so `cs_fixtures.py` and `run_final_board.py` were run
-directly as well.
-
 ## The market-vs-recon A/B was fitting the design the rank guard refuses, 14 Sep 2026
 
 **`src/ab_market_vs_recon.py` deleted.** It could not run on this machine, and routing its
@@ -267,45 +373,15 @@ they are the de-vig/inversion and the fetch+rank-guard, both still the right too
 "market-only" and triggers the rank refusal; that is a guard, not a path bug.
 
 **Correcting the record on the home term.** A note carried into this task said the other
-five inline home-term sites were routed through `bayes_model._home_effect` on 12 Sep, and
-that `ab_market_vs_recon` was the deliberate exception. **That did not happen.** There is no
-12 Sep commit and no 12 Sep entry; `docs/TRAVEL_DISTANCE_2026-09-10.md` ("Not wired, and
-pre-dating this change") still describes the routing as an open separate task. As of today
-the inline sites are `scripts/cs_fixtures.py:36`, `scripts/gw_board.py:496` (`xga27`),
-`scripts/run_final_board.py:70`, `src/captaincy.py:65` and `tests/test_defcon_env.py:45`.
-Deleting `ab_market_vs_recon` removes a sixth and changes nothing about the other five,
-which are the ones that matter: with `FPL_TRAVEL` on by default they ignore the travel term
-and the GW1-3 home discount, so the CS fixture ranking and the captaincy tail metrics can
-disagree with the board. **That was still open when this entry was written; it was closed
-later the same day — see the entry above.**
-
-## Travel distance: one real effect, one null, shipped off then switched on, 10-11 Sep 2026
-Pre-registered study `studies/travel_distance.py`, outcome-blind design pass first. 31
-seasons, team-season attack+defence FE, SEs clustered on the club pair.
-- **Traveller goals against: real.** +0.0323 per log-km, z = +4.62, the same in 2016-26
-  alone. A derby roughly halves home advantage; the longest trips add ~4% to home goals.
-- **Traveller goals for: null.** No code path.
-- **Failed the market gate** (score z = +1.73), so `src/travel.py` ships **off by default**
-  (`FPL_TRAVEL=on`). It is hooked into `_home_effect`, home side only, centred on the 25/26
-  mean trip, with b drawn per posterior draw. The guard's premise (double-counting odds)
-  does not hold mechanically here, because the per-fixture λ ingests no match odds. That is
-  raised for a decision in `docs/TRAVEL_DISTANCE_2026-09-10.md` §6, not acted on.
-- `style_matchup.market_score_test` split out of `beats_the_market`, so any covariate uses
-  the one gate implementation; `beats_the_market` behaviour is unchanged.
-- A/B, same seed: per-fixture CS moves −1.4pp to +3.6pp; season CS ±0.12 per club.
-  Player-level deltas sit at the Monte Carlo floor. A changed λ desynchronises numpy's
-  small-λ Poisson stream, so a same-seed A/B of a λ change is not common random numbers.
-- **11 Sep 2026: switched ON by default** on the owner's explicit decision. It is a scoped
-  override of the market gate, recorded in the CLAUDE.md guard row; `FPL_TRAVEL=off`
-  disables it. The board and everything downstream were rebuilt. The GW4 deadline lock
-  predates the change.
-carry is not offered, rather than drawing an empty ring for every player, which reads as
-"measured, and zero". The squad tab's rotation planner is untouched where it ranks on GAIN PER
-£m PARKED — a marginal quantity over the capital actually left idle, which is the same
-question asked correctly and stays the default. Its `Rotation total per £m` sort option
-went with the column (8 Sep): it divided the pair's TOTAL by the pair's WHOLE price, so it
-charged both players for the first ~4.0m each and ranked cheap pairs that rotate to nothing
-above pairs that score. Three ranking options remain, none of them an average-per-price.
+five inline home-term sites were routed on 12 Sep and that `ab_market_vs_recon` was the
+deliberate exception. The DATE was wrong — there is no 12 Sep commit, and at the time this
+deletion was made `docs/TRAVEL_DISTANCE_2026-09-10.md` still read "Not wired, and
+pre-dating this change", with all six sites inline. The WORK was real but same-day: a
+concurrent session landed it as `a48f4fd` a few hours later, and its draft text carried the
+same wrong 12 Sep date, which is the likeliest origin of the note. Both routings are now
+merged (see the entry above) and the date is corrected wherever it appeared. So this
+deletion removed the sixth inline site, and the other five are closed too — not, as this
+entry originally recorded, still open.
 
 ## The board is bit-identical, so `d_blended` has no noise floor, 7 Sep 2026
 `d_blended` went live when the date rolled and immediately showed six players moving
@@ -328,6 +404,160 @@ chance-of-playing overnight between the 22:29 and 06:26 runs, and GW4-only becau
 cap applies to the imminent gameweek. The delta column caught a genuine team-news change
 on its first day, which is exactly what it is for. Recorded on the metric so a small
 value is not dismissed as jitter.
+
+## Squad tab: four-day-old snapshot, and a refresh that would have reverted a transfer, 10 Sep 2026
+The squad tab showed a GW3 fetch taken MID-gameweek on 6 Sep: 45 points (final 53),
+overall 244 / rank 50,275 (now 248 / 27,933), Sep 6 prices (Groß, Rogers, Isak have each
+risen 0.1), "as picked in GW3 with the wildcard chip" over what was really a GW4 squad, and
+bank 0.0 where the truth is 0.0-0.3. Nothing on the page said when it was fetched, and the
+file was no manifest node, so doctor could not say either.
+
+The obvious fix — re-run `fpl_entry.py` — was a trap. The public picks endpoint publishes a
+gameweek only after its deadline and `entry/transfers` lists only confirmed moves, so the
+pending Cherki -> Rogers transfer (held as a hand `overlay` inside the meta JSON) would have
+been overwritten and silently reverted. Pending transfers now live in
+`data/my_squad_pending.json`; `fpl_entry.load()` applies them over every fetch (slot and
+armband inherited, bank as a range whose LOW end the transfer search spends, FPL's budget
+total preserved) and ignores them once a fetch returns picks for their gameweek. The meta
+carries `fetched_at`; the tab prints it, flags a fetch over a day old, names the pending
+transfers, and says the XI is the last one FPL published — after a gameweek finishes that
+is the lineup AFTER automatic substitutions (O'Reilly benched, Konsa in, for GW3), not a
+GW4 lineup, which is private until the deadline. The three squad files are `committed`
+manifest inputs of the explorer and the wildcard solve.
+
+**Tested and dropped: per-player selling prices.** Purchase prices are public
+(`element_in_cost`), so selling prices looked recoverable. Rebuilt with FPL's
+half-the-rise-rounded-down rule they sum to 100.3 against `entry_history.value` 100.7 (and
+101.1 at current prices). The method does not reproduce FPL's own number, so it is not
+used, and `fpl_entry`'s claim that `value` is the sum of selling prices is now marked
+[CHECK]. The tab keeps FPL's aggregate and says £ is not a selling price.
+
+## Stale-inputs audit: three untracked reads closed, one export un-drifted, 10 Sep 2026
+Audit of every study and stale artifact against its wiring. **Every tested null is off**
+[VERIFIED] — no live module imports a study, and each rejected effect has no code path or a
+default-off flag. The findings were all in the other direction: things feeding a decision
+that the manifest could not see. Three fixed here; the board is unchanged by them.
+
+**A study file was a live input to the priors.** `defcon_roles.role_map()` read
+`studies/defcon_matchups.csv` (literal path, not `config`) inside
+`multiseason_priors.to_priors()`, so a study CSV that `test_all` rewrites on every run fed
+`ms_priors.pkl` with no manifest edge, and a missing file silently returned `{}` — every
+labelled defender moved to the pooled DefCon prior without a word. The labels are now FROZEN
+to `data/defcon_roles.csv` (`config.DEFCON_ROLES`, `defcon_roles.py --freeze`), a
+`committed` node and an input of `ms_priors.pkl`; `role_map()` raises when it is absent.
+Frozen map identical to the live one (146 players, no ties); rebuilt `ms_priors.pkl`
+bit-identical to the pre-change pickle.
+
+**The explorer read three files the graph did not know about.** `wildcard_xi.csv` (built
+7 Sep, before all four 8 Sep board corrections) and `team_projections_gw1_38.csv` /
+`team_projections_season.csv` (8 Sep, stale against the feed) are now derived nodes and
+inputs of both explorer outputs, so `doctor` reports the page STALE when any lags. Their
+producer defaulted to `GW_HI=10`, which writes a file the explorer refuses (it needs the
+board's full window), so the bare run `doctor` prescribes could never have refreshed it:
+default is now 38. `export_projection_detail` pins its own 10-week window on the module
+rather than relying on the two defaults agreeing.
+
+**`export_projection_detail` described a run that never happened.** Its docstring claims to
+mirror the board exactly; it carried three defects the board had corrected: `FPL_SETPIECE`
+defaulted to `observed` (the n=1 estimator `penalty_assignment` rejected), `PRED_XI_GW` was
+hardcoded to 1 (the board is on GW4), and the XI constraint ran BEFORE availability with no
+`hold` (the ordering that cost 220 -> 184.9 starters). All three mirror the board now, plus
+`INSEASON_EXP_MINUTES`, the injury ceiling on predicted XIs and the set-piece window. The
+open-gameweek derivation moved into `inseason.next_open_gw()` so the two runners call one
+function. After rebuild: league `p_start_prior` 220.0, every club 11.0; 20 penalty takers,
+the board's 20.
+
+**Board after rebuild.** 91.7% of rows bit-identical to this morning's; every moved row is
+at Brighton or Hull, attributable to live availability (Yohanna newly `i`, back 10 Oct;
+McNair now available), not to these changes.
+
+**Left open, deliberately.** The Solio blend (`SOLIO` on, `W_OURS=0.5` [JUDGMENT], 30 GW4
+players, scored once in GW1 at MAE 1.58 vs 1.59, and `score_gw` does not write the blended
+line to the ledger); `gk_rotation` / `def_rotation` are squad planners filed as studies,
+with horizons starting at GW1; `export_workbook` / `export_solio_compare` read
+`projection_detail` and `team_projections_gw1_10.csv` and are not manifest nodes — the
+latter is no longer refreshed by a bare run and will age.
+
+## Captaincy per gameweek, and the armband rotation, 10 Sep 2026
+The tail metrics surfaced on 7 Sep answered captaincy for exactly ONE gameweek — the
+first unplayed one — because that is the only week `captaincy_tail` was ever called for.
+A captain is chosen weekly, so the question has an answer per week, and the question
+behind it — "which players do I need to OWN to have a good armband all month" — is a
+coverage question over a window that cannot be asked from a single week's numbers at all.
+
+The Players tab now carries a **Captaincy** panel: 1st / 2nd / 3rd per gameweek across the
+selected window, `C1`/`C2`/`C3` badges in the per-gameweek grid cells beside the
+projection that produced them, and an armband rotation over the window.
+
+THE ROTATION IS `def_rotation`'s ESTIMATOR AT k=1, and nothing new is claimed. Sum over
+gameweeks of the best 1 of the N you own. The same argument licenses it: you pick the
+captain from the projections before any match is played, so what you get is the score of
+the player you actually pick — max(projection) — not E[max], which would assume you knew
+the outcome in advance. The baseline is the **best fixed captain over the same window**,
+because the thing you would otherwise do is captain your best player every week, so
+`gain` is what a second premium buys you. Not to be confused with `rotation multipliers`
+(p=0.23), which is a dead claim about MINUTES and stays in the null register; this is the
+armband moving between players you own, which is a decision, not a pattern claimed about
+a manager.
+
+### Nine of the ten draws dumps in `.cache/` were from a superseded board
+`gw_board` dumps ONE gameweek by default and `.cache/draws_gw<N>.npz` has no mtime
+relationship to the board that is loaded, so SCRATCH accumulates dumps from every board
+ever run. Measured 10 Sep against the current board: **GW4 reconciled to 5e-4** (the CSV's
+own 4dp rounding) and **GW1-3 and GW5-10, written eleven days earlier, disagreed by a
+median of 0.18-0.33 points and a maximum of 4.21.** Reading those would have ranked
+captaincy for GW7 off a superseded model wearing the current board's clothes.
+
+The gate is now `draws.mean(1)` against the board's `mean` for the same gameweek, which is
+an identity when the dump came from this board and not otherwise. A dump that fails is
+treated as ABSENT — not repaired, not fallen back to a neighbouring week — and the
+gameweek ranks on the projection instead, labelled `PROJ` on its own row against `TAIL`.
+A tail-ranked week and a mean-ranked week are not two measurements of the same quantity,
+and stacking them silently under one heading would make the ordering incomparable across
+the very axis the view is built on. `build` names every refused dump and its max
+disagreement.
+
+### The top of the ranking is routinely inside the simulation's own error
+The finding that changed the design. Both bases are means over S draws and both carry a
+standard error — `sd/sqrt(S)` for the projection, `sqrt(p(1-p)/S)` for P(haul) — and at
+S=3000:
+
+- **GW8**: 5.739 / 5.566 / 5.517, standard errors ~0.10. C1 to C2 is 0.173 against a
+  combined two-sigma of 0.27. **Not separated.**
+- **GW4 on the tail basis**: 0.2053 / 0.2050 / 0.2047 against an MC standard error of
+  0.0074 — **twenty times the gap that separates them.**
+- Over GW4-9, the C1 pick is inseparable from C2 in **2 of 6 weeks**.
+
+The board being bit-identical run to run does NOT rescue this, and I had been reading that
+property too generously. Reproducibility is a statement about the seed: it says the same
+simulation error is reproduced exactly, not that there is none. Two players a tenth of a
+point apart swap places under a different seed and nothing in the board tells you which of
+the two orderings you are holding.
+
+So the page prints `±` beside every captaincy number and marks with `≈` any pick it cannot
+separate from the one above it, in the table and on the grid badge. S is NOT assumed: it
+comes from a reconciled dump — one establishes it for the whole board, since `gw_board`
+runs one `DRAWS` for every gameweek — and where no dump reconciles the page makes **no
+separation claim at all** rather than guessing at the default. A confidence marker with
+nothing behind it is worse than no marker.
+
+### What the panel actually says about this window
+Over GW4-9 the best armband rotation is **Haaland + Palmer, worth +1.01 points against
+captaining Haaland every week** — one swap, in GW4. Every set of three is that pair plus a
+passenger: only 2 of 3 ever take the armband, which the panel says on the row, because a
+member who never captains changes the gain by exactly zero and the gain column therefore
+cannot show it. The honest reading is that there is **almost no captaincy rotation to do
+in this window**, and the panel is built to say so — it names the threshold (1.0 points
+over the window) and tells you when the best set is inside it — rather than ranking
+something first and letting the sort imply it is worth doing.
+
+The default basis is therefore the PROJECTION, not the tail, even though captaincy is a
+tail question: on a board dumped for one gameweek the tail exists for one week of six, and
+a control that silently answers a different question for five of them is worse than one
+that answers the same question for all six and names it. `DUMP_DRAWS=all` puts the whole
+window on the tail, and the page says so where it matters. When no gameweek reconciles at
+all, the P(haul) button is disabled and says why, rather than sitting there live and
+quietly ranking every week on the projection.
 
 ## Captaincy tail metrics surfaced, 7 Sep 2026
 `src/captaincy.py` has computed P(haul), ceiling, floor, regret against the template

@@ -43,6 +43,30 @@ SCHEMA ERAS — the same file is three different files
   2022/23-2024/25  `starts` and `expected_goals`/`expected_assists` appear
   2025/26          `defensive_contribution` and the defensive columns return
 
+  A column appearing in the header is NOT the same as a column being populated.
+  [VERIFIED 2026-09-16] In 2022/23 `starts`, `expected_goals` and `expected_assists`
+  are a literal 0 on every row for GW1-15 — FPL began publishing them at GW16 — while
+  minutes are fully recorded. Zero, not null, so a presence check passes them, and 2,818
+  players with 60+ minutes read as non-starters. It is the only such block in the ten
+  seasons. `empty_native_gws` finds it from the data rather than a hard-coded date:
+  those gameweeks take the derived `starts` rule, flagged per ROW, and their xG is
+  nulled. It biased every start-persistence number built on 22/23 upward before it was
+  caught (docs/START_PERSISTENCE_2026-09-07.md).
+
+  The derived rule is not unbiased, and its bias has a known sign. On the SAME rows in
+  every native season, mins>=60 undercounts read starts by 0.017-0.020 absolute (about
+  -6.5%): P(proxy|native) = 0.93, P(native|proxy) ~ 0.99 [VERIFIED 2026-09-17]. So 22/23
+  GW1-15 start rates are slightly LOW, as in the 16/17-21/22 proxy seasons. Do NOT
+  compare the proxied GW1-15 rate (0.332) with GW16+ native (0.298) and read it as proxy
+  inflation — the two periods have different rosters (566 vs 783 rows a gameweek). NaN
+  instead of the proxy would be worse: `season_evidence` counts games as rows, so a
+  missing start summed as 0 would restore the original defect.
+
+  Known latent gap: xG is nulled per row, but `season_evidence` sums it with skipna, so a
+  22/23 player-season gets GW16+ xG against full-season minutes (xG per 90 LOW). No
+  consumer reads xG from here today; fix with sum(min_count=1) and xG-exposure minutes
+  before wiring it in.
+
 Handled by deriving what is derivable and FLAGGING what is derived, never by silently
 filling. `position` comes from players_raw.element_type when the column is absent;
 `starts` falls back to minutes >= 60, which is what `multiseason_priors` and
@@ -87,6 +111,27 @@ LEAKY = ("xP", "ep_this", "ep_next")
 MIN_MATCH_RATE = 0.95
 
 START_MINUTES = 60          # the project's existing definition of a start
+
+# Native columns that can be present in the header before FPL populates them.
+NATIVE_COLS = ("starts", "expected_goals", "expected_assists")
+
+
+def empty_native_gws(d, col, gw_col="gw", mins_col="mins"):
+    """Gameweeks in which native `col` is present but carries no information.
+
+    A gameweek qualifies when the column sums to zero across every row while somebody
+    played minutes in it. No real gameweek can do that: if matches were played, someone
+    started them and someone generated xG. A blank gameweek (no minutes at all) does not
+    qualify, so a fixture-free round is never mistaken for a missing column. Returns a
+    sorted list of gameweek numbers; empty when the column is absent or fully populated.
+    """
+    if col not in d.columns:
+        return []
+    g = pd.DataFrame({"gw": d[gw_col],
+                      "v": pd.to_numeric(d[col], errors="coerce").fillna(0).abs(),
+                      "m": pd.to_numeric(d[mins_col], errors="coerce").fillna(0)})
+    t = g.groupby("gw").agg(v=("v", "sum"), m=("m", "sum"))
+    return sorted(int(x) for x in t.index[(t["v"] == 0) & (t["m"] > 0)])
 
 
 def _read_csv(path, **kw):
@@ -141,11 +186,20 @@ def _load_season(season, verbose=True):
         d["pos_derived"] = True
 
     d["mins"] = pd.to_numeric(d.get("minutes"), errors="coerce").fillna(0.0)
+    d["gw"] = pd.to_numeric(d.get("GW", d.get("round")), errors="coerce")
+
+    # --- feed check: native columns present in the header but not yet populated ---
+    gaps = {c: empty_native_gws(d, c) for c in NATIVE_COLS}
 
     # --- starts: native from 2022/23, else the project's own mins>=60 rule ---
+    # `starts_derived` is per ROW. A season can be native for most gameweeks and derived
+    # for the ones FPL had not populated (22/23 GW1-15); consumers that require read
+    # starts must filter rows on it, not test the season.
     if "starts" in d.columns:
-        d["is_start"] = pd.to_numeric(d["starts"], errors="coerce").fillna(0) > 0
-        d["starts_derived"] = False
+        missing = d["gw"].isin(gaps["starts"])
+        native = pd.to_numeric(d["starts"], errors="coerce").fillna(0) > 0
+        d["is_start"] = native.where(~missing, d["mins"] >= START_MINUTES)
+        d["starts_derived"] = missing
     else:
         d["is_start"] = d["mins"] >= START_MINUTES
         d["starts_derived"] = True
@@ -154,9 +208,10 @@ def _load_season(season, verbose=True):
                    ("selected", "selected"), ("expected_goals", "xg_raw"),
                    ("expected_assists", "xa_raw")):
         d[out] = pd.to_numeric(d[c], errors="coerce") if c in d.columns else np.nan
+        if gaps.get(c):
+            d.loc[d["gw"].isin(gaps[c]), out] = np.nan     # a structural 0 is not a 0
 
     d["season"] = season
-    d["gw"] = pd.to_numeric(d.get("GW", d.get("round")), errors="coerce")
     d["has_xg"] = d["xg_raw"].notna().any()
 
     keep = ["player_code", "season", "gw", "pos", "mins", "is_start", "points",
@@ -164,11 +219,16 @@ def _load_season(season, verbose=True):
             "pos_derived", "starts_derived", "has_xg"]
     out = d[keep]
     if verbose:
+        gap_note = "".join(
+            f"  ({c} EMPTY in GW{min(g)}-{max(g)}: {len(g)} gws, "
+            f"{'derived' if c == 'starts' else 'nulled'})"
+            for c, g in gaps.items() if g)
+        sd = out["starts_derived"]
         print(f"[history] {season}: {len(out):5d} player-GW rows, "
-              f"{out.player_code.nunique():3d} players, match {rate:.1%}"
+              f"{out['player_code'].nunique():3d} players, match {rate:.1%}"
               f"{'  (pos derived)' if out['pos_derived'].iloc[0] else ''}"
-              f"{'  (starts derived)' if out['starts_derived'].iloc[0] else ''}"
-              f"{'  +xG' if out['has_xg'].iloc[0] else ''}")
+              f"{'  (starts derived)' if bool(sd.all()) else ''}"
+              f"{'  +xG' if out['has_xg'].iloc[0] else ''}{gap_note}")
     return out
 
 
@@ -189,7 +249,9 @@ def season_evidence(panel: pd.DataFrame) -> pd.DataFrame:
                points=("points", "sum"),
                xg_raw=("xg_raw", "sum"),
                xa_raw=("xa_raw", "sum"),
-               starts_derived=("starts_derived", "first")).reset_index()
+               # ANY, not first: a season derived for some gameweeks is not a season of
+               # read starts, and `first` reported 22/23 by whichever row sorted first.
+               starts_derived=("starts_derived", "any")).reset_index()
     return ev
 
 
@@ -279,13 +341,40 @@ def selftest():
         else:
             raise AssertionError("a broken element->code map must raise")
 
+        # feed check: a native column present in the header but zero until GW16 (the real
+        # 22/23 shape) must be detected from the data, derived per ROW, and xG nulled.
+        # GW20 is a genuinely blank gameweek (no minutes, zero starts) and must NOT be
+        # mistaken for a missing column.
+        os.makedirs(os.path.join(tmp, "2022-23", "gws"), exist_ok=True)
+        gap = _fake_season("2022-23", era="modern", seed=7)
+        early = gap["GW"] <= 15
+        gap.loc[early, ["starts", "expected_goals", "expected_assists"]] = 0
+        blank = gap["GW"] == 20
+        gap.loc[blank, ["minutes", "starts", "expected_goals", "expected_assists"]] = 0
+        gap["name"] = "Fake"
+        gap.to_csv(os.path.join(tmp, "2022-23", "gws", "merged_gw.csv"), index=False)
+        raw.to_csv(os.path.join(tmp, "2022-23", "players_raw.csv"), index=False)
+        g = _load_season("2022-23", verbose=False)
+        e = g["gw"] <= 15
+        assert g.loc[e, "starts_derived"].all(), "GW1-15 starts must be flagged derived"
+        assert not g.loc[~e, "starts_derived"].any(), \
+            "GW16+ is read, and a blank gameweek is not a missing column"
+        assert g.loc[e, "is_start"].any(), \
+            "a structural zero must NOT read as a non-start (the old behaviour)"
+        assert (g.loc[e, "is_start"] == (g.loc[e, "mins"] >= START_MINUTES)).all()
+        assert g.loc[e, "xg_raw"].isna().all() and g.loc[e, "xa_raw"].isna().all()
+        assert g.loc[~e & (g["gw"] != 20), "xg_raw"].notna().all()
+        assert bool(season_evidence(g)["starts_derived"].all()), \
+            "a partly-derived season must not report itself as read"
+
         w = season_weights(["2023-24", "2024-25", "2025-26"], half_life=1.0)
         assert abs(w["2025-26"] - 1.0) < 1e-12 and abs(w["2024-25"] - 0.5) < 1e-12
         assert abs(w["2023-24"] - 0.25) < 1e-12
 
         print(f"SELFTEST OK: {len(panel)} player-GW rows across 3 schema eras "
               f"(latin-1 + utf-8), code join enforced, leakage columns dropped, "
-              f"derived fields flagged, decay weights exact.")
+              f"derived fields flagged, empty native gameweeks derived per row, "
+              f"decay weights exact.")
     finally:
         config.HISTORY = real_hist
         shutil.rmtree(tmp, ignore_errors=True)
@@ -297,11 +386,28 @@ def audit():
     ev = season_evidence(panel)
     print(f"\ntotal {len(panel)} player-GW rows, {panel.player_code.nunique()} distinct players")
     t = ev.groupby("season").agg(players=("player_code", "nunique"),
-                                 mins=("mins", "sum"),
-                                 starts_derived=("starts_derived", "first"))
+                                 mins=("mins", "sum"))
+    t["starts_derived_share"] = panel.groupby("season")["starts_derived"].mean().round(3)
     t["mins"] = (t["mins"] / 1000).round(1)
-    print("\nper season (mins in thousands):")
+    print("\nper season (mins in thousands; starts_derived_share = fraction of rows whose "
+          "start is inferred from minutes):")
     print(t.to_string())
+    print("\nfeed check — native columns present but EMPTY (sum 0 while minutes played):")
+    found = False
+    for s in SEASONS:
+        path = os.path.join(config.history(s), "gws", "merged_gw.csv")
+        if not os.path.exists(path):
+            continue
+        raw = _read_csv(path)
+        raw["gw"] = pd.to_numeric(raw.get("GW", raw.get("round")), errors="coerce")
+        raw["mins"] = pd.to_numeric(raw.get("minutes"), errors="coerce").fillna(0.0)
+        for c in NATIVE_COLS:
+            g = empty_native_gws(raw, c)
+            if g:
+                found = True
+                print(f"  {s}  {c:18s} {len(g):2d} gameweeks  GW{min(g)}-{max(g)}")
+    if not found:
+        print("  none")
 
 
 if __name__ == "__main__":

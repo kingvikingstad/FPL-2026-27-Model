@@ -11,29 +11,32 @@ update is EXCHANGEABLE — it reads a count, so start-start-bench and bench-star
 produce an identical posterior. `studies/start_persistence.py` measured that this is the
 wrong likelihood:
 
-    excess over a frailty-preserving permutation null, P(start at t+1 | streak k):
-      k=1 +0.190   k=3 +0.153   k=5 +0.101   k=6 +0.083   k=8 +0.030   k>=10 ~0
+    excess over a permutation null holding each player-season's start count fixed,
+    P(start at t+1 | streak k)  [corrected 2026-09-16 — 22/23 GW1-15 `starts` were a
+    literal 0 and had inflated each value]:
+      k=1 +0.164   k=3 +0.122   k=5 +0.076   k=6 +0.060   k=8 +0.015   k=10 +0.002
 
-Ordering carries real information, and it dies out at roughly 6-8 matches. Two ways to
-encode that, and only one of them is right:
+Ordering carries information over roughly 6-8 matches. This study tests one encoding of
+it — discounting realised matches by RECENCY with a geometric weight u_d = lam^d on the
+match d back from the cutoff — as a weight on the Beta update's own observations, not a
+new predictor. (A `streak_k` covariate is not built, by `inseason`'s rule against streak
+terms. This docstring first called it "WRONG, double counting"; that does not follow,
+because the persistence null conditions on the full-season count a forecaster cannot see.
+It is untested, not refuted. The first version also said recency weights "handle the
+benching asymmetry automatically"; they cannot, since the weights do not depend on whether
+a match was a start, and that asymmetry has no null.)
 
-  WRONG   a `streak_k` covariate. The excess is ALREADY zero past k~8, so a streak term
-          would mostly re-encode the player's base rate, which the Beta prior holds.
-          That is double counting, and it is why the streak curve is not the finding.
-  RIGHT   discount realised matches by RECENCY. A geometric weight u_d = lam^d on the
-          match d back from the cutoff reproduces "the last five or six matches are what
-          matter" with one parameter, and it handles the asymmetry the persistence study
-          found — consecutive NON-starts are far more informative than consecutive starts
-          (P(start next | 3 benchings) = 0.114 vs P(start next | 3 starts) = 0.800) —
-          because recent zeros dominate the weighted count automatically.
-
-IDENTIFICATION — why the weights are renormalised
---------------------------------------------------
-Weights are rescaled to sum to k, so total evidence mass is w*k for EVERY lam. Without
-that, lam < 1 would both shorten memory and shrink the in-season weight, confounding this
-with `W_MINUTES` and `START_KAPPA`, which `start_prior_strength.py` already fitted on a
-ridge. lam = 1 recovers today's flat update EXACTLY. The only thing being tested here is
-the ORDER of the evidence, which is the only thing the persistence study identified.
+IDENTIFICATION — why the weights are renormalised, and what that does NOT buy
+-------------------------------------------------------------------------------
+Weights are rescaled to sum to k, so the NOMINAL evidence count is w*k for every lam and
+lam = 1 recovers today's flat update exactly. Without it, lam < 1 would visibly shrink the
+in-season weight. As first written, this section claimed that made the test one of ORDER
+alone, separate from the W_MINUTES/START_KAPPA ridge. [WRONG — corrected 2026-09-16,
+stats-referee.] A fixed sum is not fixed information: the effective sample size of
+geometric weights caps at (1+lam)/(1-lam), 7 at lam=0.75, while the Beta is charged k. So
+lam trades off against kappa — the results show it, lam* at h=10 being 0.25 uncapped and
+0.75 at kappa=4 — and the implied posterior is over-concentrated. Read every lam* below as
+conditional on its kappa.
 
 PRE-REGISTERED — WRITTEN BEFORE THE RESULTS WERE SEEN
 ------------------------------------------------------
@@ -73,9 +76,24 @@ Both prior strengths are swept (kappa = inf, today's production default; kappa =
 only show up if the prior is light enough for realised matches to move anything.
 
 SCOPE   Target seasons use the native `starts` column. Prior seasons may be pre-2022/23,
-        where the start definition is the mins>=60 proxy — that only sets a base rate, and
-        the persistence study showed the proxy tracks native closely. Cold-start players
+        where the start definition is the mins>=60 proxy — that only sets a base rate. On
+        the same rows the proxy ranks players like native starts but sits consistently LOW:
+        -0.017 to -0.020 absolute (about -6.5%), P(proxy|native) = 0.93, P(native|proxy)
+        ~ 0.99 in every native season [VERIFIED 2026-09-17]. Cold-start players
         have no prior season and never enter; their prior comes from `starter_prior`.
+        22/23 is observed from GW16 (its GW1-15 `starts` are structural zeros, dropped by
+        `start_persistence.build`), so its fold starts mid-season against a 21/22 prior —
+        a different setting from the three season-start folds.
+
+RESULT, 2026-09-16 (corrected data) — the full record is docs/START_PERSISTENCE_2026-09-07.md
+  Pre-registered gate: ADOPT, +10.9% at kappa=4 and +5.5% uncapped, 4/4 folds each.
+  Horizon sweep (exploratory, kappa=4): lam* 0.35/0.45/0.55/0.60/0.75/0.82 at
+  h = 1/2/3/5/10/rest, gains +10.9/+7.8/+5.5/+3.4/+1.6/+0.5%. lam=0.75 is DERIVED only
+  under (h=10, kappa=4, W=1, previous-season prior, k<=12, match grain) with the mid-season
+  22/23 fold included; the three season-start folds alone give lam*=0.70 at h=10 (+1.5%, 3/3),
+  gate +10.3% (3/3), rest-of-season 2/3 folds [VERIFIED 2026-09-17]. At fixed lam=0.75
+  the latest season gains +0.81% at h=10 and -0.42% rest-of-season. The board now defaults
+  to GW_HI=38, so point 2 above ("the board projects ten gameweeks") no longer holds.
 
 Run:  python studies/start_recency.py
 Out:  studies/start_recency.csv

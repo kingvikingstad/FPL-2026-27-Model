@@ -1,0 +1,144 @@
+team,player,role,as_of,band,p_band,ring_hue,ocr_conf,author_confidence
+Arsenal,Havertz,start,2026-09-17,85-99,0.92,74.0,0.827,0.95
+Arsenal,Odegaard,start,2026-09-17,>99,0.995,91.0,0.726,0.95
+Arsenal,Tzolis,start,2026-09-17,70-84,0.77,24.0,0.846,0.95
+Arsenal,Saka,start,2026-09-17,85-99,0.92,74.0,0.793,0.95
+Arsenal,Bruno G,start,2026-09-17,50-69,0.6,11.0,0.794,0.95
+Arsenal,Rice,start,2026-09-17,>99,0.995,91.0,0.78,0.95
+Arsenal,Calafiori,start,2026-09-17,85-99,0.92,74.0,0.867,0.95
+Arsenal,Timber,start,2026-09-17,50-69,0.6,12.0,0.761,0.95
+Arsenal,Gabriel,start,2026-09-17,>99,0.995,91.0,0.873,0.95
+Arsenal,Konsa,start,2026-09-17,>99,0.995,91.0,0.755,0.95
+Arsenal,Raya,start,2026-09-17,>99,0.995,91.0,0.773,0.95
+Aston Villa,Jackson,start,2026-09-17,>99,0.995,92.0,0.873,0.91
+Aston Villa,Hemmings,start,2026-09-17,50-69,0.6,11.0,0.786,0.91
+Aston Villa,Buendia,start,2026-09-17,70-84,0.77,25.0,0.867,0.91
+Aston Villa,McGinn,start,2026-09-17,85-99,0.92,74.0,0.845,0.91
+Aston Villa,Barkley,start,2026-09-17,50-69,0.6,12.0,0.818,0.91
+Aston Villa,Kamara,start,2026-09-17,85-99,0.92,74.0,0.769,0.91
+Aston Villa,Ruggeri,start,2026-09-17,85-99,0.92,74.0,0.852,0.91
+Aston Villa,Cash,start,2026-09-17,50-69,0.6,12.0,0.702,0.91
+Aston Villa,Mings,start,2026-09-17,85-99,0.92,74.0,0.746,0.91
+Aston Villa,Lindelof,start,2026-09-17,50-69,0.6,12.0,0.751,0.91
+Aston Villa,Suzuki,start,2026-09-17,>99,0.995,91.0,0.779,0.91
+Bournemouth,Evanilson,start,2026-09-17,85-99,0.92,74.0,0.821,0.95
+Bournemouth,Kluivert,start,2026-09-17,85-99,0.92,75.0,0.862,0.95
+Bournemouth,Tavernier,start,2026-09-17,>99,0.995,91.0,0.866,0.95
+Bournemouth,Rayan,start,2026-09-17,85-99,0.92,75.0,0.833,0.95
+Bournemouth,Scott,start,2026-09-17,>99,0.995,91.0,0.739,0.95
+Bournemouth,Adams,start,2026-09-17,70-84,0.77,25.0,0.781,0.95
+Bournemouth,Truffert,start,2026-09-17,>99,0.995,91.0,0.868,0.95
+Bournemouth,Smith,start,2026-09-17,70-84,0.77,25.0,0.75,0.95
+Bournemouth,Hill,start,2026-09-17,>99,0.995,92.0,0.796,0.95
+Bournemouth,Silva,start,2026-09-17,>99,0.995,91.0,0.719,0.95
+Bournemouth,Petrovic,start,2026-09-17,85-99,0.92,75.0,0.838,0.95
+Brentford,Thiago,start,2026-09-17,>99,0.995,91.0,0.8,0.91
+Brentford,Schade,start,2026-09-17,85-99,0.92,74.0,0.819,0.91
+Brentford,Yarmoliuk,start,2026-09-17,50-69,0.6,12.0,0.832,0.91
+Brentford,Anthony,start,2026-09-17,50-69,0.6,11.0,0.81,0.91
+Brentford,Janelt,start,2026-09-17,85-99,0.92,75.0,0.794,0.91
+Brentford,Sangare,start,2026-09-17,70-84,0.77,24.0,0.839,0.91
+Brentford,Lewis-Potter,start,2026-09-17,<50,0.35,172.0,0.871,0.91
+Brentford,Kayode,start,2026-09-17,50-69,0.6,11.0,0.857,0.91
+Brentford,Schuster,start,2026-09-17,85-99,0.92,74.0,0.751,0.91
+Brentford,Ajer,start,2026-09-17,>99,0.995,92.0,0.701,0.91
+Brentford,Kelleher,start,2026-09-17,>99,0.995,91.0,0.853,0.91
+Brighton,Kostoulas,start,2026-09-17,70-84,0.77,24.0,0.899,0.91
+Brighton,De Cuyper,start,2026-09-17,>99,0.995,91.0,0.842,0.91
+Brighton,Yalcouye,start,2026-09-17,70-84,0.77,25.0,0.858,0.91
+Brighton,Gomez,start,2026-09-17,85-99,0.92,74.0,0.832,0.91
+Brighton,Ayari,start,2026-09-17,85-99,0.92,75.0,0.798,0.91
+Brighton,GroB,start,2026-09-17,>99,0.995,91.0,0.766,0.91
+Brighton,Boscagli,start,2026-09-17,85-99,0.92,74.0,0.793,0.91
+Brighton,Kadioglu,start,2026-09-17,>99,0.995,91.0,0.888,0.91
+Brighton,Dunk,start,2026-09-17,70-84,0.77,25.0,0.762,0.91
+Brighton,Vuskovic,start,2026-09-17,>99,0.995,91.0,0.819,0.91
+Brighton,Verbruggen,start,2026-09-17,>99,0.995,92.0,0.872,0.91
+Chelsea,Welbeck,start,2026-09-17,70-84,0.77,25.0,0.849,0.8
+Chelsea,Rogers,start,2026-09-17,>99,0.995,91.0,0.818,0.8
+Chelsea,Palmer,start,2026-09-17,>99,0.995,91.0,0.828,0.8
+Chelsea,Chavarria,start,2026-09-17,70-84,0.77,24.0,0.735,0.8
+Chelsea,James,start,2026-09-17,85-99,0.92,75.0,0.831,0.8
+Chelsea,Lavia,start,2026-09-17,85-99,0.92,75.0,0.833,0.8
+Chelsea,Neto,start,2026-09-17,70-84,0.77,24.0,0.791,0.8
+Chelsea,Colwill,start,2026-09-17,70-84,0.77,25.0,0.873,0.8
+Chelsea,Fofana,start,2026-09-17,70-84,0.77,24.0,0.809,0.8
+Chelsea,Lacroix,start,2026-09-17,70-84,0.77,25.0,0.854,0.8
+Chelsea,Martinez,start,2026-09-17,>99,0.995,91.0,0.818,0.8
+Coventry,Cherif,start,2026-09-17,70-84,0.77,24.0,0.79,0.93
+Coventry,Mason-Clark,start,2026-09-17,70-84,0.77,24.0,0.831,0.93
+Coventry,Rudoni,start,2026-09-17,70-84,0.77,25.0,0.795,0.93
+Coventry,Thomas-Asante,start,2026-09-17,<50,0.35,172.0,0.885,0.93
+Coventry,Grimes,start,2026-09-17,85-99,0.92,75.0,0.81,0.93
+Coventry,Yirenkyi,start,2026-09-17,50-69,0.6,12.0,0.881,0.93
+Coventry,Dasilva,start,2026-09-17,>99,0.995,91.0,0.815,0.93
+Coventry,van Ewijk,start,2026-09-17,>99,0.995,91.0,0.818,0.93
+Coventry,Amenda,start,2026-09-17,>99,0.995,91.0,0.741,0.93
+Coventry,Thomas,start,2026-09-17,>99,0.995,91.0,0.849,0.93
+Coventry,Rushworth,start,2026-09-17,>99,0.995,91.0,0.873,0.93
+Crystal Palace,Strand Larsen,start,2026-09-17,85-99,0.92,74.0,0.897,0.82
+Crystal Palace,Yeremy,start,2026-09-17,85-99,0.92,75.0,0.766,0.82
+Crystal Palace,Kamada,start,2026-09-17,70-84,0.77,24.0,0.807,0.82
+Crystal Palace,Mitchell,start,2026-09-17,85-99,0.92,75.0,0.847,0.82
+Crystal Palace,Khalaili,start,2026-09-17,>99,0.995,91.0,0.874,0.82
+Crystal Palace,Wharton,start,2026-09-17,70-84,0.77,24.0,0.827,0.82
+Crystal Palace,Q.Timber,start,2026-09-17,70-84,0.77,24.0,0.886,0.82
+Crystal Palace,Ahanor,start,2026-09-17,85-99,0.92,75.0,0.797,0.82
+Crystal Palace,Tomiyasu,start,2026-09-17,70-84,0.77,24.0,0.809,0.82
+Crystal Palace,Richards,start,2026-09-17,85-99,0.92,75.0,0.84,0.82
+Crystal Palace,Benitez,start,2026-09-17,>99,0.995,91.0,0.715,0.82
+Everton,Barry,start,2026-09-17,>99,0.995,91.0,0.832,0.89
+Everton,Grealish,start,2026-09-17,<50,0.35,171.0,0.79,0.89
+Everton,Dewsbury-Hall,start,2026-09-17,>99,0.995,91.0,0.864,0.89
+Everton,George,start,2026-09-17,70-84,0.77,24.0,0.73,0.89
+Everton,Garner,start,2026-09-17,85-99,0.92,75.0,0.857,0.89
+Everton,Hackney,start,2026-09-17,50-69,0.6,12.0,0.823,0.89
+Everton,Mykolenko,start,2026-09-17,85-99,0.92,75.0,0.89,0.89
+Everton,Maitland-Niles,start,2026-09-17,85-99,0.92,75.0,0.835,0.89
+Everton,Branthwaite,start,2026-09-17,>99,0.995,91.0,0.828,0.89
+Everton,Tarkowski,start,2026-09-17,>99,0.995,92.0,0.887,0.89
+Everton,Pickford,start,2026-09-17,>99,0.995,91.0,0.788,0.89
+Fulham,Gonzalo,start,2026-09-17,>99,0.995,91.0,0.815,0.95
+Fulham,Iwobi,start,2026-09-17,85-99,0.92,74.0,0.775,0.95
+Fulham,King,start,2026-09-17,85-99,0.92,74.0,0.75,0.95
+Fulham,Bobb,start,2026-09-17,70-84,0.77,24.0,0.706,0.95
+Fulham,Charles,start,2026-09-17,85-99,0.92,74.0,0.87,0.95
+Fulham,Berge,start,2026-09-17,70-84,0.77,24.0,0.706,0.95
+Fulham,Robinson,start,2026-09-17,85-99,0.92,74.0,0.842,0.95
+Fulham,Castagne,start,2026-09-17,85-99,0.92,75.0,0.888,0.95
+Fulham,Bassey,start,2026-09-17,85-99,0.92,75.0,0.846,0.95
+Fulham,Affengruber,start,2026-09-17,85-99,0.92,75.0,0.895,0.95
+Fulham,Leno,start,2026-09-17,>99,0.995,92.0,0.725,0.95
+Hull,McBurnie,start,2026-09-17,85-99,0.92,74.0,0.845,0.91
+Hull,Stroud,start,2026-09-17,70-84,0.77,24.0,0.857,0.91
+Hull,Belloumi,start,2026-09-17,85-99,0.92,75.0,0.886,0.91
+Hull,Giles,start,2026-09-17,>99,0.995,91.0,0.767,0.91
+Hull,Slater,start,2026-09-17,85-99,0.92,75.0,0.741,0.91
+Hull,Crooks,start,2026-09-17,<50,0.35,172.0,0.85,0.91
+Hull,Coyle,start,2026-09-17,>99,0.995,91.0,0.771,0.91
+Hull,Herrington,start,2026-09-17,70-84,0.77,24.0,0.866,0.91
+Hull,Egan,start,2026-09-17,>99,0.995,91.0,0.774,0.91
+Hull,Ajayi,start,2026-09-17,>99,0.995,91.0,0.772,0.91
+Hull,Tzolakis,start,2026-09-17,>99,0.995,91.0,0.866,0.91
+Ipswich,Emersonn,start,2026-09-17,50-69,0.6,11.0,0.883,0.95
+Ipswich,Clarke,start,2026-09-17,<50,0.35,172.0,0.833,0.95
+Ipswich,Enciso,start,2026-09-17,>99,0.995,91.0,0.796,0.95
+Ipswich,Fatawu,start,2026-09-17,85-99,0.92,75.0,0.793,0.95
+Ipswich,Lukic,start,2026-09-17,85-99,0.92,75.0,0.761,0.95
+Ipswich,Palacios,start,2026-09-17,85-99,0.92,74.0,0.869,0.95
+Ipswich,Davis,start,2026-09-17,>99,0.995,91.0,0.778,0.95
+Ipswich,O'Shea,start,2026-09-17,>99,0.995,91.0,0.84,0.95
+Ipswich,Greaves,start,2026-09-17,70-84,0.77,24.0,0.872,0.95
+Ipswich,Diop,start,2026-09-17,>99,0.995,91.0,0.694,0.95
+Ipswich,Scherpen,start,2026-09-17,>99,0.995,91.0,0.83,0.95
+Leeds,Calvert-Lewin,start,2026-09-17,>99,0.995,91.0,0.862,0.91
+Leeds,Okafor,start,2026-09-17,85-99,0.92,74.0,0.774,0.91
+Leeds,Stach,start,2026-09-17,>99,0.995,91.0,0.793,0.91
+Leeds,Gudmundsson,start,2026-09-17,>99,0.995,91.0,0.871,0.91
+Leeds,Tanaka,start,2026-09-17,70-84,0.77,24.0,0.745,0.91
+Leeds,Ampadu,start,2026-09-17,>99,0.995,91.0,0.799,0.91
+Leeds,Bogle,start,2026-09-17,>99,0.995,91.0,0.787,0.91
+Leeds,Muharemovic,start,2026-09-17,>99,0.995,91.0,0.829,0.91
+Leeds,Elvedi,start,2026-09-17,85-99,0.92,75.0,0.785,0.91
+Leeds,Justin,start,2026-09-17,>99,0.995,91.0,0.755,0.91
+Leeds,Trafford,start,2026-09-17,>99,0.995,91.0,0.887,0.91

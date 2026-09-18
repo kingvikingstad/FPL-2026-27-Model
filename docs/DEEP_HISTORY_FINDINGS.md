@@ -57,6 +57,16 @@ baseline) versus 24/25 plus eight decayed earlier seasons. Same players, same me
 
 **0.0017 MAE.** Nothing. And the steelman is worse, not better.
 
+> **Re-run 2026-09-16.** `fpl_history` had read 2022/23 GW1-15 `starts` as a literal 0 —
+> FPL began publishing the column at GW16 — so 22/23 start counts in the deep panel were
+> undercounted. Those gameweeks now take the minutes-derived start, which on the same rows
+> runs about 6.5% low against read starts (−0.019 absolute, P(proxy|native) = 0.93) — the
+> same small downward bias as the 16/17-21/22 proxy seasons this study already pools, where
+> before it was 100% low. Re-run on the corrected
+> loader: all +0.0010, regulars +0.0021, fringe −0.0000, "no material gain" in every group;
+> best half-life still 1.5 (MAE 0.1999). **The null holds.** The tables above are the
+> original run.
+
 ### Why — two structural reasons, neither fixable by tuning
 
 **Start rate is a property of a role at a club, not of a player.** Eight seasons encode a

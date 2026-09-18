@@ -41,14 +41,29 @@ Getting role onto cold-start players needs an external positional source (a line
 carrying CB/RB/LB, or average-position data for a player's previous league). Until then
 `role_for` returns None for them and they take the pooled prior.
 
+WHERE THE LABELS COME FROM  [changed 2026-09-10]
+-------------------------------------------------
+`role_map()` reads `data/defcon_roles.csv` (config.DEFCON_ROLES), a FROZEN copy of the
+labels, and never the study CSV. Until 2026-09-10 it read `studies/defcon_matchups.csv`
+directly, which made a study file a live input to `ms_priors.pkl` that the manifest could
+not see — and `test_all` rewrites that file on every run, so its mtime could not have been
+tracked honestly even if it had been declared. Worse, a missing file returned `{}` without
+a word, silently moving every labelled defender onto the pooled prior. The frozen file is
+a declared `committed` node, and a missing one now fails the build.
+
+Re-freeze only when the study's underlying data changes (it is 25/26 appearances, so in
+practice never this season):  python src/defcon_roles.py --freeze
+
 Run:  python src/defcon_roles.py --selftest
       python src/defcon_roles.py --check      (needs FPL_DATA)
+      python src/defcon_roles.py --freeze     (study CSV -> data/defcon_roles.csv)
 """
 import os
 import numpy as np
 import pandas as pd
 
-STUDY = os.path.join(config.ROOT, "studies", "defcon_matchups.csv")
+STUDY = config.DEFCON_MATCHUPS_STUDY     # research input: measure(), freeze()
+FROZEN = config.DEFCON_ROLES             # pipeline input: role_map()
 
 # Measured per-90 rates. Recomputed by `measure()`; these are the committed values so a
 # prior build does not silently depend on a study file being present.
@@ -81,22 +96,44 @@ def measure(path=None, min_mins=60):
     return out
 
 
-def role_map(path=None, min_apps=MIN_APPS):
-    """player_code -> 'CB' | 'FB', from measured 25/26 appearances.
+def derive_roles(path=None, min_apps=MIN_APPS):
+    """Frame of player_code, role, n_role, n_apps — from per-appearance study rows.
 
     A player who appears under both labels takes his majority role; one with fewer than
     `min_apps` appearances is left unlabelled rather than classified on one or two games.
+    Ties in `n` are broken by player_code then role, so the frozen file is deterministic.
     """
-    p = path or STUDY
-    if not os.path.exists(p):
-        return {}
-    M = pd.read_csv(p).dropna(subset=["player_code", "role"])
-    cnt = M.groupby(["player_code", "role"]).size().rename("n").reset_index()
-    tot = cnt.groupby("player_code")["n"].sum().rename("tot")
+    M = pd.read_csv(path or STUDY).dropna(subset=["player_code", "role"])
+    cnt = M.groupby(["player_code", "role"]).size().rename("n_role").reset_index()
+    tot = cnt.groupby("player_code")["n_role"].sum().rename("n_apps")
     cnt = cnt.merge(tot, on="player_code")
-    cnt = cnt[cnt["tot"] >= min_apps]
-    best = cnt.sort_values("n", ascending=False).drop_duplicates("player_code")
-    return dict(zip(best["player_code"], best["role"]))
+    cnt = cnt[cnt["n_apps"] >= min_apps]
+    best = (cnt.sort_values(["player_code", "n_role", "role"], ascending=[True, False, True])
+               .drop_duplicates("player_code"))
+    return best[["player_code", "role", "n_role", "n_apps"]].reset_index(drop=True)
+
+
+def freeze(src=None, out=None, min_apps=MIN_APPS):
+    """Write the frozen role file the pipeline reads. Returns its path."""
+    out = out or FROZEN
+    derive_roles(src, min_apps).to_csv(out, index=False)
+    return out
+
+
+def role_map(path=None):
+    """player_code -> 'CB' | 'FB', from the FROZEN role file.
+
+    Raises if the file is absent. The old behaviour — an empty map — moved every labelled
+    defender onto the pooled prior without a word, which is a different model, not a
+    degraded one.
+    """
+    p = path or FROZEN
+    if not os.path.exists(p):
+        raise FileNotFoundError(
+            f"{p} is missing. It is a committed input to the DefCon prior; regenerate "
+            f"with `python src/defcon_roles.py --freeze` (reads {STUDY}).")
+    M = pd.read_csv(p).dropna(subset=["player_code", "role"])
+    return dict(zip(M["player_code"], M["role"]))
 
 
 def prior_rate(pos, role=None):
@@ -165,9 +202,18 @@ def selftest():
     assert abs(m["CB"]["rate90"] - 10.0) < 0.1, m["CB"]
     assert abs(m["FB"]["rate90"] - 7.0) < 0.1, m["FB"]
 
-    rm = role_map(p, min_apps=3)
+    # derive -> freeze -> read round-trips, and role_map never reads the study format
+    fz = freeze(src=p, out=os.path.join(root, "roles.csv"), min_apps=3)
+    rm = role_map(fz)
     assert rm[1] == "CB" and rm[2] == "FB"
     assert 3 not in rm, "a single appearance must not earn a role label"
+    assert list(pd.read_csv(fz).columns) == ["player_code", "role", "n_role", "n_apps"]
+    # a missing frozen file must FAIL, not silently return every defender to pooled
+    try:
+        role_map(os.path.join(root, "absent.csv"))
+        raise AssertionError("role_map returned on a missing file")
+    except FileNotFoundError:
+        pass
 
     # prior_rate: role refines DEF only, and never touches other positions
     assert prior_rate("DEF", "CB") == RATE_CB
@@ -180,7 +226,7 @@ def selftest():
     # attach adds exactly two columns and changes nothing else
     pl = pd.DataFrame({"player_code": [1, 2, 3], "pos": ["DEF", "DEF", "MID"],
                        "web_name": ["CBman", "FBman", "Mid"], "other": [1.0, 2.0, 3.0]})
-    out = attach(pl, path=p, verbose=False)
+    out = attach(pl, path=fz, verbose=False)
     assert set(out.columns) - set(pl.columns) == {"dc_role", "dc_prior_rate"}
     assert_scope(pl, out)
     assert out.loc[out.player_code == 1, "dc_prior_rate"].iloc[0] == RATE_CB
@@ -212,6 +258,12 @@ if __name__ == "__main__":
             print(f"  {k:4s} rate90 {v['rate90']:.3f}  hit {v['hit_rate']:.3f}  "
                   f"apps {v['n_apps']}")
         rm = role_map()
-        print(f"\n  role labels: {len(rm)} players")
+        fresh = dict(zip(*[derive_roles()[c] for c in ("player_code", "role")]))
+        print(f"\n  role labels: {len(rm)} players frozen; the study now derives "
+              f"{len(fresh)}, {'IDENTICAL' if fresh == rm else 'DIFFERENT — re-freeze?'}")
+        sys.exit(0)
+    if "--freeze" in sys.argv:
+        out = freeze()
+        print(f"[defcon-roles] froze {len(role_map(out))} labels -> {out}")
         sys.exit(0)
     print(__doc__)

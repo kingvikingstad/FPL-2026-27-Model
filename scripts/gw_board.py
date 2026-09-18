@@ -19,7 +19,7 @@ Env: GW_HI (default 38 = full season), SOLIO_W_OURS (default 0.5), SOLIO=off, MA
      MARKET_WEIGHT, DEFCON_ENV=off, REGIME_PANEL=on, REGIME=kappa|proposed,
      INSEASON=off (default ON), INSEASON_UPTO, INSEASON_W_MIN, INSEASON_W_MATCH,
      INSEASON_W_RATE, INSEASON_EXP_MINUTES=on (default off), INSEASON_EXP_K,
-     INSEASON_KAPPA=<n> (default off/inf),
+     INSEASON_KAPPA=<n> (default 4, ON since 2026-09-17; =off restores the uncapped prior),
      SOLIO_MARKET=on (default off; requires MARKET_ODDS=off), SOLIO_MARKET_W,
      SOLIO_MARKET_GW, XI_CONSTRAINT=off,
      FPL_SETPIECE=fpl|override|fill|observed (default fpl; `observed` is the
@@ -176,7 +176,21 @@ _INSEASON = _flag("INSEASON", "on", on_values=("on", "1", "true"))
 # happened when these two were first added and INSEASON=off. The banner caught it, which
 # is what it is for; the fix is to resolve here and act below.
 _EXP_MINUTES = _flag("INSEASON_EXP_MINUTES", "off", on_values=("on", "1", "true"))
-_kap = os.environ.get("INSEASON_KAPPA", "").strip()
+# ON BY DEFAULT since 2026-09-17. It shipped off because only the ratio w/kappa was
+# identified on the stand-in prior the calibration used. Both halves are now closed:
+# studies/start_prior_production.py re-fits on a replica of the INSTALLED prior (the cap
+# beats the weight, 3/3 folds, every cutoff; kappa=4 interior), and
+# scripts/ab_inseason_starts.py scored it out of sample on GW2-4 — Brier +15.4% pooled,
+# better in 3/3 weeks, points MSE +4.0% — meeting a rule fixed before the run.
+# `INSEASON_KAPPA=off` (or 0/inf) restores the uncapped prior.
+# The literal is the BANNER's label only. It mirrors `inseason.START_KAPPA`, and it is a
+# literal because this flag resolves OUTSIDE the INSEASON branch (see the note above)
+# while `inseason` is imported inside it. The branch asserts the two agree rather than
+# trusting the copy, and when the variable is unset it passes the module's own constant.
+_kap_env = os.environ.get("INSEASON_KAPPA")
+_kap = (_kap_env if _kap_env is not None else "4").strip()
+if _kap.lower() in ("off", "0", "none", "inf", ""):
+    _kap = ""
 _FLAGS.append(("INSEASON_KAPPA", "ON " if _kap else "off", _kap or "inf"))
 _lam = os.environ.get("INSEASON_LAM", "").strip()
 _FLAGS.append(("INSEASON_LAM", "ON " if _lam else "off", _lam or "1.0 (flat)"))
@@ -185,9 +199,11 @@ if _INSEASON:
     import inseason as ins
     # INSEASON_LAM discounts realised matches by recency inside the Beta update, which is
     # otherwise exchangeable and so cannot tell start-start-bench from bench-start-start.
-    # OFF by default; lam=1.0 is the flat update exactly. The fitted value is a function
-    # of FORECAST HORIZON (inseason.RECENCY_LAM_H10 = 0.75 at this board's ~10 gameweeks)
-    # and was fitted at kappa=4, so set INSEASON_LAM=0.75 together with INSEASON_KAPPA=4.
+    # OFF by default; lam=1.0 is the flat update exactly. inseason.RECENCY_LAM_H10 = 0.75 was
+    # fitted at h=10 and kappa=4 only; this board defaults to GW_HI=38, where that value does
+    # not clear its gate and over-concentrates the posterior (docs/START_PERSISTENCE_2026-09-07.md,
+    # corrected 2026-09-16). INSEASON_LAM=0.75 with INSEASON_KAPPA=4 reproduces the study,
+    # not a validated board setting.
     _apps = ins.appearances(upto_gw=int(os.environ.get("INSEASON_UPTO", "38")),
                             lam=float(_lam) if _lam else ins.RECENCY_LAM)
     # Cap the Beta start prior BEFORE the realised matches land on it, or they land on
@@ -196,7 +212,12 @@ if _INSEASON:
     # and it was fitted against a previous-season prior, not this one — see
     # PROJECT_KNOWLEDGE 6.9. INSEASON_KAPPA=5 turns it on.
     if _kap:
-        pl, _ = ins.cap_start_prior(pl, kappa=float(_kap))
+        if _kap_env is None:
+            assert float(_kap) == ins.START_KAPPA, (
+                f"the banner's INSEASON_KAPPA default ({_kap}) has drifted from "
+                f"inseason.START_KAPPA ({ins.START_KAPPA})")
+        pl, _ = ins.cap_start_prior(pl, kappa=ins.START_KAPPA if _kap_env is None
+                                    else float(_kap))
     pl, _mrep = ins.update_minutes(
         pl, _apps, weight=float(os.environ.get("INSEASON_W_MIN", ins.W_MINUTES)))
     # How long he lasts GIVEN a start, which no in-season path touched before. OFF by
@@ -304,21 +325,12 @@ def _default_pred_xi_gw():
     selection purposes — you cannot pick into it — so a teamsheet for it is worthless.
 
     Falls back to 1 if the in-season feed is unreachable, which is what it always did.
+    The derivation lives in `inseason.next_open_gw` so `export_projection_detail`, which
+    explains this board, cannot name a different week (it did: a hardcoded 1 until
+    2026-09-10).
     """
-    try:
-        import inseason as _ins
-        m = _ins.played(upto_gw=38, require_xg=False, verbose=False)
-        if m is None or not len(m):
-            return 1
-        done = set()
-        for r in m.itertuples():
-            gw = int(r.gameweek)
-            done.add((str(r.home), gw)); done.add((str(r.away), gw))
-        played_gws = {g for (_, g) in done}
-        nxt = [g for g in range(1, 39) if g not in played_gws]
-        return min(nxt) if nxt else 38
-    except Exception:
-        return 1
+    import inseason as _ins
+    return _ins.next_open_gw()
 
 
 PRED_XI_GW = int(os.environ.get("PRED_XI_GW") or _default_pred_xi_gw())
@@ -415,15 +427,6 @@ pl["pen_xg90"] = np.where(pl.player_code.isin(pen1),
                           pl.pen_xg90.fillna(0).clip(lower=0.10), 0.0)
 print(f"[set-piece] penalty xG floor applied to {int(pl.player_code.isin(pen1).sum())} "
       f"players across {len(pen1)} resolved codes")
-# The away side's trip as a per-fixture modifier of home advantage (src/travel.py). ON by
-# default since 2026-09-11: real in 31 seasons under team-season FE (z=+4.6 on the
-# traveller's goals against). It did NOT clear the market gate (score z=+1.73); it is on by
-# an explicit owner override of that guard, scoped to this signal, because the per-fixture
-# lambda here ingests no match odds and so has nothing to double-count — see CLAUDE.md and
-# docs/TRAVEL_DISTANCE_2026-09-10.md §6. FPL_TRAVEL=off disables it. Resolved here for the
-# banner; bayes_model reads the same variable through travel.enabled(), same off-values.
-import travel
-_flag("FPL_TRAVEL", "on", off_values=travel.OFF_VALUES)
 
 # ---------- team model with betting-odds strength ----------
 elo = ci.to_elo_frame(t26); pclub = ci.promoted_prior_from_elo(t26)["per_club"]
@@ -433,6 +436,15 @@ if _flag("MARKET_ODDS", None):
     print(f"[market-odds] betting-odds team strength blended (weight {os.environ.get('MARKET_WEIGHT','0.6')})")
 _elo_w = float(os.environ.get("ELO_WEIGHT", "0.45"))
 _FLAGS.append(("ELO_WEIGHT", "ON ", str(_elo_w)))
+# The away side's trip as a per-fixture modifier of home advantage (src/travel.py). ON by
+# default since 2026-09-11: real in 31 seasons under team-season FE (z=+4.6 on the
+# traveller's goals against). It did NOT clear the market gate (score z=+1.73); it is on by
+# an explicit owner override of that guard, scoped to this signal, because the per-fixture
+# lambda here ingests no match odds and so has nothing to double-count — see CLAUDE.md and
+# docs/TRAVEL_DISTANCE_2026-09-10.md §6. FPL_TRAVEL=off disables it. Resolved here for the
+# banner; bayes_model reads the same variable through travel.enabled(), same off-values.
+import travel
+_flag("FPL_TRAVEL", "on", off_values=travel.OFF_VALUES)
 tm = TeamModel(promoted_per_club=pclub).fit(e0_path=_e0_path, clubelo=elo, clubelo_weight=_elo_w)
 bayes_model.rng = np.random.default_rng(7); ts = tm.sample_2627(S=S)
 
@@ -546,8 +558,25 @@ if _DUMP in ("all", "*"):
     _dump_gws = set(range(1, GW_HI + 1))
 else:
     _dump_gws = {int(g) for g in _DUMP.split(",") if g.strip().isdigit()}
+# DUMP_FRAME=<path> writes the START PRIOR as each gameweek actually projects it — after
+# the in-season update, availability, the XI constraint and any predicted XI. Off by
+# default and nothing on the board path reads it. It exists because `gw_board_long.csv`
+# carries no p_start (the XI-constraint invariant above says so and checks at build time
+# instead), so an A/B of the minutes channel could only score POINTS, where the channel's
+# effect is swamped: scoring the probability it actually changes needs the frame itself.
+# See scripts/ab_inseason_starts.py.
+_DUMP_FRAME = (os.environ.get("DUMP_FRAME") or "").strip()
+_frame_rows = []
 for gw in range(1, GW_HI + 1):
     bayes_model.rng = np.random.default_rng(7)
+    if _DUMP_FRAME:
+        _f = pl_by_gw.get(gw, pl)
+        _a = _f["start_a"].astype(float); _b = _f["start_b"].astype(float)
+        _frame_rows.append(pd.DataFrame({
+            "gw": gw, "player_code": _f["player_code"], "player": _f["web_name"],
+            "pos": _f["pos"], "team": _f["team"], "start_a": _a, "start_b": _b,
+            "p_start": _a / (_a + _b).replace(0, np.nan),
+            "exp_minutes": _f.get("exp_minutes"), "own": _f.get("own")}))
     if gw in _dump_gws:
         g, _draws = project(pl_by_gw.get(gw, pl), tm, ts, gw, gw, S=S, return_draws=True)
         _keep = ~g["id"].duplicated()
@@ -563,6 +592,9 @@ for gw in range(1, GW_HI + 1):
         g = project(pl_by_gw.get(gw, pl), tm, ts, gw, gw, S=S).drop_duplicates("id")
     g["gw"] = gw; frames.append(g)
     print(f"[gw {gw}] projected {len(g)} players (top: {g.iloc[0].player} {g.iloc[0]['mean']:.2f})")
+if _DUMP_FRAME and _frame_rows:
+    pd.concat(_frame_rows, ignore_index=True).to_csv(_DUMP_FRAME, index=False)
+    print(f"[frame] wrote per-gameweek start priors -> {_DUMP_FRAME}")
 long_df = pd.concat(frames, ignore_index=True)
 # id -> player_code. project() carries the per-player `id` from the frame it was given;
 # player_code is the stable key the rest of the project joins on and the one a scoring

@@ -1,6 +1,6 @@
 # docs/ — what to read, and what not to
 
-28 files, ~63,000 words. Reading them in order is not a strategy; most of what is
+29 files, ~64,000 words. Reading them in order is not a strategy; most of what is
 here is the *record* of how a claim was established, not the claim itself. This
 index routes by question, and marks what is stale so nobody spends context on it.
 
@@ -59,12 +59,12 @@ name. The evidence, if you need to see it before you believe it:
 | Fixture congestion (GW1-26), three instruments | P(start) +0.001, CI ±0.02 | `FIXTURE_CONGESTION_2026-09-01.md` |
 | Team explosiveness | r=+0.006 inside a simulated true-Poisson null | `DEFCON_TEAM_EXPLOSIVENESS_2026-09-02.md` |
 | Four early-season scoring hypotheses | four nulls | `EARLY_SCORING_TRENDS_2026-08-20.md` |
-
 | Travel distance → the traveller's goals **for** | −0.0096/log-km, z=−1.1; sign flips 2016+ | `TRAVEL_DISTANCE_2026-09-10.md` |
 
 Travel distance → the traveller's goals **against** is NOT a null. It is real (z=+4.6 under
 team-season FE) and failed only the market gate; it is ON by an owner-approved, scoped
 exception to that gate (2026-09-11). `FPL_TRAVEL=off` disables it.
+
 GW27+ congestion is **untested, not null** — it needs knockout kickoff times and the
 FA Cup, neither of which the data source carries.
 

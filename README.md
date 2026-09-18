@@ -124,6 +124,18 @@ python scripts/gw_board.py          # env: GW_HI=38 (full season) SOLIO_W_OURS=0
 #                       transfers, points, minutes, starts — each tooltipped with whether
 #                       it is exact (price, ownership) or mostly variance this early
 #                       (points).
+#                       CAPTAINCY sits on this tab: 1st/2nd/3rd per gameweek across the
+#                       window, C1/C2/C3 badges in the grid cells beside the projection
+#                       that produced them, and the armband rotation — def_rotation's
+#                       best-K-each-week objective at k=1, measured against captaining
+#                       your best player every week, which is the only baseline the
+#                       decision has. Ranks on the projection by default and on P(haul)
+#                       for gameweeks whose draws dump RECONCILES with this board; a
+#                       dump that does not is treated as absent, never fallen back on,
+#                       and the week is labelled PROJ rather than TAIL. Every number
+#                       carries the simulation's standard error and picks the board
+#                       cannot separate are marked — at S=3000 the C1/C2 gap is inside
+#                       it in about a third of weeks.
 #       Fixture outlook club x gameweek ticker on the model's own posterior lambda.
 #                       Defaults to each club's deviation from its OWN 38-fixture average,
 #                       so it measures the run and not the side; absolute lambda is one click away.
@@ -248,23 +260,37 @@ happened.
 | `REGIME_PANEL=on` | appointment-weighted minutes for partial-regime clubs |
 | `REGIME=kappa` | widens the posterior on regime clubs without moving any point estimate |
 | `SOLIO_MARKET=on` | Solio's market-implied team lambda as an E0 re-anchor |
-| `INSEASON_KAPPA=4` | caps the Beta start prior at 4 pseudo-matches so realised starts can move it |
 | `INSEASON_LAM=0.75` | discounts realised starts by recency inside the minutes update |
 
+`INSEASON_KAPPA` has left this table: it is **ON by default at 4 since 2026-09-17**, capping
+the Beta start prior at four pseudo-matches so realised starts can actually move it.
+`INSEASON_KAPPA=off` restores the uncapped prior. Both halves of PROJECT_KNOWLEDGE §6.9 are
+closed — `studies/start_prior_production.py` re-fitted it on the INSTALLED prior (the cap
+beats the weight, 3/3 folds at every cutoff), and `scripts/ab_inseason_starts.py` scored it
+out of sample on GW2-4: start-probability Brier **+15.4%** pooled, better in 3 of 3 weeks,
+with points squared error also **+4.0%** against a pre-registered rule fixed before the run.
+
 `INSEASON_LAM` exists because a conjugate Beta update reads a *count* and is therefore
-exchangeable: start-start-bench and bench-start-start give an identical posterior. Ordering
-is measurably informative over a window of about six matches, and a run of non-starts is far
-more informative than a run of starts (`docs/START_PERSISTENCE_2026-09-07.md`). **The fitted
-value is a function of forecast horizon** — 0.40 one match out, 0.75 at this board's ten, and
-nothing licenses it rest-of-season — so set it to match the horizon you are projecting, and
-set it *with* `INSEASON_KAPPA=4`, which is what it was fitted against:
+exchangeable: start-start-bench and bench-start-start give an identical posterior, while
+ordering is measurably informative over a window of about six matches
+(`docs/START_PERSISTENCE_2026-09-07.md`, corrected 2026-09-16). **Leave it off for the default
+board.** The fitted value depends on forecast horizon *and* on κ — 0.35 one match out and 0.75
+ten out at κ=4, but 0.25 ten out with an uncapped prior. At 0.75 it gains under 1% in the
+latest season at h=10 (+0.81%) and is negative there over the rest of the season (−0.42%);
+pooled over seasons the rest-of-season gain is about +0.6%, below the 1% gate — and rest of
+season is closer to what the default `GW_HI=38` board projects. Its renormalised weights also make the start posterior
+over-confident. The command below reproduces the study's conditions; it is not a validated
+board setting:
 
 ```bash
 INSEASON_KAPPA=4 INSEASON_LAM=0.75 python scripts/gw_board.py
 ```
 
 It is not a streak or momentum term and adds no predictor; it re-weights the estimator's own
-observations. Both flags are validated on the start probability, **not yet on points**.
+observations. `INSEASON_KAPPA=4` is now validated on the start probability AND on the board out
+of sample (see above); `INSEASON_LAM` only inside the study's conditions, and **not on points**.
+In the GW2-4 A/B it added +1.2pp to κ's Brier gain on top of κ, which is promising and is not
+evidence: it was declared non-adopting in advance, having had no power calculation.
 
 **Wired but not reachable yet:** `lineups.py` (needs
 `APIFOOTBALL_KEY`), `oddsapi_feed` (needs `ODDS_API_KEY`), and `momentum.csv` /

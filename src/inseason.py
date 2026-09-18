@@ -125,32 +125,36 @@ much EVIDENCE the existing estimators see, never their functional form.
 
 ONE AMENDMENT TO THAT  [2026-09-07, studies/start_persistence.py + start_recency.py]
 ------------------------------------------------------------------------------------
-`recency_starts` weights realised matches by recency, which changes not how much evidence
-the minutes estimator sees but how that evidence is DISTRIBUTED IN TIME. Total mass is
-renormalised to the raw match count, so it is a pure reallocation and lam = 1 is the old
-behaviour exactly — but the claim "never their functional form" no longer holds without
-qualification, and the distinction from the dead heuristics has to be stated rather than
-assumed:
+`recency_starts` weights realised matches by recency, which changes how the minutes
+estimator's evidence is DISTRIBUTED IN TIME. The weights are renormalised to sum to the
+match count and lam = 1 is the old behaviour exactly — but that sum is not the information
+(see `recency_starts`, "What it does NOT guarantee"), and the claim "never their functional
+form" no longer holds without qualification. The distinction from the dead heuristics has
+to be stated rather than assumed:
 
   A ROTATION MULTIPLIER predicted WHICH gameweeks a given player would be rested, from
   fixture congestion. That is dead three ways over (rest differential, European
   participation, midweek fixtures by recovery day; P(start) +0.001, CI +/-0.02) and
   nothing here touches it — this module still has no fixture-conditional term.
-  A MOMENTUM TERM would assert that a run of starts predicts MORE than the player's own
-  rate. That is also dead: measured against a frailty-preserving permutation null, the
-  streak excess is zero from k=10 on, which is exactly why there is no `streak_k`
-  covariate here and why adding one would double-count the Beta prior.
+  A MOMENTUM / STREAK TERM would add a run of starts as a predictor. This module does not
+  build one, by the rule above. It is NOT a tested null [corrected 2026-09-16]: the
+  permutation null in `start_persistence` holds each player's FULL-season start count
+  fixed — hindsight a forecaster lacks — so "no streak excess past k~8" says nothing about
+  whether a streak beats the forecaster's prior. Untested; do not cite it as dead.
 
 What survives measurement is narrower than either: the ORDER of a player's own realised
-matches is informative over a window of roughly six, and a Beta update on a count is
-exchangeable and therefore blind to it. The fix is a weight on the likelihood's own
-observations, not a new predictor. It is OFF by default regardless.
+matches carries information over a window of roughly six (corrected excess +0.164 at k=1,
++0.060 at k=6, +0.015 at k=8), and a Beta update on a count is exchangeable and blind to
+it. The response is a weight on the likelihood's own observations, not a new predictor.
+It is OFF by default, and not supported as fitted for the default board
+(docs/START_PERSISTENCE_2026-09-07.md).
 
 Run:  python src/inseason.py --selftest
       python src/inseason.py --report          (what 26/27 currently supplies)
 """
 import io
 import os
+import sys          # selftest() captures sys.stdout; do not rely on __main__ importing it
 import glob
 import numpy as np
 import pandas as pd
@@ -236,6 +240,35 @@ def played(season="2026-2027", upto_gw=None, base=None, require_xg=True, verbose
         print(f"[inseason] {n_all} finished matches, {len(out)} with xG"
               + ("" if require_xg else " (xG not required)"))
     return out.reset_index(drop=True)
+
+
+def first_open_gw(matches, n_gw=38):
+    """The first gameweek in which NOTHING has been played, from a `played()` frame.
+
+    A partly-played week is past for selection purposes — you cannot pick into it — so it
+    counts as played. Returns 1 for an empty frame and `n_gw` once every week has a result.
+    Pure, so it is testable offline; `next_open_gw` reads the feed.
+    """
+    if matches is None or not len(matches):
+        return 1
+    done = {int(g) for g in matches["gameweek"]}
+    nxt = [g for g in range(1, n_gw + 1) if g not in done]
+    return min(nxt) if nxt else n_gw
+
+
+def next_open_gw(season="2026-2027", base=None):
+    """The gameweek a teamsheet would be FOR — see `first_open_gw`.
+
+    Lives here, not in a runner, because two runners need the SAME answer: `gw_board`
+    applies predicted XIs to this week and `export_projection_detail` explains that board.
+    The export carried its own hardcoded `PRED_XI_GW=1` long after the board had derived
+    it, and so described GW1 team news on a board built for GW4. Falls back to 1 if the
+    feed is unreadable, which is what both runners always did.
+    """
+    try:
+        return first_open_gw(played(season, base=base, require_xg=False, verbose=False))
+    except Exception:
+        return 1
 
 
 # ---------------------------------------------------------------- team channel
@@ -500,51 +533,101 @@ def last_appearance(season="2026-2027", upto_gw=None, base=None):
 # --- recency weighting of realised starts (studies/start_recency.py) ------------
 # A conjugate Beta update reads a COUNT, so it is EXCHANGEABLE: start-start-bench and
 # bench-start-start produce an identical posterior. `studies/start_persistence.py`
-# measured that this is the wrong likelihood. Against a frailty-preserving permutation
-# null (each player's own start count held fixed, only the ORDER destroyed), the excess
-# in P(start at t+1 | k consecutive starts) is +0.190 at k=1, +0.153 at k=3, +0.080 at
-# k=6, +0.030 at k=8 and indistinguishable from zero from k=10 on. Ordering carries real
-# information and it decays out over roughly six matches.
+# measured that this is the wrong likelihood. Against a permutation null that holds each
+# player-season's start count fixed and destroys only the ORDER, the excess in
+# P(start at t+1 | k consecutive starts) is +0.164 at k=1, +0.122 at k=3, +0.060 at k=6,
+# +0.015 at k=8 and +0.002 at k=10 [corrected 2026-09-16: 22/23 GW1-15 `starts` were a
+# literal 0 and had inflated each of these]. Ordering carries information over roughly six
+# matches.
 #
-# The encoding is a geometric recency weight, NOT a streak covariate: the excess is
-# already zero past k~8, so a streak term would mostly re-encode the player's base rate,
-# which the Beta prior already holds. It also picks up the asymmetry the persistence
-# study found for free — P(start next | 3 benchings) = 0.114 against P(start next | 3
-# starts) = 0.800 — because recent zeros dominate a weighted count automatically.
+# The encoding is a geometric recency weight, not a streak covariate — this module builds no
+# streak term by rule. Two claims first made here are withdrawn [2026-09-16, stats-referee]:
+# that a streak term "would re-encode the base rate" (the null conditions on the full-season
+# count, so that is untested, not shown), and that recency weights "pick up the benching
+# asymmetry for free" (the weights do not depend on whether a match was a start, and the
+# asymmetry itself has no null).
 #
-# LAM IS A FUNCTION OF FORECAST HORIZON, which is why it is exposed and not pinned.
-# `start_recency.py`, leave-one-season-out over 22/23-25/26 at kappa=4:
+# LAM DEPENDS ON FORECAST HORIZON AND ON KAPPA. `start_recency.py`, leave-one-season-out
+# over 22/23 (from GW16) to 25/26 at kappa=4:
 #
-#     horizon (matches)     1     2     3     5    10   rest
-#     lam*               0.40  0.50  0.55  0.65  0.75  0.82
-#     LOSO Brier gain   +7.9% +5.6% +4.0% +2.6% +1.2% +0.3%
-#     folds positive     4/4   4/4   4/4   4/4   4/4    3/4
+#     horizon (matches)     1      2     3     5    10   rest
+#     lam*               0.35   0.45  0.55  0.60  0.75  0.82
+#     LOSO Brier gain   +10.9%  +7.8% +5.5% +3.4% +1.6% +0.5%
+#     folds positive      4/4    4/4   4/4   4/4   4/4    3/4
 #
-# Short horizon, short memory. The board projects ~10 gameweeks, so 0.75 is its value and
-# `RECENCY_LAM_H10` names it; the one-match number is much lower and must NOT be used for
-# a horizon board, which is the whole reason the constant is horizon-tagged. Rest-of-
-# season fails the 1% gate, so nothing licenses this for a season-long projection.
+# RECENCY_LAM_H10 = 0.75 is [DERIVED] only under the study's conditions (h=10, kappa=4, W=1,
+# previous-season prior, k<=12, match grain) and on four folds including a mid-season 22/23
+# fold that pulls lam* down; the three season-start folds alone give 0.70 at h=10. As a board
+# constant it is [JUDGMENT]. It is not
+# separable from kappa (lam* at h=10 is 0.25 with an uncapped prior), it over-concentrates the
+# posterior (see `recency_starts`), and at fixed lam=0.75 the latest season gains +0.81% at
+# h=10 and -0.42% over the rest of the season — the endpoint nearer the default GW_HI=38 board.
 #
-# OFF by default (lam = 1.0 reproduces the flat update EXACTLY, weight for weight), for
-# two reasons: it was fitted at kappa=4, which `INSEASON_KAPPA` itself leaves off, and at
-# the uncapped production prior lam* pins to the grid boundary rather than fitting.
-# `INSEASON_LAM=0.75` turns it on and should be set together with `INSEASON_KAPPA=4`.
+# OFF by default (lam = 1.0 reproduces the flat update EXACTLY, weight for weight), and not
+# supported as fitted for the default board. `INSEASON_LAM=0.75` with `INSEASON_KAPPA=4`
+# reproduces the study's conditions; the right next step is a joint (kappa, lam) refit, ideally
+# as a discounted Beta-Bernoulli filter, on the endpoint the board is scored on.
 RECENCY_LAM = 1.0
 RECENCY_LAM_H10 = 0.75
 
 
-def recency_starts(G, matches, lam=RECENCY_LAM):
+def _slots_from_panel(G, mg):
+    """player_code x gw -> match count, taking his club each gameweek from the panel.
+
+    The fallback for players `team_at_gw` cannot place (no `team_history.csv`). A player's
+    club in a gameweek is the club his panel row names that week, carried forward and then
+    backward across gameweeks he has no row for — the same fill `team_at_gw` applies — so
+    a mid-season mover's starts still land on the fixtures of the club he played FOR.
+    """
+    gws = sorted(int(x) for x in mg["gameweek"].unique())
+    if not gws or not len(G):
+        return pd.DataFrame(columns=["player_code", "gw", "m"])
+    last = G.sort_values("gw").drop_duplicates(["player_code", "gw"], keep="last")
+    P = (last.pivot(index="player_code", columns="gw", values="team")
+             .reindex(columns=gws).ffill(axis=1).bfill(axis=1))
+    P.columns.name = "gw"
+    s = P.stack().rename("team").reset_index()
+    s["gw"] = s["gw"].astype("int64")
+    return (s.merge(mg, left_on=["team", "gw"], right_on=["team", "gameweek"],
+                    how="inner")[["player_code", "gw", "m"]])
+
+
+def recency_starts(G, matches, lam=RECENCY_LAM, slots=None):
     """Recency-weighted start count per (player_code, team).
 
-    Weight u_d = lam**d on the club's d-th most recent gameweek (d = 0 is the latest),
-    renormalised so the total weighted MATCH mass equals the club's actual match count.
-    Total evidence is therefore unchanged and only its ORDER is re-weighted — which is
-    the only thing `start_recency.py` identified, and it keeps this from confounding with
-    W_MINUTES / START_KAPPA, whose ridge `start_prior_strength.py` already fitted.
+    Weight u_d = lam**d on the d-th most recent gameweek HE IS CHARGED FOR (d = 0 is the
+    latest), renormalised so his total weighted match mass equals his own `club_matches`.
+    `slots` is that charge list — player_code, gw, m — exactly the frame `appearances`
+    sums into `club_matches`; players it does not cover fall back to `_slots_from_panel`.
 
-    Consequences of that renormalisation, both wanted: the result is bounded by the
-    club's match count exactly as a raw count is, so `update_minutes` keeps its invariant;
-    and lam = 1 returns the raw LEAGUE start count to floating-point equality.
+    WHY PER PLAYER  [fixed 2026-09-16, flagged by stats-referee]. The first version
+    renormalised over the CLUB's whole run of gameweeks and then summed a player's rows,
+    which is only right when his charged window IS the club's run. When it is shorter the
+    recent weights exceed 1 and his starts are over-counted: at GW4, lam=0.75, a player
+    charged for GW3-4 only who started GW4 scores 1.46 of 2 against 1.14 of 2 over his own
+    window (the selftest pins 8/7). How much that mattered, measured rather than assumed:
+    NOTHING yet. `team_at_gw` carries every player's club forward and backward across the
+    season, so in 26/27 through GW4 every charged window equals a club's full run and the
+    fix moves 0 of 658 players [VERIFIED 2026-09-16]. The two versions part company when a
+    blank or double gameweek sits either side of a transfer (his two clubs' runs differ
+    from his window), and on the `_slots_from_panel` fallback. The bound now holds by
+    construction instead of by that coincidence.
+
+    What the renormalisation guarantees, now that it is over his own window: the result
+    is bounded by his `club_matches` by construction, so `update_minutes` keeps its
+    invariant without leaning on the clip; and lam = 1 returns the raw LEAGUE start count
+    to floating-point equality.
+
+    What it does NOT guarantee  [DERIVED 2026-09-16, stats-referee]. Holding the weights'
+    SUM at k holds the nominal evidence count fixed, not the information in it. The
+    effective sample size of geometric weights levels off at (1+lam)/(1-lam) — 7 at
+    lam = 0.75 — while the Beta update is still charged k observations, so the posterior
+    is too concentrated and the variance of multi-gameweek starts is understated, by more
+    the later in the season. It also means lam is NOT separable from W_MINUTES/START_KAPPA,
+    contrary to what this docstring first claimed: `start_recency.py` fits lam* of 0.20-0.30
+    at an uncapped prior and 0.75 at kappa=4 on the same horizon. The estimator with the
+    right concentration is a discounted Beta-Bernoulli (forgetting) filter fitted jointly
+    with kappa; not built, and it needs its own pre-registration.
 
     "League" is load-bearing. A start is placed by the league fixture it belongs to, so a
     start with no finished league fixture behind it has no recency position and cannot
@@ -568,27 +651,44 @@ def recency_starts(G, matches, lam=RECENCY_LAM):
     mg = (pd.concat([matches[["gameweek", "home"]].rename(columns={"home": "team"}),
                      matches[["gameweek", "away"]].rename(columns={"away": "team"})])
             .groupby(["team", "gameweek"]).size().rename("m").reset_index())
-    scaled = []
-    for _team, t in mg.groupby("team"):
-        t = t.sort_values("gameweek")
-        d = np.arange(len(t) - 1, -1, -1, dtype=float)        # 0 = most recent
-        u = lam ** d
-        mass = float((u * t["m"].to_numpy()).sum())
-        if mass <= 0:
-            continue
-        t = t.assign(u=u * (float(t["m"].sum()) / mass))
-        scaled.append(t)
-    if not scaled:
-        return pd.DataFrame(columns=cols)
-    U = pd.concat(scaled, ignore_index=True)
     if "team_now" not in G.columns:
         G = G.assign(team_now=G["team"])
-    # `team` here is the club he played for THAT week, so a start lands on the recency
-    # position of the fixture it actually belongs to; the result is keyed on `team_now`
-    # so a player who moved stays ONE row and keeps his whole record.
-    g = G.merge(U[["team", "gameweek", "u"]], left_on=["team", "gw"],
-                right_on=["team", "gameweek"], how="left")
+    G = G.astype({"player_code": "int64", "gw": "int64"})
+
+    # his charge list: the slots `appearances` put in club_matches, else the panel fallback
+    S = (slots[["player_code", "gw", "m"]].dropna(subset=["m"])
+         if slots is not None and len(slots) else
+         pd.DataFrame(columns=["player_code", "gw", "m"]))
+    S = S.astype({"player_code": "int64", "gw": "int64", "m": "float64"})
+    uncovered = G[~G["player_code"].isin(S["player_code"])]
+    if len(uncovered):
+        S = pd.concat([S, _slots_from_panel(uncovered, mg).astype(
+            {"player_code": "int64", "gw": "int64", "m": "float64"})], ignore_index=True)
+    S = S.groupby(["player_code", "gw"], as_index=False)["m"].sum()
+    S = S[S["m"] > 0].sort_values(["player_code", "gw"])
+    if not len(S):
+        return pd.DataFrame(columns=cols)
+    # d = 0 on his most recent charged gameweek; renormalise within HIS window
+    d = S.groupby("player_code").cumcount(ascending=False).astype(float)
+    u = lam ** d
+    mass = (u * S["m"]).groupby(S["player_code"]).transform("sum")
+    S["u"] = u * S.groupby("player_code")["m"].transform("sum") / mass
+
+    # A start lands on his own weight for that gameweek; the result is keyed on
+    # `team_now` so a player who moved stays ONE row and keeps his whole record.
+    g = G.merge(S[["player_code", "gw", "u"]], on=["player_code", "gw"], how="left")
     g["u"] = g["u"].fillna(0.0)
+    # A start with no charged slot gets weight 0 and silently vanishes. That happens when
+    # `team_history` places a player at a club with no fixture that gameweek (a transfer
+    # recorded a week late) — the same class of silent drop as the 26/27 GW3 half-time
+    # starts. It cannot happen on 26/27 data to date; say so loudly if it ever does.
+    lost = g[(pd.to_numeric(g["starts"], errors="coerce").fillna(0.0) > 0) & (g["u"] <= 0)]
+    if len(lost):
+        codes = sorted(int(c) for c in lost["player_code"].unique())
+        print(f"[inseason] WARNING recency: {int(lost['starts'].sum())} starts for "
+              f"{len(codes)} player(s) sit on no charged gameweek and get weight 0 "
+              f"(team_history lagging a transfer?): player_code {codes[:8]}"
+              f"{' ...' if len(codes) > 8 else ''}")
     g["ws"] = g["u"] * pd.to_numeric(g["starts"], errors="coerce").fillna(0.0)
     return (g.groupby(["player_code", "team_now"], as_index=False)["ws"].sum()
              .rename(columns={"ws": "w_starts", "team_now": "team"}))
@@ -624,15 +724,19 @@ def appearances(season="2026-2027", upto_gw=None, base=None, verbose=True,
             .groupby(["team", "gameweek"]).size().rename("m").reset_index())
     TH = team_at_gw(season, base, gws=mg["gameweek"].unique()) if len(mg) else mg.head(0)
     cmp_ = None
+    slots = None
     if len(TH):
         code = G.drop_duplicates("player_id").set_index("player_id")["player_code"]
-        cmp_ = (TH.merge(mg, left_on=["team", "gw"], right_on=["team", "gameweek"],
-                         how="left")
-                  .assign(player_code=lambda d: d["player_id"].map(code))
-                  .dropna(subset=["player_code"])
-                  .groupby("player_code", as_index=False)["m"].sum()
-                  .rename(columns={"m": "club_matches"}))
+        # One charge list feeds BOTH the denominator and the recency weights, so the
+        # weights sum to exactly the club_matches the Beta update is charged against.
+        charged = (TH.merge(mg, left_on=["team", "gw"], right_on=["team", "gameweek"],
+                            how="left")
+                     .assign(player_code=lambda d: d["player_id"].map(code))
+                     .dropna(subset=["player_code"]))
+        cmp_ = (charged.groupby("player_code", as_index=False)["m"].sum()
+                       .rename(columns={"m": "club_matches"}))
         cmp_ = cmp_ if len(cmp_) else None
+        slots = charged[["player_code", "gw", "m"]] if len(charged) else None
     # Minutes accrued IN MATCHES HE STARTED, kept apart from total minutes. Dividing
     # total minutes by starts is wrong for anyone who both started some matches and came
     # off the bench in others: the substitute minutes land in the numerator with no start
@@ -662,7 +766,7 @@ def appearances(season="2026-2027", upto_gw=None, base=None, verbose=True,
     # stays because the raw path is cheaper and byte-identity is worth keeping, not
     # because the two answers still differ.
     if float(lam) != 1.0:
-        W = recency_starts(G, pl, lam)
+        W = recency_starts(G, pl, lam, slots=slots)
         A = A.merge(W, on=["player_code", "team"], how="left")
         A["w_starts"] = A["w_starts"].fillna(0.0).clip(lower=0.0)
         A["w_starts"] = np.minimum(A["w_starts"], A["club_matches"].astype(float))
@@ -830,9 +934,19 @@ def update_exp_minutes(players, apps, k_half=EXP_MINUTES_K, verbose=True):
 # player may carry without changing how a realised match is counted.
 # 4, the centre of the interior optimum once the grid was extended below 5. The first
 # run of the study put it at 5 — the LOWEST value then tested — which was a boundary
-# artefact, not a fit. At w=1 the single-lever optimum is kappa = 3/4/4/5 across k =
-# 2/3/5/8. Still one endpoint of an unidentified ridge (only w/kappa is pinned), so this
+# artefact, not a fit. At w=1 the single-lever optimum is kappa = 3/4/4/4 across k =
+# 2/3/5/8 (3/4/4/5 before 2026-09-16, when the 22/23 zero-`starts` block was removed from the
+# prior season; the verdict and gains held). Still one endpoint of an unidentified ridge
+# (only w/kappa is pinned), so this
 # is a default for a flag that is OFF, not a settled constant.
+# RE-FIT 2026-09-17 on the INSTALLED prior (studies/start_prior_production.py): the lever
+# IS identified there (cap beats weight, 3/3 folds, all cutoffs) and kappa = 4 is pinned.
+# NOW ON BY DEFAULT in gw_board.py — scored out of sample on GW2-4 by
+# scripts/ab_inseason_starts.py: Brier +15.4%, 3/3 weeks, points +4.0%, on a rule fixed
+# before the run. The appearance-denominator bias in the prior (mean 0.548 against a
+# realised 0.424) turned out NOT to confound it: the XI constraint pins each club to
+# eleven, so that bias never reaches the board's level and this cap buys discrimination.
+# The denominator is still worth fixing on its own terms — PROJECT_KNOWLEDGE §6.9.
 START_KAPPA = 4.0
 
 
@@ -1031,6 +1145,12 @@ def selftest():
     # and the response column must be xG, not the scoreline
     assert abs(rows["FTHG"].iloc[0] - 1.26) < 1e-9, "FTHG must carry xG, not goals"
     assert rows["FTHG"].iloc[0] != M["home_score"].iloc[0]
+
+    # --- the open gameweek: a partly-played week is closed, a gap is not skipped ---
+    assert first_open_gw(pd.DataFrame()) == 1
+    assert first_open_gw(pd.DataFrame({"gameweek": [1, 2, 3, 3]})) == 4
+    assert first_open_gw(pd.DataFrame({"gameweek": [1, 3]})) == 2   # postponed GW2 stays open
+    assert first_open_gw(pd.DataFrame({"gameweek": list(range(1, 39))})) == 38
 
     # --- stacking replicates by weight, and promoted clubs get their own ---
     base = pd.DataFrame({"Date": ["01/11/2025"], "HomeTeam": ["Brighton"],
@@ -1239,6 +1359,35 @@ def selftest():
     wrong = recency_starts(Gt.assign(team=Gt["team_now"]), Mt, lam=1.0)
     assert abs(float(wrong["w_starts"].iloc[0]) - 1.0) < 1e-9, \
         "the current-roster attribution should lose the old club's start (guard is live)"
+
+    # --- minutes: recency renormalises over HIS charged window, not the club's history
+    # Club T plays GW1-4. Player 3 is charged for GW3-4 only (a late signing) and started
+    # GW4 only. Over his own window u = [0.75, 1] * 2/1.75, so w = 8/7. The first version
+    # renormalised over T's four gameweeks and scored him 1.46; had he started both it
+    # scored 2.56 and only the clip in `appearances` brought it back to 2.
+    Gs = pd.DataFrame({"player_code": [3, 3], "team": ["T", "T"], "gw": [3, 4],
+                       "starts": [0, 1], "minutes": [0, 90]})
+    Ms = pd.DataFrame({"gameweek": [1, 2, 3, 4], "home": ["T"] * 4, "away": ["U"] * 4})
+    Ss = pd.DataFrame({"player_code": [3, 3], "gw": [3, 4], "m": [1, 1]})
+    ws = float(recency_starts(Gs, Ms, lam=0.75, slots=Ss)["w_starts"].iloc[0])
+    assert abs(ws - 8.0 / 7.0) < 1e-9, \
+        f"a late signing must renormalise over his own 2 gameweeks, got {ws}"
+    wb = float(recency_starts(Gs.assign(starts=[1, 1]), Ms, lam=0.75,
+                              slots=Ss)["w_starts"].iloc[0])
+    assert abs(wb - 2.0) < 1e-9, \
+        f"started every charged match -> exactly his count, with no clip needed, got {wb}"
+    w1 = float(recency_starts(Gs, Ms, lam=1.0, slots=Ss)["w_starts"].iloc[0])
+    assert abs(w1 - 1.0) < 1e-9, "lam=1 is the raw count on the slotted path too"
+    # ...and a start with NO charged slot (team_history a week behind: charged for GW3 only,
+    # started GW4) must be reported, not silently dropped.
+    _buf, _out = io.StringIO(), sys.stdout
+    sys.stdout = _buf
+    try:
+        wl = float(recency_starts(Gs, Ms, lam=0.75, slots=Ss[Ss["gw"] == 3])["w_starts"].iloc[0])
+    finally:
+        sys.stdout = _out
+    assert wl == 0.0 and "WARNING recency" in _buf.getvalue(), \
+        "a start that lands on no charged gameweek must raise the zero-weight warning"
 
     # --- minutes: the finished guard is per MATCH, not per gameweek
     # One finished match must not carry an unfinished one into the panel with it. This is

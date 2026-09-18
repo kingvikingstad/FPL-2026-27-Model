@@ -56,6 +56,7 @@ Out:  outputs/gw_explorer.html   self-contained; no network, no CDN, opens from 
 """
 import json
 import os
+import re
 import numpy as np
 import pandas as pd
 
@@ -383,8 +384,13 @@ def minutes_per_start():
     coin flips directly: realised matches are discounted by recency, so a run of recent
     non-starts outweighs older starts instead of averaging with them. It does NOT address
     the other half — the 34-pseudo-match prior a realised match is landing against — which
-    is `INSEASON_KAPPA`. Dubravka needs both, and both are still OFF by default and
-    validated on the start probability rather than on points (PROJECT_KNOWLEDGE §6.9).
+    is `INSEASON_KAPPA`. Dubravka needs both. KAPPA is now **ON by default at 4**
+    [2026-09-17]: re-fitted on the installed prior (studies/start_prior_production.py) and
+    scored out of sample on GW2-4 (scripts/ab_inseason_starts.py) — Brier +15.4%, 3/3
+    weeks, points +4.0%, against a rule fixed before the run. LAM stays OFF: validated
+    only inside its study's conditions (h=10, kappa=4), not supported as fitted for the
+    default GW_HI=38 board — corrected 2026-09-16,
+    docs/START_PERSISTENCE_2026-09-07.md — and declared non-adopting in that A/B.
     This function is unaffected either way: it reports the RAW realised record, which is
     what a presentation guard should key on, and passes no `lam`.
     """
@@ -445,6 +451,8 @@ def live_squad():
                 "xi": bool(r.in_xi), "cap": bool(r.is_captain),
                 "vice": bool(r.is_vice),
                 "bench": (None if r.bench_order != r.bench_order else int(r.bench_order)),
+                # a hand-entered pending transfer, not something the feed confirmed
+                "pend": bool(getattr(r, "pending_in", False)),
             })
         return {"picks": picks, "meta": meta or {}}
     except Exception:
@@ -709,7 +717,7 @@ def captaincy_tail(gw, draws_dir=None, board_mean=None, tol=0.01, diag=None):
             return {}
         if diag is not None:
             diag.append({"gw": int(gw), "why": "ok", "maxdiff": round(worst, 6),
-                         "n": len(have)})
+                         "n": len(have), "S": int(draws.shape[1])})
 
     p_haul = (draws >= HAUL_PTS).mean(1)
     p_blank = (draws <= BLANK_PTS).mean(1)
@@ -775,14 +783,16 @@ def captaincy_tails(df, gws, draws_dir=None):
     mixing a tail-ranked week and a mean-ranked week under one heading would make the
     ordering incomparable across the very axis -- the gameweek -- the view is built on.
 
-    Returns (per_gw, diag, gws_ok):
+    Returns (per_gw, diag, gws_ok, S):
       per_gw  {gw: {player_code: {...}}} for the gameweeks that reconciled
       diag    one record per dump examined, for the build log
       gws_ok  those gameweeks, sorted -- the index the page's per-gameweek tail arrays
               are parallel to
+      S       the board's draw count, from the reconciled dumps, or None if no dump
+              reconciled or they disagree
     """
     if "mean" not in df.columns or "player_code" not in df.columns:
-        return {}, [], []
+        return {}, [], [], None
     per_gw, diag = {}, []
     d = draws_dir or config.SCRATCH
     for gw in gws:
@@ -794,7 +804,15 @@ def captaincy_tails(df, gws, draws_dir=None):
         t = captaincy_tail(gw, draws_dir=d, board_mean=bm, diag=diag)
         if t:
             per_gw[int(gw)] = t
-    return per_gw, diag, sorted(per_gw)
+    # THE DRAW COUNT, because every number on this panel is a simulation estimate and the
+    # top of a captaincy ranking is routinely separated by less than the simulation's own
+    # error. `gw_board` runs one S for the whole board (`DRAWS`, default 3000), so a
+    # single reconciled dump establishes it for every gameweek — including the ones with
+    # no dump, whose EV standard error is sd/sqrt(S) from columns the board already
+    # carries. Absent any reconciled dump, S is unknown and the page makes NO separation
+    # claim rather than assuming the default.
+    Ss = {d["S"] for d in diag if d["why"] == "ok"}
+    return per_gw, diag, sorted(per_gw), (Ss.pop() if len(Ss) == 1 else None)
 
 
 def season_to_date(season="2026-2027", base=None):
@@ -1101,7 +1119,7 @@ def payload(df, board_path=None, notes=None, teams=None, res=None):
     # and parallel to `tail_gws` rather than to `gws`: on a board dumped for one gameweek
     # -- the default -- an array over all 38 would be 37 nulls per player per field, which
     # is a third of a megabyte of nothing.
-    tails, tdiag, tail_gws = captaincy_tails(df, gws)
+    tails, tdiag, tail_gws, n_draws = captaincy_tails(df, gws)
     players = []
     for _, g in df.groupby(key, sort=False):
         r = g.iloc[0]
@@ -1174,6 +1192,7 @@ def payload(df, board_path=None, notes=None, teams=None, res=None):
             # and a tail-ranked week are never presented as the same kind of answer.
             "tail_gws": tail_gws,
             "tail_diag": tdiag,
+            "n_draws": n_draws,
         },
         "gws": gws,
         "played_gws": fully,
@@ -1439,7 +1458,9 @@ def selftest():
         assert captaincy_tail(3, draws_dir=d, board_mean=None),             "board_mean=None must skip the check, not fail closed"
         # the multi-gameweek driver reports the gameweek as unavailable rather than
         # falling back to a neighbour's draws
-        _per, _dg, _gok = captaincy_tails(df, [1, 2, 3, 4, 5], draws_dir=d)
+        _per, _dg, _gok, _S = captaincy_tails(df, [1, 2, 3, 4, 5], draws_dir=d)
+        assert _S is None, "a draw count was reported with no reconciled dump"
+
         assert _gok == [], f"a stale gameweek entered the tail basis: {_gok}"
         _pay2 = payload(df)
         assert _pay2["meta"]["tail_gws"] == [], _pay2["meta"]["tail_gws"]
@@ -1448,6 +1469,33 @@ def selftest():
     html = render_html(pay)
     assert html.lstrip().startswith("<!DOCTYPE"), "template did not render"
     assert "perM" not in html, "the retired points-per-£m column is back in the page"
+    # THE SHORTLIST CONTROLS ARE A CONTRACT BETWEEN THE TEMPLATE AND ITS OWN SCRIPT, and
+    # nothing else checks it. The page's JS addresses these by id and throws on a null
+    # node, so a control dropped from the markup during an edit takes the whole tab down
+    # at load — silently, because the template is never imported and never parsed here.
+    # Failing in the selftest costs one string search; failing in the browser costs the
+    # gameweek. Mirrored from the handler bindings in `gw_explorer_view.html`.
+    for _id in ("slxprices", "slxadd", "slxranges",           # price exclusion
+                "rotmode", "rottitle", "rotonebox", "rottwobox",   # rotation mode switch
+                "sqrotbox", "sqrotslots", "sqbudget", "sqperprice", "sqshow",
+                "sqxilegal", "sqtrimflag", "sqrotcount", "rotnote", "rottable"):
+        assert f'id="{_id}"' in html, f"the explorer template lost the #{_id} control"
+    # EVERY ID IN THIS PAGE MUST BE UNIQUE, and nothing else enforces it. The page's `$` is
+    # a bare `document.querySelector`, so a duplicated id silently resolves to whichever
+    # node is EARLIER in the document; the later one is never written to. The writer
+    # succeeds, the reader sees an empty box, and no error is raised anywhere -- not in the
+    # console, not in a test. That is how `sqxi`, added to the Shortlist tab on 2026-09-18,
+    # swallowed the My squad tab's Best XI table: a tab the change never touched went blank
+    # underneath a caption promising a result. Whole-page uniqueness is the only check that
+    # catches it, because the two features that collided never refer to each other, so no
+    # test written for either one can see the other.
+    _ids = re.findall(r'\sid="([A-Za-z0-9_-]+)"', html)
+    _dupe = sorted({i for i in _ids if _ids.count(i) > 1})
+    assert not _dupe, ("duplicate element ids in the explorer template: " + ", ".join(_dupe) +
+                       " -- `$` is querySelector, so only the first of each is ever addressed")
+    # the marks have to be reachable from the shortlist itself, not only the Players tab
+    for _hook in ("data-sllock", "data-slban", "data-slxp", "data-sqown", "data-sqstart"):
+        assert _hook in html, f"the explorer template lost its {_hook} hook"
     assert json.dumps(pay["gws"]) in html or '"gws"' in html
     assert len(long_csv(df)) == len(board)
 

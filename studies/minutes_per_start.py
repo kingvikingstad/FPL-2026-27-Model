@@ -98,17 +98,24 @@ OUT = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "minutes_per_s
 
 
 def usable_seasons(panel):
-    """Seasons whose `is_start` was read, not inferred from minutes."""
+    """Seasons with READ starts. `starts_derived` is per row since 2026-09-16 (22/23 is
+    read from GW16 only — src/fpl_history.py, SCHEMA ERAS), so the season test is "has
+    read rows" and `build` drops derived rows. Identical to the old whole-season test for
+    every season that is wholly read or wholly derived."""
     ok = []
     for s, g in panel.groupby("season"):
-        if not bool(g["starts_derived"].any()):
+        if bool((~g["starts_derived"].astype(bool)).any()):
             ok.append(s)
     return sorted(ok)
 
 
 def build(panel, seasons):
     """One row per (player_code, season, cutoff) with prior, early and target."""
-    panel = panel[panel["is_start"] == True].copy()          # noqa: E712
+    # Read starts only. Before 2026-09-16 the 22/23 GW1-15 rows carried is_start=False
+    # (FPL's structural zero) and fell out on the filter below by accident; they now carry
+    # the minutes-derived start and must be excluded on purpose.
+    panel = panel[(panel["is_start"] == True)                 # noqa: E712
+                  & ~panel["starts_derived"].astype(bool)].copy()
     panel["mins"] = panel["mins"].clip(upper=90)
     panel = panel.sort_values(["player_code", "season", "gw"])
 

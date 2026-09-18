@@ -42,6 +42,13 @@
   --mid-bg:#d9f0e5; --mid-ink:#0f5c44;
   --fwd-bg:#fce7d9; --fwd-ink:#8a4113;
   --ok:#006300; --warn:#8a5b00;
+  /* captaincy — a gold family, deliberately outside the blue/red diverging ramp the
+     cell fill uses, because the badge sits ON a shaded cell and must not read as more
+     of the same scale. Three steps, brightest for the first choice. */
+  --cap1:#ffd24a; --cap1b:#c98f00;
+  --cap2:#f5e6b8; --cap2b:#d9c078;
+  --cap3:#efece2; --cap3b:#d6d2c6;
+  --cap-rot:#fff8e0;
   --shadow:0 1px 2px rgba(11,11,11,.04), 0 4px 16px rgba(11,11,11,.05);
   --r:12px; --r-sm:8px;
 }
@@ -61,6 +68,10 @@
     --mid-bg:#17302a; --mid-ink:#8fd9bd;
     --fwd-bg:#3a2418; --fwd-ink:#f2b78f;
     --ok:#0ca30c; --warn:#fab219;
+    --cap1:#f0b400; --cap1b:#ffd24a;
+    --cap2:#4a3d18; --cap2b:#8a7330;
+    --cap3:#2f2e2a; --cap3b:#4a4842;
+    --cap-rot:#2a2413;
     --shadow:0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
   }
 }
@@ -78,6 +89,10 @@
   --mid-bg:#17302a; --mid-ink:#8fd9bd;
   --fwd-bg:#3a2418; --fwd-ink:#f2b78f;
   --ok:#0ca30c; --warn:#fab219;
+  --cap1:#f0b400; --cap1b:#ffd24a;
+  --cap2:#4a3d18; --cap2b:#8a7330;
+  --cap3:#2f2e2a; --cap3b:#4a4842;
+  --cap-rot:#2a2413;
   --shadow:0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
 }
 
@@ -187,6 +202,33 @@ td.gwcell{text-align:center; min-width:60px; padding:4px 6px; line-height:1.3}
 td.gwcell .v{display:block; font-weight:600; font-size:13px}
 td.gwcell .fx{display:block; font-size:9.5px; color:var(--ink-muted); letter-spacing:.03em; margin-top:1px}
 td.gwcell.pastc{opacity:.42}
+/* CAPTAIN BADGE. Sits in the per-gameweek cell so the armband ranking is read in the
+   same grid as the projection it comes from, rather than in a table you have to hold
+   beside it. Only the top three, only on weeks with something still to play. */
+td.gwcell .cbadge{display:inline-block; margin-top:2px; font-size:9px; font-weight:700;
+  letter-spacing:.06em; padding:0 4px; border-radius:7px; line-height:14px;
+  border:1px solid transparent}
+.cbadge.c1{background:var(--cap1); color:#1a1200; border-color:var(--cap1b)}
+.cbadge.c2{background:var(--cap2); color:var(--ink); border-color:var(--cap2b)}
+.cbadge.c3{background:var(--cap3); color:var(--ink-2); border-color:var(--cap3b)}
+/* Both captaincy tables hold names, a club and a signed number per cell and are wider
+   than half a screen at any sensible font. They scroll inside their own box rather than
+   pushing the page sideways or, as they did before this rule, overlapping the panel
+   beside them. */
+.capwrap{overflow-x:auto; max-width:100%}
+.capgrid{width:max-content; min-width:100%; border-collapse:collapse; font-size:12.5px}
+.capgrid th,.capgrid td{padding:5px 8px; border-bottom:1px solid var(--line); text-align:left;
+  white-space:nowrap}
+.capgrid th{font-size:10.5px; text-transform:uppercase; letter-spacing:.06em;
+  color:var(--ink-muted); font-weight:600}
+.capgrid td.num{text-align:right; font-variant-numeric:tabular-nums}
+.capgrid tr.rot td{background:var(--cap-rot)}
+.capname{font-weight:600}
+.capsub{color:var(--ink-muted); font-size:11px}
+.basis{display:inline-block; font-size:9px; font-weight:700; letter-spacing:.06em;
+  padding:0 5px; line-height:15px; border-radius:8px; border:1px solid var(--line);
+  color:var(--ink-muted)}
+.basis.tail{border-color:var(--cap1b); color:var(--ink)}
 td.blank{color:var(--ink-muted)}
 .pinbtn{cursor:pointer; color:var(--line-strong); user-select:none; font-size:14px}
 .pinbtn:hover{color:var(--s2)}
@@ -212,8 +254,12 @@ a.pl:hover{border-bottom-color:var(--s1); color:var(--s1)}
 .count{font-size:12.5px; color:var(--ink-2)}
 
 /* ---- percentile bars ---- */
-.pbars{display:flex; flex-direction:column; gap:9px}
-.pbar{display:grid; grid-template-columns:118px 1fr 44px 92px; gap:9px; align-items:center; font-size:12.5px}
+/* One grid for the whole stack, shared by every row through subgrid. The meta column was
+   a fixed 92px per row, and "0.270 · #3/20 · med -0.001" is wider than that, so the
+   median — the number the bar is read against — was the part that got cut off. It is
+   now sized to its widest row, and the tracks stay aligned because they share the grid. */
+.pbars{display:grid; grid-template-columns:118px minmax(0,1fr) 36px max-content; column-gap:9px; row-gap:9px}
+.pbar{display:grid; grid-column:1/-1; grid-template-columns:subgrid; align-items:center; font-size:12.5px}
 .pbar .lab{color:var(--ink-2); text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .pbar .track{height:14px; background:var(--surface-3); border-radius:4px; position:relative; overflow:hidden}
 .pbar .fill{position:absolute; left:0; top:0; bottom:0; border-radius:4px}
@@ -250,8 +296,26 @@ table.fx td.team{text-align:left; padding:6px 10px; font-weight:550; font-size:1
 /* ---- charts ---- */
 svg{display:block; max-width:100%; overflow:visible}
 .ax{font-size:10.5px; fill:var(--ink-muted)}
+/* Direct labels on the data. Axis furniture can be muted; a label that names a club or
+   carries a value is read, so it wears the secondary ink (7:1 on the surface) rather than
+   the muted one (3.4:1). It never wears the series colour — an inline fill on an `.ax`
+   text lost to this stylesheet anyway, so the orange labels the code asked for were
+   already rendering grey. */
+.lbl{font-size:11px; fill:var(--ink-2)}
+.lbl.hi{fill:var(--ink); font-weight:650}
+/* A halo in the surface colour behind any text that sits INSIDE a plot, so a label a
+   line runs through stays readable instead of being struck through. */
+.lbl, .halo{paint-order:stroke; stroke:var(--surface); stroke-width:3px; stroke-linejoin:round}
+.leader{stroke:var(--ink-muted); stroke-width:1}
 .gl{stroke:var(--grid); stroke-width:1}
 .axline{stroke:var(--axis); stroke-width:1}
+.refline{stroke:var(--ink-muted); stroke-width:1}
+.xhair{stroke:var(--ink-muted); stroke-width:1; pointer-events:none}
+.hit{fill:transparent}
+g.hrow{cursor:default}
+g.hrow:hover .hit{fill:var(--surface-2)}
+#tip .tv{font-weight:650; font-variant-numeric:tabular-nums}
+#tip .tk{display:inline-block; width:10px; height:2px; border-radius:1px; vertical-align:middle; margin-right:5px}
 .chartlegend{display:flex; gap:16px; flex-wrap:wrap; font-size:12px; color:var(--ink-2); margin-top:8px}
 .chartlegend span{display:inline-flex; align-items:center; gap:6px}
 .chartlegend i{width:14px; height:3px; border-radius:2px; display:block}
@@ -341,7 +405,60 @@ table.rot td.nm{text-align:left; white-space:nowrap}
 .wA{background:var(--def-bg); color:var(--def-ink)}
 .wB{background:var(--fwd-bg); color:var(--fwd-ink)}
 .wC{background:var(--mid-bg); color:var(--mid-ink)}
+.wD{background:var(--gk-bg); color:var(--gk-ink)}
 .key{display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:4px; vertical-align:-1px}
+/* --- shortlist filters ----------------------------------------------------- */
+.slactive{display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:10px; font-size:12px}
+.slactive:empty{display:none}
+.xchip{display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:999px;
+  font-size:11.5px; cursor:pointer; border:1px solid var(--line-strong); background:var(--surface-2);
+  color:var(--ink-2)}
+.xchip:hover{border-color:var(--ink-2); color:var(--ink)}
+.chip.sm.off{opacity:.55; text-decoration:line-through}
+.band h3{display:flex; align-items:center; gap:6px}
+.bandx{margin-left:auto; border:0; background:none; color:var(--ink-muted); font-size:15px;
+  line-height:1; padding:0 2px; cursor:pointer}
+.bandx:hover{color:var(--ink)}
+.band .pill[data-xteam]{cursor:pointer}
+.band .pill[data-xteam]:hover{background:var(--fwd-bg); color:var(--fwd-ink)}
+.band .mk{font-size:11px; cursor:pointer; margin-left:3px; color:var(--ink-muted)}
+.band .mk:hover{color:var(--ink)}
+/* quick price toggles: every price actually present in the candidate pool, one click to
+   drop. The typed from/to range below it stays for anything that is not a round price. */
+.pxgrid{display:flex; flex-wrap:wrap; gap:4px; align-items:center}
+.px{padding:2px 7px; border-radius:var(--r-sm); border:1px solid var(--line-strong);
+  background:var(--surface); color:var(--ink-2); font-size:11.5px; cursor:pointer;
+  font-variant-numeric:tabular-nums}
+.px:hover{border-color:var(--ink-2); color:var(--ink)}
+.px.off{opacity:.5; text-decoration:line-through; background:var(--fwd-bg); color:var(--fwd-ink);
+  border-color:transparent}
+.px .n{color:var(--ink-muted); font-size:10px; margin-left:3px}
+.px.off .n{color:inherit}
+/* whole-squad rotation */
+.sqrot{display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; margin-bottom:10px}
+.sqrot .blk{display:flex; flex-direction:column; gap:3px}
+.sqrot .blk > span{font-size:9.5px; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--ink-muted)}
+.sqrot .blk .pair{display:flex; gap:4px; align-items:center}
+.sqrot select{min-width:0}
+.xisum{font-size:12px; color:var(--ink-2)}
+.xisum.bad{color:var(--pole-bad); font-weight:600}
+.trimflag{color:var(--pole-bad); font-weight:650; letter-spacing:0; text-transform:none;
+  cursor:help}
+table.rot td.sqm{text-align:left; white-space:nowrap; font-size:11.5px}
+/* The cost and the two valuations are the reason to read a row, so they are pinned: the
+   roster is 900px wide and would otherwise carry them off the right edge. `left` is set
+   from the measured header widths in `sqPinColumns`, not hardcoded, because a squad that
+   costs three digits widens the first column and a hardcoded offset would overlap.
+   The z-index has to CLEAR the unpinned headers, which the generic `table.rot th` rule
+   puts at 20: at a lower value they scroll over the pinned ones and the reader sees the
+   numbers with somebody else's column headings above them. */
+table.rot th.sqnum, table.rot td.sqnum{position:sticky; background:var(--surface); z-index:2}
+table.rot th.sqnum{z-index:25; background:var(--surface-2)}
+table.rot th.sqnum.edge, table.rot td.sqnum.edge{box-shadow:1px 0 0 var(--line)}
+table.rot td.sqm .grp{display:block; margin:1px 0}
+table.rot td.sqm .grp b{display:inline-block; min-width:26px; color:var(--ink-muted);
+  font-weight:600; font-size:9.5px; letter-spacing:.05em}
 /* --- notebook -------------------------------------------------------------- */
 textarea{width:100%;box-sizing:border-box;font:inherit;font-size:13px;color:var(--ink);
   background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r-sm);
@@ -444,6 +561,32 @@ textarea:focus{outline:2px solid var(--s1);outline-offset:1px}
       <span class="muted" style="font-size:12px">Metric filters use the window aggregate selected above.</span></div>
   </details>
 
+  <details id="capbox">
+    <summary>Captaincy <span class="muted" id="capsum" style="text-transform:none;letter-spacing:0"></span></summary>
+    <div class="row" style="margin-bottom:10px">
+      <label class="f">Rank on</label>
+      <span class="seg" id="capbasis">
+        <button data-cb="ev" aria-pressed="true">Projection</button>
+        <button data-cb="haul" aria-pressed="false">P(haul)</button>
+      </span>
+      <label class="f">Rotate between</label>
+      <select id="capn">
+        <option value="1">1 &mdash; one captain all window</option>
+        <option value="2" selected>2 players</option>
+        <option value="3">3 players</option>
+      </select>
+      <label class="f"><input type="checkbox" id="capbadge" checked> badges in the grid</label>
+      <span class="spacer"></span>
+      <span class="count" id="capcount"></span>
+    </div>
+    <p class="cap" id="capcap"></p>
+    <div class="cols two" style="align-items:start">
+      <div id="captbl"></div>
+      <div id="caprot"></div>
+    </div>
+    <div class="note" id="capnote"></div>
+  </details>
+
   <div class="note" id="notes"></div>
 
   <div class="cols side" style="margin-bottom:16px">
@@ -509,12 +652,85 @@ textarea:focus{outline:2px solid var(--s1);outline-offset:1px}
         <option value="1">&pound;1.0m</option>
       </select>
       <label class="f">Per band</label>
-      <select id="sln"><option>3</option><option>5</option><option>8</option></select>
-      <label class="f">Max price</label><input type="number" id="slmax" step="0.5" min="4">
-      <label class="f">Max owned %</label><input type="number" id="slown" step="1" min="0" placeholder="any">
+      <select id="sln"><option>3</option><option>5</option><option>8</option><option>12</option></select>
+      <label class="f">Rank by</label>
+      <select id="slsort">
+        <option value="res">vs price</option>
+        <option value="pts">Window points</option>
+        <option value="h3">Next 3 GWs</option>
+        <option value="h6">Next 6 GWs</option>
+        <option value="h10">Next 10 GWs</option>
+      </select>
       <span class="spacer"></span>
       <span class="count" id="slcount"></span>
     </div>
+    <!-- CANDIDATE FILTERS. Shared by the price bands AND the rotation enumeration below.
+         They decide who is a candidate; they never touch the fitted price line, which is
+         the market reference every "vs price" figure is measured against. Excluding the
+         cheap end must not move what a price "normally buys". -->
+    <div class="row">
+      <label class="f">Price &pound;</label>
+      <input type="number" id="slmin" step="0.5" min="3.5" placeholder="min">
+      <span class="muted">to</span>
+      <input type="number" id="slmax" step="0.5" min="4" placeholder="max">
+      <label class="f">Owned %</label>
+      <input type="number" id="slownmin" step="1" min="0" placeholder="min">
+      <span class="muted">to</span>
+      <input type="number" id="slown" step="1" min="0" placeholder="max">
+      <label class="f" title="Minimum projected points over the selected window">Min pts</label>
+      <input type="number" id="slminpts" step="1" min="0" placeholder="any">
+      <label class="f">My squad</label>
+      <span class="seg" id="slsquad">
+        <button data-sq="any" aria-pressed="true">Any</button>
+        <button data-sq="exclude" aria-pressed="false" title="Only players you do not already own">Not owned</button>
+        <button data-sq="only" aria-pressed="false" title="Only your own fifteen">Only mine</button>
+      </span>
+      <label class="f" id="slclubcapwrap" title="FPL allows three per club. Hides players from clubs you already hold three of (your own players stay).">
+        <input type="checkbox" id="slclubcap"> skip clubs I hold 3 of</label>
+    </div>
+    <!-- PRICE EXCLUSION. The common case is "no 4.0s and no 4.5s in my rotation", so the
+         common case is one click per price rather than a typed range. Every price present
+         in the current candidate pool gets a toggle with its headcount; the typed range
+         underneath stays for anything the toggles do not cover. Both write the same
+         `slXRanges`, which `slCandidate` applies to the bands AND the rotations. The price
+         LINE is fitted before any of this, so excluding the cheap end never moves what a
+         price "normally buys". -->
+    <div class="row">
+      <label class="f" title="Click a price to drop every player at it from the shortlist and from every rotation. The fitted price line is unaffected.">Exclude prices</label>
+      <span class="pxgrid" id="slxprices"></span>
+    </div>
+    <div class="row">
+      <label class="f">or a range &pound;</label>
+      <input type="number" id="slxlo" step="0.1" min="3.5" placeholder="from">
+      <span class="muted">to</span>
+      <input type="number" id="slxhi" step="0.1" min="3.5" placeholder="to">
+      <button id="slxadd">Exclude range</button>
+      <span id="slxranges"></span>
+    </div>
+    <div class="row">
+      <details id="slteamsbox" style="flex:1; margin:0">
+        <summary>Clubs <span class="muted" id="slteamsum" style="text-transform:none;letter-spacing:0"></span></summary>
+        <div class="row" style="margin-bottom:8px">
+          <button id="slteamall">Include all</button>
+          <button id="slteamnone">Exclude all</button>
+          <button id="slteaminv">Invert</button>
+          <span class="muted" style="font-size:12px">Click a club to include or exclude it. The club tag on any band row excludes it too.</span>
+        </div>
+        <div class="grid-cols" id="slteams"></div>
+      </details>
+    </div>
+    <div class="row">
+      <label class="f">Saved views</label>
+      <select id="slpreset"><option value="">choose…</option></select>
+      <button id="slpresetload">Load</button>
+      <button id="slpresetdel">Delete</button>
+      <input id="slpresetname" placeholder="name this view" size="16">
+      <button id="slpresetsave">Save</button>
+      <span class="count" id="slpresetstatus"></span>
+      <span class="spacer"></span>
+      <button id="slreset" title="Clear every shortlist and rotation filter. Locks and bans are kept.">Reset filters</button>
+    </div>
+    <div class="slactive" id="slactive"></div>
   </div>
   <div class="kpis" id="slkpis"></div>
   <div class="card">
@@ -526,13 +742,38 @@ textarea:focus{outline:2px solid var(--s1);outline-offset:1px}
   <div id="slbands"></div>
 
   <div class="card" style="margin-top:16px">
-    <h2>Rotation pairs</h2>
+    <h2 id="rottitle">Rotation pairs</h2>
+    <div class="row" style="margin-bottom:10px">
+      <label class="f">Search</label>
+      <span class="seg" id="rotmode">
+        <button data-rm="one" aria-pressed="true" title="One position at a time: which pair or triple of defenders rotates best">One position</button>
+        <button data-rm="squad" aria-pressed="false" title="All four blocks at once under a single budget: 2 GK, 5 DEF, 5 MID, 3 FWD">Whole squad</button>
+      </span>
+      <span class="spacer"></span>
+      <span class="count" id="sqrotcount"></span>
+    </div>
     <p class="cap" id="rotcap"></p>
-    <div class="row" style="margin-bottom:12px">
+    <!-- WHOLE-SQUAD CONTROLS -->
+    <div id="sqrotbox" class="hide">
+      <div class="sqrot" id="sqrotslots"></div>
+      <div class="row" style="margin-bottom:12px">
+        <label class="f" title="Most you will spend across all fifteen. Leave blank to see the whole frontier.">Budget &pound;</label>
+        <input type="number" id="sqbudget" step="0.5" placeholder="any">
+        <label class="f" title="How many players to keep at each distinct price, per position. Larger searches deeper and is slower.">Per price <span id="sqtrimflag"></span></label>
+        <select id="sqperprice"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+        <label class="f">Show</label>
+        <select id="sqshow"><option>10</option><option>15</option><option>25</option><option>50</option></select>
+        <span class="spacer"></span>
+        <span class="xisum" id="sqxilegal"></span>
+      </div>
+    </div>
+    <div class="row" id="rotonebox" style="margin-bottom:12px">
+      <label class="f">Position</label>
+      <span id="rotpos"></span>
       <label class="f">Own</label>
-      <select id="rotn"><option value="2">2 players</option><option value="3">3 players</option></select>
+      <select id="rotn"><option value="2">2 players</option><option value="3">3 players</option><option value="4">4 players</option></select>
       <label class="f">Start</label>
-      <select id="rotk"><option value="1">1 each week</option><option value="2">2 each week</option></select>
+      <select id="rotk"><option value="1">1 each week</option></select>
       <label class="f">Rank by</label>
       <select id="rotsort">
         <option value="perpark">Gain per &pound;m parked</option>
@@ -546,12 +787,34 @@ textarea:focus{outline:2px solid var(--s1);outline-offset:1px}
              is the same question asked correctly — a MARGINAL gain over the capital that
              is actually idle — and it is right beside it. -->
       </select>
-      <label class="f">Max combined</label><input type="number" id="rotmax" step="0.5" placeholder="any">
       <span class="spacer"></span>
       <span class="count" id="rotcount"></span>
     </div>
+    <div class="row" id="rottwobox" style="margin-bottom:12px">
+      <label class="f">Combined &pound;</label>
+      <input type="number" id="rotmin" step="0.5" placeholder="min">
+      <span class="muted">to</span>
+      <input type="number" id="rotmax" step="0.5" placeholder="max">
+      <label class="f" title="Most you are willing to leave on the bench: the price of the members who start least">Max parked &pound;</label>
+      <input type="number" id="rotparkmax" step="0.5" placeholder="any">
+      <label class="f" title="Hide combinations whose gain over holding the best of them is below this">Min gain</label>
+      <input type="number" id="rotmingain" step="0.5" placeholder="any">
+      <label class="f">Clubs</label>
+      <select id="rotclub">
+        <option value="any">Any mix</option>
+        <option value="distinct">All different</option>
+        <option value="same">Same club only</option>
+      </select>
+      <label class="f" title="Drop combinations where a member never makes the weekly pick. That is a bench player, not a rotation.">
+        <input type="checkbox" id="rotreal"> everyone starts at least once</label>
+      <label class="f">Pool</label>
+      <select id="rotpool"><option value="20">top 20</option><option value="40">top 40</option><option value="60">top 60</option></select>
+      <label class="f">Show</label>
+      <select id="rotshow"><option>25</option><option>50</option><option>100</option></select>
+    </div>
     <div class="squadbar" id="squadbar"></div>
     <div id="rottable"></div>
+    <div class="note" id="rotnote"></div>
   </div>
 </section>
 
@@ -674,7 +937,9 @@ textarea:focus{outline:2px solid var(--s1);outline-offset:1px}
   <div class="card" style="margin-top:16px">
     <h2>The league, attack against defence</h2>
     <p class="cap">Fitted posterior strength, model log scale. Up is a better attack; right
-      is a better defence. Every club is labelled — position carries the identity, not colour.</p>
+      is a better defence; the crossing lines are the league average, so each corner means what
+      it says. Clubs are labelled wherever a label fits without overprinting another — position
+      carries the identity, not colour — and every dot answers to hover.</p>
     <div id="tscatter"></div>
   </div>
 </section>
@@ -712,6 +977,85 @@ function saveMarks(S){
     localStorage.setItem(MARKS_KEY, JSON.stringify({
       locked: [...S.locked], banned: [...S.banned]}));
   } catch (e) { /* nothing to do; the page still works */ }
+}
+/* SHORTLIST + ROTATION FILTERS. Every candidate filter on the Shortlist tab, in one place
+   so that defaults, reset, persistence and saved views cannot drift apart. They persist
+   the same way the marks do — guarded, so a page with no storage simply forgets them. */
+/* The FPL squad, which is what bounds the own-counts: 2 GK, 5 DEF, 5 MID, 3 FWD. */
+const SL_SQ_OWN = {GK:2, DEF:5, MID:5, FWD:3};
+const SL_SQ_MAXOWN = {GK:2, DEF:5, MID:5, FWD:3};
+function SL_DEFAULTS(){ return {
+  slPos:"ALL", slBand:0.5, slN:3, slSort:"res",
+  slMin:null, slMax:null, slOwnMin:null, slOwn:null, slMinPts:null,
+  slSquad:"any", slClubCap:false, slXRanges:[], slXTeams:new Set(),
+  rotPos:"auto", rotN:2, rotK:1, rotSort:"perpark", rotMin:null, rotMax:null,
+  rotParkMax:null, rotMinGain:null, rotClub:"any", rotReal:false, rotPool:40, rotShow:25,
+  /* WHOLE-SQUAD ROTATION. `one` is the pair/triple tool above; `squad` searches all four
+     position blocks at once under a single budget. Own/start default to the real FPL
+     squad, 2-5-5-3, starting n-1 of each, which is 1+4+4+2 = a legal 4-4-2 XI. */
+  rotMode:"one",
+  sqOwn:{GK:2, DEF:5, MID:5, FWD:3}, sqStart:{GK:1, DEF:4, MID:4, FWD:2},
+  sqBudget:null, sqPerPrice:3, sqShow:15,
+}; }
+const SL_KEY = "fpl_explorer_shortlist_v1";
+const SL_PRESETS_KEY = "fpl_explorer_sl_presets_v1";
+function slSnapshot(S){
+  const o = {};
+  for (const k in SL_DEFAULTS()){
+    const v = S[k];
+    o[k] = v instanceof Set ? [...v]
+         : Array.isArray(v) ? v.map(x => Array.isArray(x) ? [...x] : x)
+         : (v && typeof v === "object") ? Object.assign({}, v) : v;
+  }
+  return o;
+}
+function slApply(S, o){
+  const d = SL_DEFAULTS();
+  for (const k in d){
+    if (!o || o[k] === undefined || o[k] === null && d[k] !== null){ S[k] = d[k]; continue; }
+    // a stored plain object is MERGED onto the default, never adopted wholesale: a view
+    // saved before a position existed would otherwise restore a squad with no slot for it
+    S[k] = d[k] instanceof Set ? new Set(o[k])
+         : (d[k] && typeof d[k] === "object" && !Array.isArray(d[k]))
+           ? Object.assign({}, d[k], (o[k] && typeof o[k] === "object") ? o[k] : {})
+           : o[k];
+  }
+  // stored views outlive a rebuild: drop clubs that are no longer in the league and
+  // malformed ranges rather than carrying filters that can never be seen or removed
+  S.slXTeams = new Set([...S.slXTeams].filter(t => D.teams.includes(t)));
+  S.slXRanges = (Array.isArray(S.slXRanges) ? S.slXRanges : [])
+    .filter(r => Array.isArray(r) && r.length === 2 && isFinite(r[0]) && isFinite(r[1]));
+  if (![2,3,4].includes(S.rotN)) S.rotN = 2;
+  S.rotK = Math.max(1, Math.min(S.rotK, S.rotN - 1));
+  if (S.rotMode !== "squad") S.rotMode = "one";
+  /* THE START CAP IS A SQUAD CONSTRAINT, NOT A BLOCK ONE. The pair tool caps starts at
+     own-1 because starting both of two defenders is a team sheet, not a rotation. That
+     reasoning does not carry to a whole squad: you own fifteen and start eleven, so four
+     are always benched and the rotation is real whatever any single block does. Capping
+     each block at own-1 instead would leave 4-4-2 as the ONLY reachable legal XI — every
+     other legal shape starts all five of a position or all three forwards — and the other
+     seven would silently lose their best-XI valuation. So the ceiling here is `own`, and
+     the DEFAULT is own-1, which is the maximum-rotation shape. */
+  for (const q of ["GK","DEF","MID","FWD"]){
+    let n = Math.round(+S.sqOwn[q]); if (!isFinite(n)) n = SL_SQ_OWN[q];
+    S.sqOwn[q] = Math.max(1, Math.min(n, SL_SQ_MAXOWN[q]));
+    let kk = Math.round(+S.sqStart[q]); if (!isFinite(kk)) kk = S.sqOwn[q] - 1;
+    S.sqStart[q] = Math.max(1, Math.min(kk, S.sqOwn[q]));
+  }
+}
+function loadShortlist(S){
+  try { const raw = localStorage.getItem(SL_KEY); if (raw) slApply(S, JSON.parse(raw)); }
+  catch (e) { /* no storage: filters are session-only */ }
+}
+function saveShortlist(){
+  try { localStorage.setItem(SL_KEY, JSON.stringify(slSnapshot(S))); } catch (e) {}
+}
+function loadPresets(){
+  try { const o = JSON.parse(localStorage.getItem(SL_PRESETS_KEY) || "{}"); return (o && typeof o === "object") ? o : {}; }
+  catch (e) { return {}; }
+}
+function savePresets(o){
+  try { localStorage.setItem(SL_PRESETS_KEY, JSON.stringify(o)); return true; } catch (e) { return false; }
 }
 /* NOTEBOOK. The manager's own reasoning, which is exactly the information the model
    does not have. Same storage discipline as the marks above: guarded on every read and
@@ -868,9 +1212,15 @@ const S = {
   profMode:"bars", pop:"starters",
   fxView:"att", fxSort:"ease", fxBasis:"rel",
   team: null, tProfMode:"bars", sosMode:"all",
-  slPos:"ALL", slBand:0.5, slN:3, slMax:null, slOwn:null,
+  ...SL_DEFAULTS(),
   sqHorizon:"1", sqFT:1, sqHit:4,
-  rotN:2, rotK:1, rotSort:"perpark", rotMax:null,
+  /* Captaincy. The basis DEFAULTS TO THE PROJECTION, not to the tail, even though
+     captaincy is a tail question: on a board dumped for one gameweek — the default —
+     the tail exists for one week out of the window, and a control that silently answers
+     a different question for five of six weeks is worse than one that answers the same
+     question for all six and says which question it is. `capN:2` because the decision
+     the panel exists for is "is a second premium worth owning for the armband". */
+  capBasis:"ev", capN:2, capBadge:true,
   locked:new Set(), banned:new Set(),
 };
 S.to = Math.min(D.meta.gw_hi, S.from + 5);
@@ -1231,6 +1581,147 @@ function renderRadar(el, series, axes, size){
   el.innerHTML = s + leg;
 }
 
+/* ======================= chart helpers =======================
+   Shared by the SVG charts on the Shortlist and Team trends tabs. These are Datawrapper's
+   conventions applied by hand, so the page stays self-contained: ticks on round numbers,
+   labels that never overprint each other, and hover targets bigger than the dot. */
+const SVGNS = "http://www.w3.org/2000/svg";
+
+/* Round-number axis. The old axes divided the range into four and rounded the LABEL, so
+   the gridline marked "1.9" sat at 1.875 and "9" at 8.5 — the label misstated its own
+   line. Steps are now 1, 2, 2.5 or 5 x 10^k, the range is widened to whole steps, and
+   every label is the exact value of its gridline. `target` is the interval count aimed at. */
+function niceTicks(lo, hi, target){
+  target = target || 5;
+  if (!(hi > lo)) hi = lo + 1;
+  const raw = (hi - lo) / target;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw * 0.999);
+  const a = Math.floor(lo / step + 1e-9) * step, b = Math.ceil(hi / step - 1e-9) * step;
+  const dec = Math.max(0, -Math.floor(Math.log10(step) + 1e-9) +
+                          (Math.abs(step / mag - 2.5) < 1e-9 ? 1 : 0));
+  const ticks = [];
+  for (let v = a; v <= b + step * 1e-6; v += step) ticks.push(+v.toFixed(10));
+  return {lo: a, hi: b, step, ticks, fmt: v => (+v).toFixed(dec)};
+}
+
+/* Text width in SVG user units. A label's font-size is in user units too, so the same
+   number is right whatever the chart is scaled to on screen. */
+const _mctx = document.createElement("canvas").getContext("2d");
+function textW(s, px, weight){
+  _mctx.font = (weight || 400) + " " + px + "px " + getComputedStyle(document.body).fontFamily;
+  return _mctx.measureText(s).width;
+}
+
+/* Greedy label placement. Candidates are {x, y, r, text, bold, src} in priority order —
+   the selected club, the biggest overperformers — so the labels the chart is ABOUT claim
+   space first. Each tries eight positions round its point, then the same eight on two
+   wider rings with a leader line back to the point. A label that fits nowhere is dropped, not
+   nudged: a label pushed off its mark reads as naming its new neighbour, which is worse
+   than no label. Dropped labels stay one hover away. `obstacles` are the points ({x,y,r},
+   a label may not cover any but its own `src`), `reserved` are rects already taken, and
+   `box` is where labels may go. Returns {svg, dropped}. */
+function placeLabels(cands, obstacles, box, reserved){
+  const taken = (reserved || []).slice();
+  const hit = (a, b) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
+  const dirs = [[1,0],[-1,0],[0,-1],[0,1],[1,-1],[1,1],[-1,-1],[-1,1]];
+  let svg = "", dropped = [];
+  for (const c of cands){
+    const w = textW(c.text, 11, c.bold ? 650 : 400), h = 12;
+    let got = null;
+    for (const ring of [1, 2.4, 4]){
+      for (const [dx, dy] of dirs){
+        const g = ((c.r || 4) + 3) * ring;
+        const cx = c.x + dx * g, cy = c.y + dy * g * 0.9;
+        const x0 = dx > 0 ? cx : dx < 0 ? cx - w : cx - w / 2;
+        const y0 = dy > 0 ? cy : dy < 0 ? cy - h : cy - h / 2;
+        const r = {x0, x1: x0 + w, y0, y1: y0 + h};
+        if (r.x0 < box.x0 || r.x1 > box.x1 || r.y0 < box.y0 || r.y1 > box.y1) continue;
+        if (taken.some(t => hit(t, r))) continue;
+        if (obstacles.some(p => p !== c.src &&
+            hit({x0: p.x - p.r - 1, x1: p.x + p.r + 1, y0: p.y - p.r - 1, y1: p.y + p.r + 1}, r))) continue;
+        got = {r, ring, dx, dy, cx, cy}; break;
+      }
+      if (got) break;
+    }
+    if (!got){ dropped.push(c); continue; }
+    taken.push(got.r);
+    if (got.ring > 1){
+      // the leader runs from the point's edge to the nearest edge of the label
+      const ex = Math.min(Math.max(c.x, got.r.x0), got.r.x1), ey = Math.min(Math.max(c.y, got.r.y0), got.r.y1);
+      const len = Math.hypot(ex - c.x, ey - c.y) || 1, pr = (c.r || 4) + 1;
+      svg += '<line class="leader" x1="' + (c.x + (ex - c.x) / len * pr) + '" y1="' + (c.y + (ey - c.y) / len * pr) +
+             '" x2="' + ex + '" y2="' + ey + '"/>';
+    }
+    svg += '<text x="' + got.r.x0 + '" y="' + (got.r.y1 - 2.5) + '" class="lbl' + (c.bold ? ' hi' : '') + '">' +
+           esc(c.text) + '</text>';
+  }
+  return {svg, dropped};
+}
+
+/* 4px round on the data end, square on the baseline — a bar grows FROM its baseline, and
+   rounding both ends would make the baseline end look like data too. `xb` is the
+   baseline, `xt` the tip, either side of it. */
+function hbarPath(xb, xt, y, h, r){
+  const w = Math.abs(xt - xb); if (w < 0.5) return "";
+  r = Math.min(r, w, h / 2);
+  const dir = xt >= xb ? 1 : -1, sw = dir > 0 ? 1 : 0, xr = xt - dir * r;
+  return 'M' + xb + ',' + y + 'H' + xr + 'A' + r + ',' + r + ' 0 0 ' + sw + ' ' + xt + ',' + (y + r) +
+         'V' + (y + h - r) + 'A' + r + ',' + r + ' 0 0 ' + sw + ' ' + xr + ',' + (y + h) + 'H' + xb + 'Z';
+}
+
+function svgLocal(svg, e){
+  const m = svg.getScreenCTM(); if (!m) return null;
+  const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
+  return p.matrixTransform(m.inverse());
+}
+/* Nearest-point hover for a scatter. The target is whichever point is closest to the
+   pointer within `radius` user units — not the painted 8px disc, which nobody lands on
+   dead-centre. `pts` carry px/py in user units; the hovered point gets a ring. */
+function hoverNearest(host, pts, html, radius){
+  const svg = host.querySelector("svg"); if (!svg || !pts.length) return;
+  radius = radius || 26;
+  const ring = document.createElementNS(SVGNS, "circle");
+  ring.setAttribute("r", 10); ring.setAttribute("fill", "none");
+  ring.setAttribute("stroke", "var(--ink)"); ring.setAttribute("stroke-width", "1.5");
+  ring.style.pointerEvents = "none"; ring.style.display = "none";
+  svg.appendChild(ring);
+  svg.addEventListener("pointermove", e => {
+    const q = svgLocal(svg, e); if (!q) return;
+    let best = null, bd = radius * radius;
+    for (const p of pts){ const d = (p.px - q.x) ** 2 + (p.py - q.y) ** 2; if (d < bd){ bd = d; best = p; } }
+    if (!best){ ring.style.display = "none"; hideTip(); return; }
+    ring.setAttribute("cx", best.px); ring.setAttribute("cy", best.py); ring.style.display = "";
+    showTip(html(best), e);
+  });
+  svg.addEventListener("pointerleave", () => { ring.style.display = "none"; hideTip(); });
+}
+/* Crosshair for a line chart: a hairline snaps to the nearest gameweek and one tooltip
+   lists every series there, so the reader aims at a week, never at a 2px line. */
+function hoverColumns(host, cols, y0, y1){
+  const svg = host.querySelector("svg"); if (!svg || !cols.length) return;
+  const line = document.createElementNS(SVGNS, "line");
+  line.setAttribute("y1", y0); line.setAttribute("y2", y1); line.setAttribute("class", "xhair");
+  line.style.display = "none";
+  svg.appendChild(line);
+  svg.addEventListener("pointermove", e => {
+    const q = svgLocal(svg, e); if (!q) return;
+    let best = cols[0];
+    for (const c of cols) if (Math.abs(c.px - q.x) < Math.abs(best.px - q.x)) best = c;
+    line.setAttribute("x1", best.px); line.setAttribute("x2", best.px); line.style.display = "";
+    showTip(best.html, e);
+  });
+  svg.addEventListener("pointerleave", () => { line.style.display = "none"; hideTip(); });
+}
+/* Per-row hover for a bar chart: each row is a <g class="hrow" data-i> whose full-width
+   `.hit` rect lifts on hover, so the row, not the bar's painted pixels, is the target. */
+function hoverRows(host, html){
+  host.querySelectorAll("g.hrow").forEach(g => {
+    g.addEventListener("pointermove", e => showTip(html(+g.dataset.i), e));
+    g.addEventListener("pointerleave", hideTip);
+  });
+}
+
 /* ======================= tooltip ======================= */
 const tip = $("#tip");
 function showTip(html, e){ tip.innerHTML = html; tip.style.display="block";
@@ -1374,8 +1865,25 @@ function rows(){
   const pin=out.filter(p=>S.pins.has(pidOf(p))), rest=out.filter(p=>!S.pins.has(pidOf(p)));
   return {all:out, ordered:pin.concat(rest)};
 }
+/* Why C1 and not "best captain": the badge has to survive being read in a cell that is
+   already showing a number, a fixture and a shade. The tooltip carries the basis, because
+   a week ranked on the tail and a week ranked on the projection are different claims. */
+function capBadgeTitle(rk, gw, firm){
+  const b = capBasisFor(gw);
+  return esc((rk === 1 ? "Best" : rk === 2 ? "Second-best" : "Third-best") +
+    " captain in GW" + gw + ", ranked on " +
+    (b === "haul" ? "P(haul) from this board's own posterior draws"
+                  : "the projection") +
+    ". Ranked over every player in the league, not the filtered table; banned players are " +
+    "excluded and clubs that have already played this week are not eligible." +
+    (firm && rk > firm
+      ? "  NOT SEPARATED from the pick above it: the gap is inside the simulation's own " +
+        "standard error, so the order between them would change under a different seed."
+      : ""));
+}
 function renderTable(){
   const cols=visibleColumns(); const {ordered,all}=rows();
+  const CAP=capRanks();
   let h="<tr><th class='stick'></th>";
   cols.forEach(c=>{ h += "<th class='"+(c.k==="player"?"name stick2":"")+"' data-sort='"+c.k+"'"+
     (c.title?" title='"+esc(c.title)+"'":"")+">"+esc(c.label)+
@@ -1414,10 +1922,21 @@ function renderTable(){
       else r += "<td>"+fmt(v,c.k)+"</td>";
     }
     if(S.showgrid){ const arr=p.m[S.metric];
+      // THE ARMBAND BADGE rides in the per-gameweek cell rather than in a column of its
+      // own, so the captaincy ranking is read against the projection that produced it
+      // instead of against a second table you have to hold beside this one. It does not
+      // move with the metric picker: C1 is the best captain that week whatever quantity
+      // the grid happens to be showing.
+      const bad = S.capBadge ? (CAP.badge[id] || null) : null;
       for(const i of WIDX){ const v=arr?arr[i]:null, past=!!(p.pd&&p.pd[i]);
+        const rk = bad ? bad[i] : undefined;
+        const soft = rk && CAP.firm[i] && rk > CAP.firm[i];
+        const cb = rk ? "<span class='cbadge c"+rk+"' title='"+capBadgeTitle(rk,GWS[i],CAP.firm[i])+"'>"+
+                        (soft?"≈":"")+"C"+rk+"</span>" : "";
         if(v===null||v===undefined) r += "<td class='gwcell blank"+(past?" pastc":"")+"'>—</td>";
         else r += "<td class='gwcell"+(past?" pastc":"")+"' style='"+shadeCell(v,p.p,S.metric)+"'>"+
-          "<span class='v'>"+v.toFixed(2)+"</span>"+(S.showfx?"<span class='fx'>"+fxLabel(p,i)+"</span>":"")+"</td>"; }
+          "<span class='v'>"+v.toFixed(2)+"</span>"+(S.showfx?"<span class='fx'>"+fxLabel(p,i)+"</span>":"")+
+          cb+"</td>"; }
     }
     body.push(r+"</tr>");
   }
@@ -1732,24 +2251,180 @@ function aggRange(p, metric, fromGw, len){
 }
 const HORIZONS = [3, 6, 10];
 
+/* CANDIDATE FILTER, shared by the price bands and the rotation enumeration so the two
+   halves of the tab can never disagree about who is in play. It decides who is a
+   CANDIDATE only: the price line is fitted before any of it applies, so excluding a club
+   or a price range never changes what a price "normally buys". `pts` is the window total
+   on whichever metric the caller ranks on. */
+function slSquadInfo(){
+  const own = new Set(), perClub = {};
+  if (SQ && SQ.picks) SQ.picks.forEach(k => {
+    const c = Number(k.c); own.add(c);
+    const p = byCode[c]; if (p) perClub[p.t] = (perClub[p.t] || 0) + 1;
+  });
+  return {own, perClub, has: !!(SQ && SQ.picks && SQ.picks.length)};
+}
+function slPriceExcluded(cost){
+  return S.slXRanges.some(([lo, hi]) => cost >= lo - 1e-9 && cost <= hi + 1e-9);
+}
+function slCandidate(p, sq, pts, ignorePriceX){
+  if (p.c !== null && S.banned.has(p.c)) return false;
+  if (S.slXTeams.has(p.t)) return false;
+  const c = p.cost;
+  if (S.slMin !== null && !(c >= S.slMin)) return false;
+  if (S.slMax !== null && !(c <= S.slMax)) return false;
+  if (!ignorePriceX && c && slPriceExcluded(c)) return false;
+  if (S.slOwn !== null && p.own !== null && p.own > S.slOwn) return false;
+  if (S.slOwnMin !== null && (p.own === null || p.own < S.slOwnMin)) return false;
+  const mine = p.c !== null && sq.own.has(Number(p.c));
+  if (sq.has && S.slSquad === "exclude" && mine) return false;
+  if (sq.has && S.slSquad === "only" && !mine) return false;
+  if (sq.has && S.slClubCap && !mine && (sq.perClub[p.t] || 0) >= 3) return false;
+  if (S.slMinPts !== null && (pts === null || pts === undefined || pts < S.slMinPts)) return false;
+  return true;
+}
+
 function shortlistRows(){
   const poss = S.slPos === "ALL" ? D.positions : [S.slPos];
+  const sq = slSquadInfo();
   const rows = [];
   for (const pos of poss){
     const fit = priceFit(pos); if(!fit.ok) continue;
     for (const p of fit.pool){
-      if (p.p.c !== null && S.banned.has(p.p.c)) continue;
-      if (S.slMax !== null && p.c > S.slMax) continue;
-      if (S.slOwn !== null && p.p.own !== null && p.p.own > S.slOwn) continue;
+      if (!slCandidate(p.p, sq, p.w)) continue;
       const raw = p.w - fit.at(p.c), h = fit.hat(p.c);
       rows.push({p:p.p, cost:p.c, w:p.w, exp:fit.at(p.c),
                  rawRes: raw,
                  res: raw / Math.max(0.15, 1 - h),   // leave-one-out; floored for safety
                  lev: h, thin: fit.hiLev(p.c),
+                 hz: HORIZONS.map(hh => aggRange(p.p, "blended", D.meta.first_clean, hh)),
+                 mine: p.p.c !== null && sq.own.has(Number(p.p.c)),
                  ppm:p.w/p.c, pos});
     }
   }
   return rows;
+}
+const SL_SORT = {
+  res: r => r.res, pts: r => r.w,
+  h3: r => r.hz[0] ?? -1e9, h6: r => r.hz[1] ?? -1e9, h10: r => r.hz[2] ?? -1e9,
+};
+
+/* PRICE CENSUS. Every distinct price present among the candidates, with the number of
+   players at it, counted with the price exclusions themselves LIFTED — a price you have
+   already excluded must still show its headcount, or the toggle that puts it back is a
+   button with no label. Positions follow the shortlist's own position chips. */
+function slPriceCensus(){
+  const poss = S.slPos === "ALL" ? D.positions : [S.slPos];
+  const sq = slSquadInfo(), n = {};
+  for (const pos of poss){
+    for (const p of population(pos).pool){
+      if (!p.cost) continue;
+      if (!slCandidate(p, sq, agg(p, "blended", "sum"), true)) continue;
+      const c = Math.round(p.cost * 10) / 10;
+      n[c.toFixed(1)] = (n[c.toFixed(1)] || 0) + 1;
+    }
+  }
+  return Object.keys(n).map(k => ({c: +k, n: n[k]})).sort((a, b) => a.c - b.c);
+}
+/* ---- filter controls ---- */
+const numIn = v => { v = String(v).trim(); return v === "" || isNaN(+v) ? null : +v; };
+const fmtM = v => "£" + (+v).toFixed(1);
+function syncShortlistControls(){
+  const setv = (id, v) => { const el = $(id); if (el) el.value = v === null || v === undefined ? "" : String(v); };
+  setv("#slband", S.slBand); setv("#sln", S.slN); setv("#slsort", S.slSort);
+  setv("#slmin", S.slMin); setv("#slmax", S.slMax);
+  setv("#slownmin", S.slOwnMin); setv("#slown", S.slOwn); setv("#slminpts", S.slMinPts);
+  $("#slclubcap").checked = !!S.slClubCap;
+  setv("#rotn", S.rotN); setv("#rotsort", S.rotSort);
+  setv("#rotmin", S.rotMin); setv("#rotmax", S.rotMax);
+  setv("#rotparkmax", S.rotParkMax); setv("#rotmingain", S.rotMinGain);
+  setv("#rotclub", S.rotClub); $("#rotreal").checked = !!S.rotReal;
+  setv("#rotpool", S.rotPool); setv("#rotshow", S.rotShow);
+  setv("#sqbudget", S.sqBudget); setv("#sqperprice", S.sqPerPrice); setv("#sqshow", S.sqShow);
+  renderPresetList();
+}
+function renderPresetList(){
+  const P = loadPresets(), cur = $("#slpreset").value;
+  $("#slpreset").innerHTML = "<option value=''>choose…</option>" +
+    Object.keys(P).sort().map(n => "<option" + (n === cur ? " selected" : "") + ">" + esc(n) + "</option>").join("");
+}
+function renderSlControls(){
+  const sq = slSquadInfo();
+  $$("#slsquad button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.sq === S.slSquad)));
+  // the squad filters mean nothing without a squad on the board: say so instead of
+  // offering a control that silently does nothing
+  $$("#slsquad button").forEach(b => { b.disabled = !sq.has && b.dataset.sq !== "any"; });
+  $("#slclubcapwrap").style.opacity = sq.has ? "" : ".5";
+  $("#slclubcap").disabled = !sq.has;
+
+  const ex = S.slXTeams.size;
+  $("#slteamsum").textContent = ex ? "· " + ex + " excluded" : "· all included";
+  $("#slteams").innerHTML = D.teams.map(tm =>
+    "<span class='chip sm " + (S.slXTeams.has(tm) ? "off" : "on") + "' data-slteam='" + esc(tm) +
+    "' title='" + (S.slXTeams.has(tm) ? "Excluded — click to include" : "Included — click to exclude") + "'>" +
+    esc(tm) + "</span>").join("");
+
+  const census = slPriceCensus();
+  $("#slxprices").innerHTML = census.length
+    ? census.map(e => {
+        const off = slPriceExcluded(e.c);
+        return "<button class='px " + (off ? "off" : "") + "' data-slxp='" + e.c.toFixed(1) + "' title='" +
+          (off ? "Excluded — click to allow " + fmtM(e.c) + " again"
+               : "Click to drop all " + e.n + " candidate" + (e.n === 1 ? "" : "s") + " at " + fmtM(e.c)) +
+          "'>" + fmtM(e.c) + "<span class='n'>" + e.n + "</span></button>"; }).join("") +
+      (S.slXRanges.length ? "<button id='slxnone' title='Allow every price again'>allow all</button>" : "")
+    : "<span class='muted'>no candidates under the other filters</span>";
+
+  $("#slxranges").innerHTML = S.slXRanges.map((r, i) =>
+    "<span class='xchip' data-slxr='" + i + "' title='click to include again'>" +
+    fmtM(r[0]) + "–" + fmtM(r[1]) + " &times;</span>").join("");
+
+  const rp = S.rotPos === "auto" ? "auto" : S.rotPos;
+  $("#rotpos").innerHTML = ["auto"].concat(D.positions).map(x =>
+    "<span class='chip " + (rp === x ? "on" : "") + "' data-rotp='" + x + "'" +
+    (x === "auto" ? " title='Follow the shortlist position (DEF when showing all)'" : "") + ">" +
+    (x === "auto" ? "Same as above" : x) + "</span>").join("");
+
+  // "Start" can never reach "Own": starting every player you hold is not a rotation
+  const kSel = $("#rotk");
+  kSel.innerHTML = Array.from({length: S.rotN - 1}, (_, i) =>
+    "<option value='" + (i + 1) + "'>" + (i + 1) + " each week</option>").join("");
+  kSel.value = String(Math.min(S.rotK, S.rotN - 1));
+  if (S.rotMode === "squad") renderSqSlots();
+  renderSlActive();
+}
+/* Every active filter as one removable chip. A filter you cannot see is a filter you
+   will forget you set — the same rule the lock/ban bar follows. */
+function renderSlActive(){
+  const c = [];
+  const add = (key, label) => c.push("<span class='xchip' data-slclear='" + key + "' title='click to clear'>" + label + " &times;</span>");
+  if (S.slMin !== null) add("slMin", "price ≥ " + fmtM(S.slMin));
+  if (S.slMax !== null) add("slMax", "price ≤ " + fmtM(S.slMax));
+  S.slXRanges.forEach((r, i) => add("xr:" + i, "not " + fmtM(r[0]) + "–" + fmtM(r[1])));
+  if (S.slXTeams.size) add("slXTeams", S.slXTeams.size <= 3
+      ? "not " + [...S.slXTeams].map(esc).join(", ")
+      : S.slXTeams.size + " clubs excluded");
+  if (S.slOwnMin !== null) add("slOwnMin", "owned ≥ " + S.slOwnMin + "%");
+  if (S.slOwn !== null) add("slOwn", "owned ≤ " + S.slOwn + "%");
+  if (S.slMinPts !== null) add("slMinPts", "pts ≥ " + S.slMinPts);
+  if (S.slSquad !== "any") add("slSquad", S.slSquad === "only" ? "my squad only" : "not in my squad");
+  if (S.slClubCap) add("slClubCap", "skip clubs at 3");
+  if (S.rotMin !== null) add("rotMin", "combined ≥ " + fmtM(S.rotMin));
+  if (S.rotMax !== null) add("rotMax", "combined ≤ " + fmtM(S.rotMax));
+  if (S.rotParkMax !== null) add("rotParkMax", "parked ≤ " + fmtM(S.rotParkMax));
+  if (S.rotMinGain !== null) add("rotMinGain", "gain ≥ " + S.rotMinGain);
+  if (S.rotClub !== "any") add("rotClub", S.rotClub === "distinct" ? "different clubs" : "same club");
+  if (S.rotReal) add("rotReal", "everyone starts");
+  if (S.sqBudget !== null) add("sqBudget", "squad \u2264 " + fmtM(S.sqBudget));
+  $("#slactive").innerHTML = c.length
+    ? "<span class='muted'>Active filters:</span>" + c.join("") +
+      (c.length > 1 ? "<button id='slclearall'>Clear all</button>" : "")
+    : "";
+}
+function slClear(key){
+  const d = SL_DEFAULTS();
+  if (key.startsWith("xr:")) S.slXRanges.splice(+key.slice(3), 1);
+  else if (key in d) S[key] = d[key];
 }
 
 function renderShortlist(){
@@ -1757,11 +2432,12 @@ function renderShortlist(){
   $("#slpos").innerHTML = ["ALL"].concat(D.positions).map(x =>
     "<span class='chip " + (S.slPos===x?"on":"") + "' data-slp='"+x+"'>" +
     (x==="ALL"?"All":x) + "</span>").join("");
+  renderSlControls();
 
   const rows = shortlistRows();
   $("#slcount").textContent = rows.length + " candidates";
   if (!rows.length){ $("#slbands").innerHTML = "<p class='muted'>Nothing matches these filters.</p>";
-    $("#slkpis").innerHTML = ""; $("#slchart").innerHTML = ""; return; }
+    $("#slkpis").innerHTML = ""; $("#slchart").innerHTML = ""; renderRotation(); return; }
 
   // KPIs — one fit per position, so report the one in view (or MID as the reference)
   const kpos = poss.length===1 ? poss[0] : (poss.includes("MID")?"MID":poss[0]);
@@ -1780,7 +2456,9 @@ function renderShortlist(){
     "Each dot is a likely starter; the line is projected points fitted on price for that " +
     "position over <b>GW"+S.from+"–"+S.to+"</b>. A player above the line delivers more than " +
     "his price normally buys — that vertical gap is what the shortlist ranks on. " +
-    (poss.length===1 ? "" : "One line is fitted per position; the chart shows " + esc(kpos) + ".");
+    (poss.length===1 ? "" : "One line is fitted per position; the chart shows " + esc(kpos) + ". ") +
+    "The line always uses every likely starter: your filters choose the candidates below, " +
+    "not what a price normally buys.";
 
   renderPriceChart(kpos, kfit);
   renderRotation();
@@ -1807,23 +2485,31 @@ function renderShortlist(){
   rows.forEach(r => { const b = Math.floor(r.cost/bw)*bw; (bands[b] = bands[b]||[]).push(r); });
   const keys = Object.keys(bands).map(Number).sort((a,b)=>a-b);
   const n = S.slN;
+  const skey = SL_SORT[S.slSort] || SL_SORT.res;
   $("#slbands").innerHTML = "<div class='bandwrap'>" + keys.map(b => {
-    const list = bands[b].sort((x,y)=>y.res-x.res).slice(0, n);
+    const list = bands[b].sort((x,y)=>skey(y)-skey(x)).slice(0, n);
     const topPts = bands[b].reduce((a,c)=>c.w>a.w?c:a, bands[b][0]);
-    return "<div class='band'><h3>£" + b.toFixed(1) + " – £" + (b+bw-0.1).toFixed(1) + "</h3>" +
+    const hi = Math.round((b+bw-0.1)*10)/10;
+    return "<div class='band'><h3>£" + b.toFixed(1) + " – £" + hi.toFixed(1) +
+      "<button class='bandx' data-xband='" + b.toFixed(1) + "," + hi.toFixed(1) + "' " +
+      "title='Exclude this price range from the shortlist and the rotations'>&times;</button></h3>" +
       "<p class='bs'>" + bands[b].length + " candidate" + (bands[b].length===1?"":"s") +
       " · most points: " + esc(topPts.p.n) + " " + topPts.w.toFixed(1) + "</p>" +
       "<table><tr><th class='nm' style='text-align:left'>Player</th><th>Pts</th>" +
       "<th title='Points above what this price normally buys at this position'>vs price</th>" +
       "<th title='Next 3 / 6 / 10 gameweeks from GW" + D.meta.first_clean + "'>3·6·10</th></tr>" +
       list.map(r => {
-        const hz = HORIZONS.map(h => {
-          const v = aggRange(r.p, "blended", D.meta.first_clean, h);
-          return v===null ? "—" : v.toFixed(0);
-        });
+        const hz = r.hz.map(v => v===null ? "—" : v.toFixed(0));
         return "<tr><td class='nm'><span class='pos " + r.p.p + "' style='min-width:0;padding:1px 4px'>" +
           r.p.p + "</span> " + esc(r.p.n) +
-          "<span class='pill'>" + esc(ab(r.p.t)) + "</span>" +
+          (r.p.c !== null ?
+            "<span class='mk lock" + (S.locked.has(r.p.c) ? " on" : "") + "' data-sllock='" + r.p.c + "' " +
+              "title='Lock: keep him in every rotation combination — for someone you already own'>&#128274;</span>" +
+            "<span class='mk ban' data-slban='" + r.p.c + "' " +
+              "title='Ban: drop from shortlists and rotations (undo in the bar under Rotation pairs)'>&#8856;</span>"
+            : "") +
+          "<span class='pill' data-xteam='" + esc(r.p.t) + "' title='" + esc(r.p.t) + " — click to exclude this club'>" + esc(ab(r.p.t)) + "</span>" +
+          (r.mine ? "<span class='pill'>owned</span>" : "") +
           (r.p.own !== null && r.p.own < 5 ? "<span class='pill'>diff</span>" : "") +
           (r.thin ? "<span class='pill' title='High leverage: few players priced near here, so the price line is weakly identified at this end and this figure is the least certain on the page'>thin market</span>" : "") +
           "</td><td>" + r.w.toFixed(1) + "</td>" +
@@ -1831,6 +2517,421 @@ function renderShortlist(){
           "<td><span class='hz'><b>" + hz[0] + "</b>·" + hz[1] + "·" + hz[2] + "</span></td></tr>";
       }).join("") + "</table></div>";
   }).join("") + "</div>";
+}
+
+/* ======================= captaincy =======================
+   WHAT THE ARMBAND IS WORTH. Captaining a player adds a SECOND COPY of his score, so
+   the value of the choice is his projected points for that gameweek, not twice them.
+   Ranking on 2*mean and ranking on mean give the identical ORDER, but the number beside
+   the name has to be the thing the armband actually buys or the rotation gain below is
+   in the wrong units — and the gain is the only number here you can act on.
+
+   THE POOL IS EVERY PLAYER, NOT THE FILTERED TABLE. Filtering the grid to defenders must
+   not change who the best captain is; the position and team filters are a lens on the
+   table, and the armband is a fact about the whole league. Bans are the exception — a
+   banned player is one you have told the page is not being picked — and they are honoured
+   here for the same reason they are honoured in the rotation enumeration below.
+
+   A PLAYED WEEK IS NOT A DECISION. `p.pd[i]` is per CLUB, so in a part-played gameweek
+   the clubs who have finished drop out of the ranking and the ones who have not remain.
+   That is the honest read: you cannot captain a match that has kicked off.
+
+   TWO BASES, NEVER MIXED WITHOUT SAYING SO.
+     Projection  the board's blended points for that gameweek. Available every week. It
+                 is what maximises EXPECTED score, which is the right objective if you
+                 are playing your own points total.
+     P(haul)     P(>=10 raw points) from the board's own posterior draws. The right
+                 objective if you are playing a RANK — captaincy is a tail bet — but it
+                 exists only for gameweeks whose draws dump reconciles with this board
+                 (`meta.tail_gws`), and it carries a KNOWN, DIRECTIONAL BIAS: the engine
+                 draws team goals as Poisson and the league's upper tail is thinner than
+                 that, so P(haul) is inflated in exactly the high-lambda fixtures a
+                 captaincy shortlist is drawn from. See gw_explorer.captaincy_tail. Read
+                 it as a ranking with a known lean, not as a probability.
+   A week with no tail falls back to the projection and is LABELLED on its own row rather
+   than silently blended in, because a tail-ranked week and a mean-ranked week are not two
+   measurements of the same quantity and stacking them under one heading would make the
+   ordering incomparable across the very axis the view is built on. */
+const TAILGWS = (D.meta.tail_gws || []);
+const TAILIX = {}; TAILGWS.forEach((g, j) => TAILIX[g] = j);
+const capBasisFor = g => (S.capBasis === "haul" && TAILIX[g] !== undefined) ? "haul" : "ev";
+
+/* The value of the armband on player p in window slot i, or null if he cannot take it.
+   `basis` is resolved per gameweek by the caller, so one week's fallback cannot silently
+   re-rank another's. */
+function capVal(p, i, basis){
+  if (p.c !== null && S.banned.has(p.c)) return null;   /* you have said he is not playing */
+  if (p.pd && p.pd[i]) return null;                     /* his club has already played */
+  if (basis === "haul"){
+    const j = TAILIX[GWS[i]];
+    if (j === undefined || !p.tg || !p.tg.p_haul) return null;
+    const v = p.tg.p_haul[j];
+    return (v === null || v === undefined) ? null : v;
+  }
+  const a = p.m.blended;
+  if (!a) return null;
+  const v = a[i];
+  return (v === null || v === undefined) ? null : v;
+}
+/* The armband's POINTS value, whatever the ranking basis. P(haul) orders, it does not
+   add, so every total and every gain on this panel stays in points even when the tail
+   chose the ordering. */
+function capPts(p, i){
+  if (p.c !== null && S.banned.has(p.c)) return null;
+  if (p.pd && p.pd[i]) return null;
+  const a = p.m.blended; if (!a) return null;
+  const v = a[i]; return (v === null || v === undefined) ? null : v;
+}
+
+let CAPCACHE = null;
+const capKey = () => [S.from, S.to, S.capBasis, S.capN,
+  [...S.banned].sort().join(","), [...S.locked].sort().join(",")].join("|");
+
+/* Per-gameweek ranking, top three, plus the basis that produced each week. */
+function capRanks(){
+  if (CAPCACHE && CAPCACHE.key === capKey()) return CAPCACHE;
+  const perGw = WIDX.map(i => {
+    const g = GWS[i], basis = capBasisFor(g);
+    const scored = [];
+    for (const p of D.players){
+      const v = capVal(p, i, basis);
+      if (v === null) continue;
+      scored.push({p, v, pts: capPts(p, i)});
+    }
+    scored.sort((a, b) => b.v - a.v);
+    return {i, gw: g, basis, top: scored.slice(0, 3), n: scored.length};
+  });
+  /* player -> {window slot -> rank 1..3}, so painting a grid cell is an O(1) lookup */
+  const badge = {};
+  for (const r of perGw) r.top.forEach((x, k) => {
+    const id = pidOf(x.p); (badge[id] = badge[id] || {})[r.i] = k + 1;
+  });
+  const firm = {};
+  for (const r of perGw) if (r.n) firm[r.i] = capFirmness(r);
+  CAPCACHE = {key: capKey(), perGw, badge, firm, rot: capRotation(perGw)};
+  return CAPCACHE;
+}
+
+/* ---- is the ordering real? -------------------------------------------------
+   THE TOP OF A CAPTAINCY RANKING IS ROUTINELY SEPARATED BY LESS THAN THE SIMULATION'S
+   OWN ERROR, and printing a clean 1-2-3 over it is the failure this whole panel would
+   otherwise commit: a correct number that reliably produces a wrong decision. Measured
+   on this board, GW8's first three are 5.739 / 5.566 / 5.517 with standard errors of
+   about 0.10, so C1 and C2 differ by 0.17 against a combined two-sigma of 0.27 — the
+   order between them is a coin flip the page would be presenting as a finding. On the
+   tail basis it is starker still: GW4's top three sit at 0.2053 / 0.2050 / 0.2047 with
+   an MC standard error of 0.0074, twenty times the gap that separates them.
+
+   The board being bit-identical run to run does NOT rescue this. Reproducibility is a
+   statement about the seed; it says the same simulation error is reproduced exactly, not
+   that there is none. Two players a tenth of a point apart will swap places under a
+   different seed, and nothing in the board tells you which of the two orderings you are
+   looking at.
+
+   THE TEST. Both bases are means over S draws, so both carry a standard error:
+     projection   se = sd / sqrt(S)         `sd` is the board's own per-gameweek column
+     P(haul)      se = sqrt(p(1-p) / S)     a proportion over the same draws
+   Two picks are reported as NOT SEPARATED when their gap is inside two standard errors
+   of the difference. That is a deliberately permissive bar — it flags only orderings the
+   simulation cannot support at all, not every ordering that is merely close.
+
+   S IS NOT ASSUMED. It comes from a reconciled draws dump, and where no dump reconciles
+   the page makes no separation claim rather than guessing at the default. A silent
+   assumption about the draw count would put a confidence marker on the page with nothing
+   behind it, which is worse than no marker. */
+const NDRAWS = D.meta.n_draws || null;
+
+function capSE(x, basis, i){
+  if (!NDRAWS) return null;
+  if (basis === "haul")
+    return Math.sqrt(Math.max(x.v, 0) * (1 - Math.min(x.v, 1)) / NDRAWS);
+  const sd = x.p.m.sd ? x.p.m.sd[i] : null;
+  return (sd === null || sd === undefined) ? null : sd / Math.sqrt(NDRAWS);
+}
+/* true when a and b are far enough apart for the simulation to tell them apart */
+function capSeparated(a, b, basis, i){
+  if (!NDRAWS) return null;
+  const sa = capSE(a, basis, i), sb = capSE(b, basis, i);
+  if (sa === null || sb === null) return null;
+  return (a.v - b.v) > 2 * Math.sqrt(sa * sa + sb * sb);
+}
+/* How far down the top three the ordering survives the test: 1 means even C1 vs C2 is
+   inside the noise, 3 means all three are distinguishable. */
+function capFirmness(r){
+  if (!NDRAWS || r.top.length < 2) return null;
+  let k = 1;
+  for (let j = 1; j < r.top.length; j++){
+    const sep = capSeparated(r.top[j-1], r.top[j], r.basis, r.i);
+    if (sep === null || !sep) break;
+    k++;
+  }
+  return k;
+}
+
+/* ---- the rotation ----------------------------------------------------------
+   WHICH SET OF PLAYERS DO I NEED TO OWN TO HAVE A GOOD ARMBAND ALL WINDOW.
+   This is the SAME estimator the defender rotation below uses, at k = 1:
+
+       sum over gameweeks of ( the best 1 of the N you own, that week )
+
+   and the same argument licenses it. You pick the captain from the projections, before
+   any of the matches are played, so what you get is the score of the player you actually
+   pick — max(projection) — and not E[max], which would assume you knew the outcome in
+   advance and would overstate every set. Nothing new is claimed here;
+   `studies/def_rotation.py` is the place that establishes the objective.
+
+   THE BASELINE IS THE BEST FIXED CAPTAIN, NOT THE AVERAGE OF THE SET. The decision this
+   answers is "is it worth owning a second premium so I can move the armband", and the
+   thing you would otherwise do is captain your best player every week. So `gain` is the
+   window total of the rotating armband MINUS the window total of the best single captain
+   over the same window. It is the only number on this panel you can act on: a set that
+   gains 0.3 points over six weeks is not a plan, it is a rounding error, and the panel
+   says which side of that line each row falls on rather than ranking it first and letting
+   the sort imply otherwise.
+
+   NOT THE DEAD ROTATION HEURISTIC. `rotation multipliers` (p = 0.23) was a claim about
+   MINUTES — that clubs rotate their players in a way the projection should discount for.
+   It is in the null register and stays there. This is the armband moving between players
+   you own, which is a decision you make, not a pattern claimed about a manager.
+
+   THE ENUMERATION. Candidates are the top 24 by window captain value, which is
+   C(24,3) = 2,024 sets at the largest size — trivial, and nothing below that is a captain
+   under any window. Locked players join every set, exactly as they do in the defender
+   enumeration, so "I already own him, who pairs with him" is one click. */
+function capRotation(perGw){
+  const live = perGw.filter(r => r.n > 0);
+  if (!live.length) return null;
+  const lockedAll = D.players.filter(x => x.c !== null && S.locked.has(x.c));
+  const lockIds = new Set(lockedAll.map(pidOf));
+  // THE SHORTLIST IS RANKED ON POINTS, WHATEVER THE BASIS RANKS THE WEEKS ON.
+  // Summing capVal across the window would add a probability to a points total whenever
+  // the window mixes a tail-ranked week with a projection-ranked one — 0.205 for GW4
+  // beside 6.46 for GW5 — which is a number with no referent and would quietly drop the
+  // tail weeks out of the shortlist altogether. Points are defined for every week and
+  // add, so they order the candidate pool; the basis still decides who takes the armband
+  // within each week, which is a comparison inside one week and one unit.
+  const wv = [];
+  for (const p of D.players){
+    if (p.c !== null && S.banned.has(p.c)) continue;
+    if (lockIds.has(pidOf(p))) continue;
+    let s = 0, n = 0;
+    for (const r of live){ const v = capPts(p, r.i); if (v !== null){ s += v; n++; } }
+    if (n) wv.push({p, s});
+  }
+  wv.sort((a, b) => b.s - a.s);
+  const pool = wv.slice(0, 24).map(x => x.p);
+  const free = Math.max(0, S.capN - lockedAll.length);
+  if (pool.length < free) return null;
+
+  /* the window total of the best SINGLE captain — the baseline the gain is measured
+     against, and the row the panel shows even when no rotation beats it */
+  let solo = -Infinity, soloP = null;
+  for (const p of lockedAll.concat(pool)){
+    let s = 0, n = 0;
+    for (const r of live){ const v = capPts(p, r.i); if (v !== null){ s += v; n++; } }
+    if (n && s > solo){ solo = s; soloP = p; }
+  }
+  if (soloP === null) return null;
+
+  const value = members => {
+    let tot = 0; const picks = [];
+    for (const r of live){
+      let best = null, bv = -Infinity;
+      for (const m of members){
+        const v = capVal(m, r.i, r.basis);
+        if (v !== null && v > bv){ bv = v; best = m; }
+      }
+      const pts = best === null ? 0 : (capPts(best, r.i) ?? 0);
+      tot += pts;
+      picks.push({gw: r.gw, p: best, pts, basis: r.basis});
+    }
+    return {tot, picks};
+  };
+
+  const n = pool.length, sets = [];
+  if (free === 0) sets.push([]);
+  else if (free === 1){ for (let a = 0; a < n; a++) sets.push([a]); }
+  else if (free === 2){ for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++) sets.push([a, b]); }
+  else { for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++) for (let c = b + 1; c < n; c++) sets.push([a, b, c]); }
+
+  const out = [];
+  for (const st of sets){
+    const members = lockedAll.concat(st.map(k => pool[k]));
+    if (!members.length) continue;
+    const {tot, picks} = value(members);
+    /* how many of the set ever actually take the armband. A "rotation" in which one
+       player captains every week is not a rotation, and pricing it as one is the whole
+       trap this column exists to expose. */
+    const used = new Set(picks.filter(x => x.p).map(x => pidOf(x.p)));
+    let swings = 0;
+    for (let j = 1; j < picks.length; j++)
+      if (picks[j].p && picks[j - 1].p && pidOf(picks[j].p) !== pidOf(picks[j - 1].p)) swings++;
+    const cost = members.reduce((a, m) => a + (m.cost || 0), 0);
+    out.push({members, tot, gain: tot - solo, picks, swings, used: used.size, cost});
+  }
+  out.sort((a, b) => b.gain - a.gain || b.tot - a.tot);
+  return {best: out.slice(0, 8), solo, soloP, live, nSets: out.length, locked: lockedAll.length};
+}
+
+/* ---- rendering ---- */
+const capLink = p => "<a class='pl' href='#' data-open='" + esc(pidOf(p)) + "'>" + esc(p.n) + "</a>";
+const MEANINGFUL_GAIN = 1.0;   /* points over the whole window — below this, say so */
+
+function renderCaptaincy(){
+  const C = capRanks();
+  const nTail = C.perGw.filter(r => r.basis === "haul").length;
+  const nLive = C.perGw.filter(r => r.n > 0).length;
+  $("#capsum").textContent = nLive
+    ? "· best armband GW" + S.from + "–" + S.to + (nTail ? " · " + nTail + " week(s) on the tail" : "")
+    : "· nothing left to captain in this window";
+  $("#capcount").textContent = C.rot ? C.rot.nSets.toLocaleString() + " sets" : "";
+
+  $("#capcap").innerHTML =
+    "The best armband each week, and the smallest set of players you would have to own to " +
+    "hold it all window. Ranked on <b>" +
+    (S.capBasis === "haul"
+      ? "P(haul)</b> — P(&ge;10 raw points) from the board's own draws, the tail bet you " +
+        "are making if you are playing a rank. Available for " + TAILGWS.length +
+        " gameweek(s) on this board; every other week falls back to the projection and " +
+        "says so on its row."
+      : "the projection</b> — the board's points for that gameweek, which is what the " +
+        "armband's second copy is worth and what maximises expected score.") +
+    " Totals and gains are always in <b>points</b>: P(haul) orders the weeks, it does not add.";
+
+  /* ---- per-gameweek 1st / 2nd / 3rd ---- */
+  let h = "<h3 style='margin:0 0 8px;font-size:13px'>Best captain, week by week</h3>";
+  if (!nLive){
+    h += "<p class='muted' style='font-size:12.5px'>Every club in GW" + S.from + "–" + S.to +
+         " has played. Move the window forward.</p>";
+  } else {
+    h += "<div class='capwrap'><table class='capgrid'><thead><tr><th>GW</th><th>1st</th><th>2nd</th><th>3rd</th>" +
+         "<th title='Which basis produced this week&#39;s ordering'>On</th></tr></thead><tbody>";
+    for (const r of C.perGw){
+      if (!r.n){
+        h += "<tr><td class='capname'>GW" + r.gw + "</td><td colspan='4' class='muted'>" +
+             "every club has played</td></tr>";
+        continue;
+      }
+      const firm = capFirmness(r);
+      h += "<tr><td class='capname'>GW" + r.gw + "</td>";
+      for (let k = 0; k < 3; k++){
+        const x = r.top[k];
+        if (!x){ h += "<td class='muted'>—</td>"; continue; }
+        const se = capSE(x, r.basis, r.i);
+        const shown = r.basis === "haul"
+          ? (100 * x.v).toFixed(1) + "%" + (se !== null ? " ±" + (100 * se).toFixed(1) : "")
+          : x.v.toFixed(2) + (se !== null ? " ±" + se.toFixed(2) : "");
+        // A rank the simulation cannot support is marked where it is READ, not only in a
+        // footnote. `≈` against the pick above means the two are inside two standard
+        // errors of each other and the order between them is a seed, not a finding.
+        const tied = (firm !== null && k > 0 && k + 1 > firm);
+        h += "<td>" + (tied ? "<span class='capsub' title='Inside the simulation&#39;s own " +
+               "error of the pick to its left — the order between them would change under a " +
+               "different seed. Treat them as level.'>≈</span> " : "") +
+             "<span class='cbadge c" + (k + 1) + "'>C" + (k + 1) + "</span> " +
+             capLink(x.p) + "<span class='capsub'> " + esc(x.p.t) + " · " + shown +
+             (r.basis === "haul" && x.pts !== null ? " · " + x.pts.toFixed(2) + " pts" : "") +
+             "</span></td>";
+      }
+      h += "<td><span class='basis " + (r.basis === "haul" ? "tail" : "") + "' title='" +
+           (r.basis === "haul"
+             ? "Ranked on P(haul) from this board&#39;s own posterior draws for GW" + r.gw
+             : "No reconciled draws dump for GW" + r.gw + " — ranked on the projection") +
+           "'>" + (r.basis === "haul" ? "TAIL" : "PROJ") + "</span></td></tr>";
+    }
+    h += "</tbody></table></div>";
+    if (NDRAWS){
+      const soft = C.perGw.filter(r => r.n && capFirmness(r) === 1).length;
+      h += "<p class='muted' style='font-size:11.5px;margin:8px 0 0'>&plusmn; is the " +
+           "SIMULATION's standard error on that number over " + NDRAWS.toLocaleString() +
+           " draws, not the spread of outcomes. <b>&asymp;</b> marks a pick the board cannot " +
+           "separate from the one to its left" +
+           (soft ? " &mdash; it happens in <b>" + soft + " of " + nLive + "</b> weeks here, " +
+                   "at the very top of the ranking" : "") +
+           ". The board being bit-identical run to run does not help: that reproduces the " +
+           "same simulation error exactly, it does not remove it. Raise it with " +
+           "<code>DRAWS=20000</code> if an ordering matters.</p>";
+    } else {
+      h += "<p class='muted' style='font-size:11.5px;margin:8px 0 0'>No draws dump " +
+           "reconciles with this board, so the page cannot say how much of this ordering is " +
+           "simulation noise &mdash; and at the top of a captaincy ranking that is usually " +
+           "most of it. Treat gaps under about a tenth of a point as no gap.</p>";
+    }
+    if (S.capBasis === "haul" && nTail < nLive)
+      h += "<p class='muted' style='font-size:11.5px;margin:8px 0 0'>" + (nLive - nTail) +
+           " of " + nLive + " weeks have no draws dump from this board and are ranked on the " +
+           "projection instead. <code>DUMP_DRAWS=all python scripts/gw_board.py</code> puts " +
+           "the whole window on the tail.</p>";
+  }
+  $("#captbl").innerHTML = h;
+
+  /* ---- the rotation ---- */
+  const R = C.rot;
+  let g = "<h3 style='margin:0 0 8px;font-size:13px'>Rotating the armband</h3>";
+  if (!R){
+    g += "<p class='muted' style='font-size:12.5px'>Not enough candidates under the current " +
+         "bans and locks.</p>";
+  } else {
+    g += "<p class='muted' style='font-size:12px;margin:0 0 8px'>Captaining <b>" +
+         esc(R.soloP.n) + "</b> every week is worth <b>" + R.solo.toFixed(1) +
+         "</b> points of armband over " + R.live.length + " week(s). <b>Gain</b> below is what " +
+         "each set adds on top of that" +
+         (R.locked ? ", with " + R.locked + " locked in" : "") + ".</p>";
+    g += "<div class='capwrap'><table class='capgrid'><thead><tr><th>Set of " + S.capN + "</th><th class='num'>&pound;</th>" +
+         "<th class='num' title='Sum over the window of the best of the set each week, in points'>Armband</th>" +
+         "<th class='num' title='Over captaining the best single player every week'>Gain</th>" +
+         "<th class='num' title='Weeks the armband actually moves'>Swaps</th></tr></thead><tbody>";
+    for (const r of R.best){
+      const real = r.gain >= MEANINGFUL_GAIN && r.used > 1;
+      g += "<tr class='" + (real ? "rot" : "") + "'><td>" +
+           r.members.map(capLink).join(" <span class='muted'>+</span> ") +
+           // A member who never takes the armband is a player you would be buying for
+           // nothing. At size 2 that means there is no rotation at all; at size 3 it
+           // means the set is really a pair with a passenger, and the gain column
+           // cannot show it because a passenger changes the gain by exactly zero.
+           (r.used < r.members.length
+             ? "<span class='capsub'> — only " + r.used + " of " + r.members.length +
+               " ever take the armband" +
+               (r.used <= 1 ? "; this is not a rotation" : "; the rest add nothing") +
+               "</span>"
+             : "") +
+           "</td><td class='num'>" + r.cost.toFixed(1) + "</td>" +
+           "<td class='num'>" + r.tot.toFixed(1) + "</td>" +
+           "<td class='num'>" + (r.gain > 0 ? "+" : "") + r.gain.toFixed(2) + "</td>" +
+           "<td class='num'>" + r.swings + "</td></tr>";
+    }
+    g += "</tbody></table></div>";
+    const top = R.best[0];
+    if (top && top.gain < MEANINGFUL_GAIN){
+      g += "<p class='muted' style='font-size:11.5px;margin:8px 0 0'><b>There is no rotation " +
+           "to do here.</b> The best set gains " + top.gain.toFixed(2) + " points over " +
+           R.live.length + " week(s) against simply captaining " + esc(R.soloP.n) +
+           " every week — inside the noise of the decision. Owning a second premium to move " +
+           "the armband is a real cost; this window does not pay it back.</p>";
+    } else if (top){
+      g += "<p class='muted' style='font-size:11.5px;margin:8px 0 0'>Best set moves the armband " +
+           top.swings + " time(s) across the window:<br>" +
+           top.picks.map(x => "GW" + x.gw + " " + (x.p ? esc(x.p.n) : "—") +
+                              " <span class='capsub'>" + x.pts.toFixed(2) + "</span>").join(" &middot; ") +
+           "</p>";
+    }
+  }
+  $("#caprot").innerHTML = g;
+
+  $("#capnote").innerHTML =
+    "<b>What this does not know.</b> It does not know your budget, your squad or your " +
+    "transfers — a set you cannot afford is still listed, because whether it is worth " +
+    "restructuring for is your call and not the model's. Lock the players you already own " +
+    "(&#128274; beside a row) to ask the question against your actual team. " +
+    (S.capBasis === "haul"
+      ? "<b>P(haul) is biased upward in high-lambda fixtures</b> — the engine's Poisson tail " +
+        "is fatter than the league's, and the error is concentrated at the top of exactly " +
+        "this ranking (corr(p_haul, fixture &lambda;) = +0.34 measured on GW4). It is shown " +
+        "uncorrected because the alternative is ranking a tail bet on the mean; read it as " +
+        "an ordering with a known lean."
+      : "The projection is the right basis if you are playing your own points total. If you " +
+        "are chasing a rank, captaincy is a tail bet and P(haul) is the question you are " +
+        "actually asking.");
 }
 
 /* ======================= rotation =======================
@@ -1863,39 +2964,450 @@ function topKSum(members, i, k){
   let s=0; for(let j=0;j<k && j<vals.length;j++) s+=vals[j];
   return s;
 }
-function comboValue(members, k){
-  let rot=0; const picks=[];
-  for (const i of WIDX){
-    const scored = members.map((m,j)=>({j, v:(m.m[S.metric] && m.m[S.metric][i]!=null) ? m.m[S.metric][i] : 0}));
-    scored.sort((a,b)=>b.v-a.v);
-    const take = scored.slice(0,k);
-    rot += take.reduce((s,x)=>s+x.v,0);
-    picks.push(take.map(x=>x.j).sort());
+
+/* ================= whole-squad rotation =================
+   The pair tool above answers "which two defenders rotate best". This answers the
+   question one level up: which 2 GK / 5 DEF / 5 MID / 3 FWD, under ONE budget, given
+   that you start some of each every week.
+
+   THE OBJECTIVE THE SEARCH USES, AND WHY IT IS NOT THE DECISION.
+   Fix a start count k_q per position. Then the squad's value is
+
+       sum over q of  sum over gameweeks of ( the best k_q of the n_q you own that week )
+
+   which is SEPARABLE: with k_q fixed, no defender's week can change which midfielder you
+   start, so the four blocks can be optimised independently and then combined under the
+   budget. That separability is the whole reason this is computable. The joint search is
+   not: C(26,5)^2 x C(26,3) x C(26,2) is about 10^18 combinations.
+
+   The real weekly decision is NOT fixed-k. FPL lets the formation float - 3-5 DEF,
+   2-5 MID, 1-3 FWD around one keeper - so in a week the defenders blank and the
+   midfielders haul you play 3-5-2 rather than the 4-4-2 the fixed counts assume. Letting
+   the shape float can only ever help: the fixed-k XI is one of the legal shapes the
+   floating search ranges over. So
+
+       fixed-k value  <=  best-legal-XI value,   always.
+
+   The fixed-k number is therefore a LOWER BOUND, biased DOWN, and the bias is the value
+   of the flexibility. That is the safe direction to be wrong in, which is why the search
+   runs on it. Every squad that comes back is then RE-SCORED under the true floating-XI
+   objective and both numbers are shown. Read the floating column as an honest valuation
+   of a squad found by a heuristic - not as the optimum of the floating problem, which
+   this page does not solve and does not claim to.
+
+   THE POOL TRIM IS A HEURISTIC AND IT HAS A DIRECTION. C(pool,5) forces a pool of
+   roughly 25 per position. Trimming purely by window points - what the pair tool does -
+   is wrong for a BUDGET search, because it deletes the cheap enablers the budget needs
+   and returns "no squad under 82.0". The pool here is PRICE-STRATIFIED instead: the best
+   `per price` players at each distinct price. That preserves the cheap end. It is still
+   a heuristic, and its failure mode is nameable: a player it drops for having a lower
+   window TOTAL can be the better rotation partner if his blanks land on his partner's
+   hauls, because rotation value depends on the weekly PATTERN and the trim only sees the
+   sum. Raise `per price` to search past it. */
+const SQ_POS_ORDER = ["GK", "DEF", "MID", "FWD"];
+// FPL's legal XI: exactly one keeper, then 3-5 / 2-5 / 1-3 summing to eleven.
+const XI_LO = {GK:1, DEF:3, MID:2, FWD:1};
+const XI_HI = {GK:1, DEF:5, MID:5, FWD:3};
+const XI_N  = 11;
+const SQ_SHAPES = (() => {
+  const out = [];
+  for (let d = XI_LO.DEF; d <= XI_HI.DEF; d++)
+    for (let m = XI_LO.MID; m <= XI_HI.MID; m++)
+      for (let f = XI_LO.FWD; f <= XI_HI.FWD; f++)
+        if (1 + d + m + f === XI_N) out.push({GK:1, DEF:d, MID:m, FWD:f});
+  return out;
+})();
+const sqK = q => Math.max(1, Math.min(S.sqStart[q], S.sqOwn[q]));
+const sqSeries = m => { const a = m.m[S.metric];
+  return WIDX.map(i => (a && a[i] !== null && a[i] !== undefined) ? a[i] : 0); };
+const sqNCk = (n, r) => { if (r < 0 || r > n) return Infinity;
+  let x = 1; for (let i = 0; i < r; i++){ x = x * (n - i) / (i + 1); if (x > 1e12) return Infinity; }
+  return Math.round(x); };
+
+/* Sum over the window of the best k of these members each week, and how many weeks each
+   one is in that best-k. Insertion into a k-slot buffer rather than a sort per week: the
+   enumeration calls this ~10^5 times and an allocation per gameweek dominates it. Ties
+   go to the earlier member, the convention the pair enumeration already uses. */
+const SQ_BUF = new Int32Array(8);
+function sqBlockEval(vs, k, starts){
+  const n = vs.length, NW = n ? vs[0].length : 0, buf = SQ_BUF;
+  let rot = 0;
+  for (let i = 0; i < n; i++) starts[i] = 0;
+  for (let j = 0; j < NW; j++){
+    let cnt = 0;
+    for (let mi = 0; mi < n; mi++){
+      const v = vs[mi][j];
+      let pos = cnt < k ? cnt : k;
+      while (pos > 0 && vs[buf[pos - 1]][j] < v) pos--;
+      if (pos >= k) continue;
+      for (let t = (cnt < k ? cnt : k - 1); t > pos; t--) buf[t] = buf[t - 1];
+      buf[pos] = mi;
+      if (cnt < k) cnt++;
+    }
+    for (let t = 0; t < cnt; t++){ rot += vs[buf[t]][j]; starts[buf[t]]++; }
   }
-  return {rot, picks};
+  return rot;
 }
+/* Price-stratified candidate pool for one position. Returns the pool and whether the
+   stratum depth had to be cut to keep the enumeration inside the budget. */
+const SQ_BUDGET = 120000;
+function sqPool(q, free){
+  const sq = slSquadInfo();
+  const cand = population(q).pool
+    .filter(p => p.cost && (p.c === null || !S.locked.has(p.c)))
+    .map(p => ({p, w: agg(p, S.metric, "sum")}))
+    .filter(r => r.w !== null && slCandidate(r.p, sq, r.w));
+  const byPrice = new Map();
+  for (const r of cand){ const c = Math.round(r.p.cost * 10);
+    if (!byPrice.has(c)) byPrice.set(c, []); byPrice.get(c).push(r); }
+  for (const arr of byPrice.values()) arr.sort((a, b) => b.w - a.w);
+  const strat = m => { const out = [];
+    for (const arr of byPrice.values()) for (let i = 0; i < Math.min(m, arr.length); i++) out.push(arr[i]);
+    return out.sort((a, b) => b.w - a.w); };
+  let per = S.sqPerPrice, pool = strat(per), trimmed = false;
+  while (per > 1 && sqNCk(pool.length, free) > SQ_BUDGET){ per--; pool = strat(per); trimmed = true; }
+  // a single stratum that is still too wide: give up the weakest outright, which is the
+  // pair tool's rule and is safe here only because the cheap end is already represented
+  while (pool.length > free && sqNCk(pool.length, free) > SQ_BUDGET){ pool.pop(); trimmed = true; }
+  return {pool: pool.map(r => r.p), trimmed, per};
+}
+/* One position's frontier: for every attainable block COST, the best-valued block at it.
+   Exact cost, not "at most" - the budget is handled once, in the cross-position DP. */
+function sqBlock(q){
+  const n = S.sqOwn[q], k = sqK(q);
+  const lockedAll = D.players.filter(x => x.c !== null && S.locked.has(x.c) && x.p === q && x.cost);
+  const free = n - lockedAll.length;
+  if (free < 0) return {q, n, k, err: lockedAll.length + " " + q + "s are locked in but you are only holding " + n};
+  const po = sqPool(q, free);
+  const pool = po.pool;
+  if (pool.length < free) return {q, n, k, err: "only " + pool.length + " " + q +
+    " candidate" + (pool.length === 1 ? "" : "s") + " pass the filters and " + free + " slots need filling"};
+  const ser = new Map();
+  for (const m of lockedAll.concat(pool)) ser.set(m, sqSeries(m));
+  const lockCost10 = lockedAll.reduce((a, m) => a + Math.round(m.cost * 10), 0);
+  const px = pool.map(m => Math.round(m.cost * 10));
+  const best = new Map();
+  const vs = new Array(n), starts = new Int32Array(n), ix = new Int32Array(Math.max(free, 1));
+  for (let i = 0; i < lockedAll.length; i++) vs[i] = ser.get(lockedAll[i]);
+  const walk = (start, depth, cost10) => {
+    if (depth === free){
+      const rot = sqBlockEval(vs, k, starts);
+      const cur = best.get(cost10);
+      if (!cur || rot > cur.val)
+        best.set(cost10, {val: rot, ix: Array.from(ix).slice(0, free), starts: Array.from(starts)});
+      return;
+    }
+    for (let a = start; a <= pool.length - (free - depth); a++){
+      ix[depth] = a; vs[lockedAll.length + depth] = ser.get(pool[a]);
+      walk(a + 1, depth + 1, cost10 + px[a]);
+    }
+  };
+  walk(0, 0, lockCost10);
+  if (!best.size) return {q, n, k, err: "no " + q + " block could be formed"};
+  return {q, n, k, best, pool, lockedAll, free, trimmed: po.trimmed, per: po.per,
+          members: cur => lockedAll.concat(cur.ix.map(i => pool[i]))};
+}
+/* Cross-position DP on the cost axis, in tenths of a million. Exact under fixed-k, and
+   it solves EVERY budget at once, which is the more useful object: the frontier below is
+   "the cheapest squad that reaches this value", so a row is only shown when another
+   pound actually buys something. */
+function sqSolve(blocks, cap10){
+  let cur = new Float64Array(cap10 + 1).fill(-Infinity); cur[0] = 0;
+  const choice = [];
+  for (const b of blocks){
+    const nx = new Float64Array(cap10 + 1).fill(-Infinity);
+    const ch = new Int32Array(cap10 + 1).fill(-1);
+    for (const ent of b.best){
+      const bc = ent[0], blk = ent[1];
+      if (bc > cap10) continue;
+      for (let c = bc; c <= cap10; c++){
+        const prev = cur[c - bc];
+        if (prev === -Infinity) continue;
+        const v = prev + blk.val;
+        if (v > nx[c]){ nx[c] = v; ch[c] = bc; }
+      }
+    }
+    cur = nx; choice.push(ch);
+  }
+  return {val: cur, choice};
+}
+/* THE DECISION-RELEVANT VALUATION. Once the fifteen are fixed, evaluating the real
+   objective is trivial - eight legal shapes, a prefix sum per position per week - so the
+   squads the fixed-k search returns are re-scored on it here. */
+function sqFloat(byPos){
+  const own = {}; for (const q of SQ_POS_ORDER) own[q] = (byPos[q] || []).length;
+  const shapes = SQ_SHAPES.filter(sh => SQ_POS_ORDER.every(q => sh[q] <= (own[q] || 0)));
+  if (!shapes.length) return null;
+  const ser = {}; for (const q of SQ_POS_ORDER) ser[q] = (byPos[q] || []).map(sqSeries);
+  let tot = 0;
+  for (let j = 0; j < WIDX.length; j++){
+    const pre = {};
+    for (const q of SQ_POS_ORDER){
+      const v = ser[q].map(a => a[j]).sort((a, b) => b - a), cum = [0];
+      for (let i = 0; i < v.length; i++) cum.push(cum[i] + v[i]);
+      pre[q] = cum;
+    }
+    let bv = -Infinity;
+    for (const sh of shapes){ let sm = 0;
+      for (const q of SQ_POS_ORDER) sm += pre[q][sh[q]];
+      if (sm > bv) bv = sm; }
+    tot += bv;
+  }
+  return tot;
+}
+function renderRotationSquad(){
+  const live = SQ_POS_ORDER.filter(q => D.positions.includes(q));
+  const kSum = live.reduce((a, q) => a + sqK(q), 0);
+  const nSum = live.reduce((a, q) => a + S.sqOwn[q], 0);
+  const legalXI = live.length === 4 && kSum === XI_N &&
+    SQ_SHAPES.some(sh => live.every(q => sh[q] === sqK(q)));
+  const shape = live.filter(q => q !== "GK").map(sqK).join("-");
+  $("#sqxilegal").innerHTML = "<span class='" + (legalXI ? "" : "bad") + "'>" + nSum + " owned &middot; " +
+    kSum + " started" + (legalXI ? " &mdash; " + shape + ", a legal XI"
+      : " (" + shape + ") &mdash; not a legal XI" +
+        (kSum !== XI_N ? ", the starts must total " + XI_N : ", FPL allows 3-5 DEF, 2-5 MID, 1-3 FWD") +
+        ". The search still runs; there is no best-XI column for a shape you cannot field.") + "</span>";
+
+  const blocks = live.map(sqBlock);
+  const bad = blocks.filter(b => b.err);
+  renderSquadBar(null, []);
+  if (bad.length){
+    $("#rottable").innerHTML = "<p class='muted'>" + bad.map(b => esc(b.err)).join("<br>") + ".</p>";
+    $("#sqrotcount").textContent = ""; $("#rotnote").innerHTML = "";
+    $("#sqtrimflag").innerHTML = ""; return;
+  }
+  let maxC = 0, minC = 0;
+  for (const b of blocks){
+    let lo = Infinity, hi = -Infinity;
+    for (const c of b.best.keys()){ if (c < lo) lo = c; if (c > hi) hi = c; }
+    maxC += hi; minC += lo;
+  }
+  const cap10 = Math.min(maxC, S.sqBudget !== null ? Math.round(S.sqBudget * 10) : maxC);
+  if (cap10 < minC){
+    $("#rottable").innerHTML = "<p class='muted'>The cheapest squad these filters allow costs " +
+      fmtM(minC / 10) + ", above your budget of " + fmtM(cap10 / 10) + ".</p>";
+    $("#sqrotcount").textContent = ""; $("#rotnote").innerHTML = ""; return;
+  }
+  const sol = sqSolve(blocks, cap10), val = sol.val, choice = sol.choice;
+  // the frontier: a cost is shown only where the optimum strictly improves, so each row
+  // is the CHEAPEST squad that reaches its value and the gap to the row below is what the
+  // extra money bought
+  const front = [];
+  let bestSoFar = -Infinity;
+  for (let c = minC; c <= cap10; c++)
+    if (val[c] > bestSoFar + 1e-9){ bestSoFar = val[c]; front.push(c); }
+  if (!front.length){
+    $("#rottable").innerHTML = "<p class='muted'>No squad can be formed under these filters.</p>";
+    $("#sqrotcount").textContent = ""; $("#rotnote").innerHTML = ""; return;
+  }
+  const rows = front.slice().reverse().slice(0, S.sqShow).map(c0 => {
+    let c = c0;
+    const byPos = {}, starts = {}, per = [];
+    for (let qi = blocks.length - 1; qi >= 0; qi--){
+      const bc = choice[qi][c], b = blocks[qi], blk = b.best.get(bc);
+      const mem = b.members(blk);
+      byPos[b.q] = mem; starts[b.q] = blk.starts;
+      const tots = mem.map(m => agg(m, S.metric, "sum") || 0).sort((x, y) => y - x);
+      const solo = tots.slice(0, b.k).reduce((x, y) => x + y, 0);
+      const parked = mem.map((m, mi) => ({m: m, w: blk.starts[mi]}))
+        .sort((x, y) => y.w - x.w).slice(b.k).reduce((x, o) => x + (o.m.cost || 0), 0);
+      per.unshift({q: b.q, k: b.k, rot: blk.val, solo: solo, parked: parked});
+      c -= bc;
+    }
+    const rot = per.reduce((a, p) => a + p.rot, 0);
+    const solo = per.reduce((a, p) => a + p.solo, 0);
+    const parked = per.reduce((a, p) => a + p.parked, 0);
+    return {cost: c0 / 10, byPos: byPos, starts: starts, per: per, rot: rot, solo: solo,
+            parked: parked, gain: rot - solo,
+            perPark: parked > 0 ? (rot - solo) / parked : 0,
+            best: legalXI ? sqFloat(byPos) : null};
+  });
+  const trimmed = blocks.filter(b => b.trimmed);
+  /* THE TRIM BELONGS BESIDE THE CONTROL, not only at the end of a dense paragraph. A
+     select reading "3" while the search actually went one deep at the position that most
+     needed the depth turns an artefact of the budget into an apparent fact about the
+     position ("there is no good cheap midfielder here"). */
+  $("#sqtrimflag").innerHTML = trimmed.length
+    ? "<span class='trimflag' title='The enumeration budget forced the depth down at " +
+      "these positions. Narrow the candidate filters to search deeper.'>&#9888; " +
+      trimmed.map(b => esc(b.q) + ":" + b.per).join(" ") + "</span>" : "";
+  $("#sqrotcount").textContent = front.length.toLocaleString() + " squads on the frontier" +
+    (front.length > S.sqShow ? " · best " + S.sqShow + " shown" : "") +
+    (S.locked.size ? " · " + S.locked.size + " locked in" : "") +
+    (S.banned.size ? " · " + S.banned.size + " banned" : "");
+  $("#rotcap").innerHTML =
+    "Every <b>" + live.map(q => S.sqOwn[q] + " " + q).join(" &middot; ") + "</b> your filters allow, " +
+    "valued over <b>GW" + S.from + "&ndash;" + S.to + "</b> as the sum over positions of the best " +
+    live.map(q => "<b>" + sqK(q) + "</b> " + q).join(" / ") + " each week, and solved for " +
+    "<b>every budget at once</b>. Each row is the cheapest squad that reaches its value, so the " +
+    "gap to the row below is what the extra money bought. <b>Rotation</b> is that fixed-count " +
+    "objective; <b>Best XI</b> re-scores the same fifteen letting the formation float " +
+    "week to week, as FPL actually allows &mdash; it is always the larger of the two, and the " +
+    "difference is what the flexibility is worth. The search runs on the fixed-count " +
+    "objective because only that one separates across positions; the floating column is an " +
+    "honest valuation of the squad found, not the optimum of the floating problem." +
+    rotMetricNote() +
+    (trimmed.length ? " <b>Pool trimmed</b> to keep the enumeration fast: " +
+      trimmed.map(b => esc(b.q) + " kept " + b.per + " per price, not " + S.sqPerPrice).join("; ") +
+      ". To search deeper, narrow the candidate filters above &mdash; fewer players competing " +
+      "at each price is what lets the requested depth fit. Raising <i>Per price</i> on its own " +
+      "will not, because this cut is what the budget already forced." : "");
+
+  let h = "<div class='rotwrap'><table class='rot'><thead><tr>" +
+    "<th class='sqnum'>&pound;</th>" +
+    "<th class='sqnum' title='Sum over the window of the best k of each block that week &mdash; the objective the search optimises'>Rotation</th>" +
+    "<th class='sqnum' title='The same fifteen with the formation free to change each week, inside FPL&#39;s 3-5 DEF / 2-5 MID / 1-3 FWD rules. Always at least the Rotation figure.'>Best XI</th>" +
+    "<th title='Holding the same starters every week instead of rotating'>Hold best</th>" +
+    "<th title='What the rotation is worth over never changing the XI'>Gain</th>" +
+    "<th title='Price of the members who do not start &mdash; idle capital'>Bench &pound;</th>" +
+    "<th title='Gain per million of idle capital'>Per &pound;m</th>" +
+    "<th class='nm' style='text-align:left'>Squad</th></tr></thead><tbody>";
+  for (const r of rows){
+    const groups = live.map(q => "<span class='grp'><b>" + q + "</b> " +
+      r.byPos[q].map((m, mi) => {
+        const code = m.c;
+        return "<span class='pos " + m.p + "' style='min-width:0;padding:0 3px'>" +
+          esc(ab(m.t)) + "</span> " + esc(m.n) +
+          "<span class='muted' style='font-size:10px'> " + m.cost.toFixed(1) + " &middot; " +
+          r.starts[q][mi] + "w</span>" +
+          (code === null ? "" :
+            "<span class='mk lock" + (S.locked.has(code) ? " on" : "") + "' data-sllock='" + code +
+              "' title='Lock " + esc(m.n) + " into every squad'>&#128274;</span>" +
+            "<span class='mk ban' data-slban='" + code + "' title='Ban " + esc(m.n) +
+              " from every squad and shortlist'>&#8856;</span>");
+      }).join(" &nbsp;") + "</span>").join("");
+    h += "<tr><td class='sqnum'>" + r.cost.toFixed(1) + "</td>" +
+      "<td class='sqnum'><b>" + r.rot.toFixed(1) + "</b></td>" +
+      "<td class='sqnum'>" + (r.best === null ? "<span class='muted'>&mdash;</span>" : "<b>" + r.best.toFixed(1) + "</b>") + "</td>" +
+      "<td>" + r.solo.toFixed(1) + "</td>" +
+      "<td class='res " + (r.gain > 0 ? "up" : "dn") + "'>" + (r.gain >= 0 ? "+" : "") + r.gain.toFixed(1) + "</td>" +
+      "<td>" + r.parked.toFixed(1) + "</td>" +
+      "<td><b>" + r.perPark.toFixed(2) + "</b></td>" +
+      "<td class='sqm'>" + groups + "</td></tr>";
+  }
+  $("#rottable").innerHTML = h + "</tbody></table></div>";
+  sqPinColumns();
+  $("#rotnote").innerHTML =
+    "<b>The number beside each name is the weeks he is in the starting count</b>, under the " +
+    "fixed shape. A member on 0w is a bench player, not a rotation partner &mdash; the money is " +
+    "parked and the <i>Bench &pound;</i> column is what it costs you. " +
+    "<b>The search is a lower bound.</b> Fixing the start counts is what makes the four " +
+    "positions separable and therefore searchable; it also understates every squad, because " +
+    "the real weekly choice can change shape and this one cannot. Both numbers are shown so " +
+    "the gap is visible rather than assumed away. " +
+    "<b>The pool is price-stratified, not points-ranked</b> &mdash; a budget search that trimmed " +
+    "on points alone would delete the enablers it needs. It can still drop a player whose " +
+    "window total is modest but whose blanks fall in his partner's good weeks; " +
+    "<i>Per price</i> is the dial for that. " +
+    "<b>Every figure here is a point estimate with no variance treatment</b> &mdash; none of " +
+    "these columns carries the per-player <code>sd</code> the board computes. Adjacent rows " +
+    "on the frontier differ by a few tenths of a point, which is well inside the noise on a " +
+    "sum of sixty player-gameweeks, so read the frontier as a shape and not as a ranking " +
+    "you can trust to the decimal. The ordering is real at the ends and not in the middle. " +
+    "<b>The top row is the best squad for the shape in the selects, not the best squad.</b> " +
+    "The search optimises one set of start counts at a time, because that is what separates " +
+    "across positions; a different legal shape buys a different squad and often a different " +
+    "amount of flexibility. Change the start counts to compare &mdash; the <i>Best XI</i> " +
+    "column is on the same scale across shapes and is the one to compare them on.";
+}
+
 function renderRotation(){
-  const pos = S.slPos === "ALL" ? (D.positions.includes("DEF") ? "DEF" : D.positions[0]) : S.slPos;
-  const k = Math.min(S.rotK, S.rotN - (S.rotN > 1 ? 1 : 0));
+  const squad = S.rotMode === "squad";
+  $("#rottitle").textContent = squad ? "Whole-squad rotation" : "Rotation pairs";
+  $("#sqrotbox").classList.toggle("hide", !squad);
+  $("#rotonebox").classList.toggle("hide", squad);
+  $("#rottwobox").classList.toggle("hide", squad);
+  $$("#rotmode button").forEach(b =>
+    b.setAttribute("aria-pressed", String((b.dataset.rm === "squad") === squad)));
+  if (squad){ $("#rotcount").textContent = ""; renderSqSlots(); renderRotationSquad(); return; }
+  $("#sqrotcount").textContent = ""; $("#sqxilegal").innerHTML = "";
+  $("#rotnote").innerHTML = ""; $("#sqtrimflag").innerHTML = "";
+  renderRotationOne();
+}
+/* Pin the leading numeric columns at their MEASURED widths. Offsets cannot be written
+   into the stylesheet: the first column is a price whose width changes with the digits in
+   it, and a stale offset overlaps the next column rather than failing visibly. */
+function sqPinColumns(){
+  const head = $$("#rottable thead th").filter(t => t.classList.contains("sqnum"));
+  if (!head.length) return;
+  let x = 0;
+  head.forEach((th, i) => {
+    const col = i + 1;
+    const last = i === head.length - 1;
+    for (const cell of $$("#rottable tr > :nth-child(" + col + ")")){
+      cell.style.left = x + "px";
+      cell.classList.toggle("edge", last);
+    }
+    x += th.getBoundingClientRect().width;
+  });
+}
+/* Own / start per position. `start` runs to `own`, not to `own - 1`: a week in which all
+   five of your defenders play is an ordinary FPL decision and the fifth is still rotating,
+   because he sits on the bench in the other weeks. The rotation is a property of the
+   SQUAD — eleven started out of fifteen owned — so a block that starts everyone is
+   flagged rather than forbidden. `own - 1` remains the default. */
+function renderSqSlots(){
+  const live = SQ_POS_ORDER.filter(q => D.positions.includes(q));
+  $("#sqrotslots").innerHTML = live.map(q => {
+    const n = S.sqOwn[q], k = sqK(q);
+    const own = Array.from({length: SL_SQ_MAXOWN[q]}, (_, i) => i + 1)
+      .map(v => "<option value='" + v + "'" + (v === n ? " selected" : "") + ">" + v + "</option>").join("");
+    const st = Array.from({length: n}, (_, i) => i + 1)
+      .map(v => "<option value='" + v + "'" + (v === k ? " selected" : "") + ">" + v + "</option>").join("");
+    return "<span class='blk'><span>" + q + (k >= n && n > 1
+        ? " <span class='muted' title='Every " + q + " you own starts every week, so this block " +
+          'does not rotate — its members are picked on window total alone. The squad still ' +
+          "rotates: eleven of fifteen start.'>&#9679;</span>" : "") + "</span><span class='pair'>" +
+      "<select data-sqown='" + q + "' title='How many " + q + "s you hold'>" + own + "</select>" +
+      "<span class='muted' style='font-size:11px'>own</span>" +
+      "<select data-sqstart='" + q + "' title='How many of them start each week. Runs to all of them: a week with five defenders is legal, and the fifth still rotates because he is benched in other weeks.'>" + st + "</select>" +
+      "<span class='muted' style='font-size:11px'>start</span></span></span>";
+  }).join("");
+}
+/* The metric the rotation is valued on, named wherever a rotation number is shown. The
+   "vs price" residuals above are always blended points (`priceFit` hardcodes it), but the
+   rotation inherits `S.metric` from the Players tab's "Show" control, which is hidden on
+   this tab. A reader who changed it to ceiling or minutes-security sees two adjacent
+   numeric surfaces on one page denominated differently, with nothing saying so. */
+function rotMetricNote(){
+  const lab = (MET[S.metric] && MET[S.metric].label) || S.metric;
+  return S.metric === "blended"
+    ? " Valued on <b>" + esc(lab) + "</b>, the same basis as the &ldquo;vs price&rdquo; residuals above."
+    : " <b>Valued on &ldquo;" + esc(lab) + "&rdquo;</b>, set by <i>Show</i> on the Players tab &mdash; " +
+      "<b>not</b> the blended points the &ldquo;vs price&rdquo; residuals above are measured in. " +
+      "The two are not comparable while this is set.";
+}
+function renderRotationOne(){
+  const pos = S.rotPos !== "auto" && D.positions.includes(S.rotPos) ? S.rotPos
+            : S.slPos === "ALL" ? (D.positions.includes("DEF") ? "DEF" : D.positions[0]) : S.slPos;
+  const k = Math.max(1, Math.min(S.rotK, S.rotN - 1));
+  const sq = slSquadInfo();
   // LOCKS AND BANS. A ban removes a player outright. A lock forces him into every
   // combination, which is the "I already own him, who pairs with him" question — so the
   // enumeration runs over the REMAINING slots only, and a lock is never filtered out by
-  // the price or ownership sliders, because the decision to hold him is already made.
+  // the candidate filters, because the decision to hold him is already made.
   const lockedAll = D.players.filter(x => x.c !== null && S.locked.has(x.c) && x.p === pos);
   let pool = population(pos).pool
-    .filter(p => p.c === null || !S.banned.has(p.c))
     .filter(p => p.c === null || !S.locked.has(p.c))
-    .filter(p => p.cost && (S.slMax===null || p.cost<=S.slMax))
-    .filter(p => S.slOwn===null || p.own===null || p.own<=S.slOwn)
+    .filter(p => p.cost)
     .map(p => ({p, w: agg(p,S.metric,"sum")}))
-    .filter(r => r.w !== null)
+    .filter(r => r.w !== null && slCandidate(r.p, sq, r.w))
     .sort((a,b)=>b.w-a.w)
-    .slice(0, 40)          // enumeration stays trivial and the tail is not shortlist material
+    .slice(0, S.rotPool)   // enumeration stays tractable and the tail is not shortlist material
     .map(r => r.p);
+
+  const free = S.rotN - lockedAll.length;
+  // ENUMERATION BUDGET. C(60,3) is 34k and C(60,4) is 488k; the second would stall the
+  // page. Trim the pool from the bottom (it is sorted best-first) until the count fits,
+  // and say so on the page rather than quietly searching a smaller space.
+  const nCk = (n, r) => { if (r < 0 || r > n) return 0; let x = 1; for (let i = 0; i < r; i++) x = x*(n-i)/(i+1); return Math.round(x); };
+  const BUDGET = 100000;
+  let trimmed = false;
+  while (free > 0 && pool.length > free && nCk(pool.length, free) > BUDGET){ pool.pop(); trimmed = true; }
 
   $("#rotcap").innerHTML =
     "Every combination of <b>" + S.rotN + " " + esc(pos) + "s</b> from the " + pool.length +
-    " best available under your price filter, valued as the sum over <b>GW" + S.from + "–" + S.to +
+    " best that pass your filters, valued as the sum over <b>GW" + S.from + "–" + S.to +
     "</b> of the best <b>" + k + "</b> that week. That is the objective " +
     "<code>studies/def_rotation.py</code> optimises for a full back line; this is the same " +
     "estimator at the size you usually decide at. <b>Gain</b> is what the choice is worth over " +
@@ -1903,47 +3415,76 @@ function renderRotation(){
     "other is otherwise on your bench. Ranked by default on <b>gain per &pound;m parked</b>: " +
     "rotation is a budget technique, so its value is measured against the capital left idle " +
     "on the bench, not in raw points. Two premiums sharing a slot will show a gain and is " +
-    "still the wrong trade &mdash; you buy a premium to play him every week.";
+    "still the wrong trade &mdash; you buy a premium to play him every week." +
+    rotMetricNote() +
+    (trimmed ? " <b>The pool was trimmed to " + pool.length + "</b> to keep the enumeration " +
+      "fast at this size; narrow the filters to search deeper." : "");
 
   renderSquadBar(pos, lockedAll);
-  const free = S.rotN - lockedAll.length;
   if (free < 0){
     $("#rottable").innerHTML = "<p class='muted'>You have locked " + lockedAll.length + " " +
       esc(pos) + "s but are only holding " + S.rotN + ". Raise “Own”, or unlock one.</p>";
     $("#rotcount").textContent = ""; return;
   }
   if (pool.length < free){
-    $("#rottable").innerHTML = "<p class='muted'>Not enough candidates under this filter.</p>";
+    $("#rottable").innerHTML = "<p class='muted'>Not enough candidates under these filters.</p>";
     $("#rotcount").textContent = ""; return;
+  }
+  // per-member weekly values, computed once rather than once per combination
+  const NW = WIDX.length;
+  const series = new Map();
+  for (const m of lockedAll.concat(pool)){
+    const a = m.m[S.metric];
+    series.set(m, {v: WIDX.map(i => (a && a[i] != null) ? a[i] : 0),
+                   tot: agg(m, S.metric, "sum") ?? 0});
   }
   // enumerate the FREE slots only; locked players join every combination
   const combos = [];
-  const n = pool.length;
-  if (free === 0) combos.push([]);
-  else if (free === 1){ for(let a=0;a<n;a++) combos.push([a]); }
-  else if (free === 2){ for(let a=0;a<n;a++) for(let b=a+1;b<n;b++) combos.push([a,b]); }
-  else { for(let a=0;a<n;a++) for(let b=a+1;b<n;b++) for(let c=b+1;c<n;c++) combos.push([a,b,c]); }
+  const walk = (start, acc) => {
+    if (acc.length === free){ combos.push(acc.slice()); return; }
+    for (let a = start; a <= pool.length - (free - acc.length); a++){ acc.push(a); walk(a+1, acc); acc.pop(); }
+  };
+  walk(0, []);
   const rows = [];
+  let clubDropped = 0;
   for (const ix of combos){
     const members = lockedAll.concat(ix.map(i=>pool[i]));
     const cost = members.reduce((s,m)=>s+m.cost,0);
-    if (S.rotMax !== null && cost > S.rotMax) continue;
-    const {rot, picks} = comboValue(members, k);
+    if (S.rotMax !== null && cost > S.rotMax + 1e-9) continue;
+    if (S.rotMin !== null && cost < S.rotMin - 1e-9) continue;
+    if (S.rotClub !== "any"){
+      const clubs = new Set(members.map(m => m.t)).size;
+      if ((S.rotClub === "distinct" && clubs !== members.length) ||
+          (S.rotClub === "same" && clubs !== 1)){ clubDropped++; continue; }
+    }
+    const vs = members.map(m => series.get(m));
+    let rot = 0; const picks = [];
+    for (let j = 0; j < NW; j++){
+      // stable: ties go to the earlier member, as the unsorted enumeration always did
+      const order = vs.map((s, mi) => mi).sort((a, b) => vs[b].v[j] - vs[a].v[j] || a - b).slice(0, k);
+      for (const mi of order) rot += vs[mi].v[j];
+      picks.push(order.sort());
+    }
     // holding the best k of them fixed all window, no rotating
-    const totals = members.map(m => agg(m,S.metric,"sum") ?? 0);
-    const solo = [...totals].sort((a,b)=>b-a).slice(0,k).reduce((s,v)=>s+v,0);
+    const solo = vs.map(s => s.tot).sort((a,b)=>b-a).slice(0,k).reduce((s,v)=>s+v,0);
+    const gain = rot - solo;
+    if (S.rotMinGain !== null && gain < S.rotMinGain) continue;
     // how many weeks the pick actually changes
     let swings = 0;
     for(let j=1;j<picks.length;j++) if(picks[j].join()!==picks[j-1].join()) swings++;
     // capital parked on the bench: the members who are NOT the most-started
     const starts = members.map((_, mi) => picks.filter(pk => pk.includes(mi)).length);
+    if (S.rotReal && starts.some(s => s === 0)) continue;
     const order = members.map((m, mi) => ({m, n: starts[mi]}))
                          .sort((x, y) => y.n - x.n);
     const parked = order.slice(k).reduce((sx, o) => sx + (o.m.cost || 0), 0);
-    rows.push({members, cost, rot, solo, gain: rot-solo, picks, swings,
-               parked, perPark: parked > 0 ? (rot-solo)/parked : 0});
+    if (S.rotParkMax !== null && parked > S.rotParkMax + 1e-9) continue;
+    rows.push({members, cost, rot, solo, gain, picks, swings,
+               parked, perPark: parked > 0 ? gain/parked : 0});
   }
-  if(!rows.length){ $("#rottable").innerHTML="<p class='muted'>No combination fits that combined price.</p>";
+  if(!rows.length){
+    $("#rottable").innerHTML = "<p class='muted'>No combination passes these filters" +
+      (clubDropped ? " (" + clubDropped.toLocaleString() + " dropped by the club rule)" : "") + ".</p>";
     $("#rotcount").textContent=""; return; }
   const key = S.rotSort==="gain" ? (r=>r.gain)
             : S.rotSort==="perpark" ? (r=>r.perPark)
@@ -1951,9 +3492,10 @@ function renderRotation(){
   rows.sort((a,b)=>key(b)-key(a));
   $("#rotcount").textContent = rows.length.toLocaleString() + " combinations" +
     (lockedAll.length ? " · " + lockedAll.length + " locked in" : "") +
-    (S.banned.size ? " · " + S.banned.size + " banned" : "");
-  const show = rows.slice(0,25);
-  const CL = ["wA","wB","wC"];
+    (S.banned.size ? " · " + S.banned.size + " banned" : "") +
+    (rows.length > S.rotShow ? " · top " + S.rotShow + " shown" : "");
+  const show = rows.slice(0, S.rotShow);
+  const CL = ["wA","wB","wC","wD"], INK = ["def","fwd","mid","gk"];
   let h = "<div class='rotwrap'><table class='rot'><thead><tr>" +
     "<th class='nm' style='text-align:left'>Combination</th><th>£</th>" +
     "<th title='Sum over the window of the best " + k + " that week'>Rotation</th>" +
@@ -1966,14 +3508,21 @@ function renderRotation(){
     "<th class='nm' style='text-align:left'>Who to start</th></tr></thead><tbody>";
   for (const r of show){
     const names = r.members.map((m,j)=>
-      "<span class='key " + CL[j] + "' style='background:var(--" +
-      (j===0?"def":j===1?"fwd":"mid") + "-ink)'></span>" + esc(m.n)).join(" &nbsp;");
+      "<span class='key " + CL[j] + "' style='background:var(--" + INK[j] + "-ink)'></span>" +
+      esc(m.n) + " <span class='muted' style='font-size:11px'>" + esc(ab(m.t)) + "</span>" +
+      // the marks live here too: seeing a combination you like and having to go back to the
+      // Players tab to hold one of its members is where the tool stopped being usable
+      (m.c === null ? "" :
+        "<span class='mk lock" + (S.locked.has(m.c) ? " on" : "") + "' data-sllock='" + m.c +
+          "' title='Lock " + esc(m.n) + " into every combination'>&#128274;</span>" +
+        "<span class='mk ban' data-slban='" + m.c + "' title='Ban " + esc(m.n) +
+          " from every combination'>&#8856;</span>")).join(" &nbsp;");
     const strip = WIDX.map((i,j)=> r.picks[j].map(pi =>
       "<span class='who " + CL[pi] + "' title='GW" + GWS[i] + "'>" +
       esc(r.members[pi].n.slice(0,3)) + "</span>").join("")).join("");
     h += "<tr><td class='nm'>" + names + "</td><td>" + r.cost.toFixed(1) + "</td>" +
       "<td><b>" + r.rot.toFixed(1) + "</b></td><td>" + r.solo.toFixed(1) + "</td>" +
-      "<td class='res " + (r.gain>0?"up":"dn") + "'>+" + r.gain.toFixed(1) + "</td>" +
+      "<td class='res " + (r.gain>0?"up":"dn") + "'>" + (r.gain>=0?"+":"") + r.gain.toFixed(1) + "</td>" +
       "<td>" + r.parked.toFixed(1) + "</td>" +
       "<td><b>" + r.perPark.toFixed(2) + "</b></td>" +
       "<td>" + r.swings + "</td><td class='nm'>" + strip + "</td></tr>";
@@ -1997,8 +3546,9 @@ function renderSquadBar(pos, lockedAll){
   if (locks.length) h += "<span class='muted'>Locked in:</span>" + locks.join("");
   if (bans.length)  h += "<span class='muted' style='margin-left:8px'>Banned:</span>" + bans.join("");
   if (!locks.length && !bans.length)
-    h += "<span class='muted'>Use &#128274; and &#8856; beside a player on the Players tab to " +
-         "keep him in every combination, or drop him from all of them.</span>";
+    h += "<span class='muted'>Use &#128274; and &#8856; beside any player &mdash; on the Players " +
+         "tab, in the price bands above, or in the table below &mdash; to keep him in every " +
+         "combination, or drop him from all of them.</span>";
   // NOT a "ban them all" button. These players are ALREADY held out of the likely-starter
   // pool, the shortlist bands and the rotation enumeration, so a mass ban would change
   // nothing and would only imply they were getting through. Stated as a fact instead.
@@ -2014,40 +3564,62 @@ function renderSquadBar(pos, lockedAll){
 function renderPriceChart(pos, fit){
   if(!fit.ok){ $("#slchart").innerHTML = "<p class='muted'>Not enough players to fit a price curve.</p>"; return; }
   const W=760,H=340,PL=48,PR=110,PT=14,PB=40;
-  const pts = fit.pool.map(r=>({n:r.p.n, x:r.c, y:r.w,
+  const pts = fit.pool.map(r=>({n:r.p.n, t:r.p.t, x:r.c, y:r.w,
     res:(r.w-fit.at(r.c))/Math.max(0.15, 1-fit.hat(r.c))}));
   const x0=fit.lo-0.4, x1=fit.hi+0.4;
-  const y0=0, y1=Math.max(...pts.map(p=>p.y))*1.08 || 1;
+  const ay = niceTicks(0, Math.max(...pts.map(p=>p.y))*1.04 || 1, 5);
+  const y0=0, y1=ay.hi;
   const X=v=>PL+(v-x0)/((x1-x0)||1)*(W-PL-PR);
   const Y=v=>H-PB-(v-y0)/((y1-y0)||1)*(H-PT-PB);
   let s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="'+H+'" role="img" aria-label="Projected points against price">';
-  for(let k=0;k<=4;k++){ const v=y0+(y1-y0)*k/4, y=Y(v);
+  ay.ticks.forEach(v=>{ const y=Y(v);
     s+='<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" class="gl"/>';
-    s+='<text x="'+(PL-7)+'" y="'+(y+3.5)+'" text-anchor="end" class="ax">'+v.toFixed(0)+'</text>'; }
+    s+='<text x="'+(PL-7)+'" y="'+(y+3.5)+'" text-anchor="end" class="ax">'+ay.fmt(v)+'</text>'; });
   s+='<line x1="'+PL+'" y1="'+(H-PB)+'" x2="'+(W-PR)+'" y2="'+(H-PB)+'" class="axline"/>';
-  for(let c=Math.ceil(x0*2)/2;c<=x1;c+=0.5){ if(Math.round(c*10)%10 && (x1-x0)>4) continue;
-    s+='<text x="'+X(c)+'" y="'+(H-PB+15)+'" text-anchor="middle" class="ax">'+c.toFixed(1)+'</text>'; }
-  // the fitted line
-  s+='<line x1="'+X(x0)+'" y1="'+Y(fit.at(x0))+'" x2="'+X(x1)+'" y2="'+Y(fit.at(x1))+
-     '" stroke="var(--ink-2)" stroke-width="2" stroke-dasharray="6 4"/>';
-  s+='<text x="'+(W-PR+6)+'" y="'+(Y(fit.at(x1))+4)+'" class="ax">what price buys</text>';
+  const ax = niceTicks(x0, x1, 10);
+  ax.ticks.forEach(c=>{ if(c<x0-1e-9||c>x1+1e-9) return;
+    s+='<text x="'+X(c)+'" y="'+(H-PB+15)+'" text-anchor="middle" class="ax">'+(+c).toFixed(1)+'</text>'; });
+  /* THE FITTED LINE, clipped to the plot. Drawn end to end it left the plot through the
+     top at the premium end and the label followed it out. The fit is linear, so the
+     segment inside [0, y1] is solved exactly rather than masked. */
+  let la=x0, lb=x1;
+  if (fit.slope){
+    const xAt = yv => (yv - fit.intercept)/fit.slope;
+    const lim = [xAt(y0), xAt(y1)].sort((a,b)=>a-b);
+    la = Math.max(x0, lim[0]); lb = Math.min(x1, lim[1]);
+  }
+  if (lb > la){
+    s+='<line x1="'+X(la)+'" y1="'+Y(fit.at(la))+'" x2="'+X(lb)+'" y2="'+Y(fit.at(lb))+
+       '" stroke="var(--ink-2)" stroke-width="2" stroke-dasharray="6 4"/>';
+    s+='<text x="'+(X(lb)+6)+'" y="'+Math.max(PT+8, Y(fit.at(lb))+4)+'" class="lbl">what price buys</text>';
+  }
   const top = [...pts].sort((a,b)=>b.res-a.res).slice(0,5);
-  const lab = new Set(top.map(p=>p.n));
-  pts.forEach(p=>{
-    const hi = lab.has(p.n);
-    s+='<circle cx="'+X(p.x)+'" cy="'+Y(p.y)+'" r="'+(hi?6:4)+'" fill="'+(hi?"var(--s2)":"var(--s1)")+
-       '" fill-opacity="'+(hi?1:0.42)+'" stroke="var(--surface)" stroke-width="1.5"><title>'+
-       esc(p.n+" — £"+p.x.toFixed(1)+", "+p.y.toFixed(1)+" pts, "+(p.res>=0?"+":"")+p.res.toFixed(1)+" vs price")+
-       '</title></circle>';
+  const lab = new Set(top);
+  pts.forEach(p=>{ p.px=X(p.x); p.py=Y(p.y); p.r=lab.has(p)?6:4; });
+  // the context dots first, the five the chart is about on top of them
+  [...pts.filter(p=>!lab.has(p)), ...top].forEach(p=>{
+    const hi = lab.has(p);
+    s+='<circle cx="'+p.px+'" cy="'+p.py+'" r="'+p.r+'" fill="'+(hi?"var(--s2)":"var(--s1)")+
+       '" fill-opacity="'+(hi?1:0.42)+'" stroke="var(--surface)" stroke-width="2"/>';
   });
-  top.forEach(p=>{ s+='<text x="'+(X(p.x)+9)+'" y="'+(Y(p.y)+3.5)+'" class="ax" fill="var(--s2)" font-weight="700">'+
-       esc(p.n)+'</text>'; });
+  const obs = pts.map(p=>({x:p.px, y:p.py, r:p.r, p}));
+  const placed = placeLabels(top.map(p=>({x:p.px, y:p.py, r:p.r, text:p.n, bold:true,
+                                          src:obs.find(o=>o.p===p)})),
+                             obs, {x0:PL, x1:W-4, y0:PT-6, y1:H-PB-2});
+  s+=placed.svg;
   s+='<text x="'+((PL+W-PR)/2)+'" y="'+(H-6)+'" text-anchor="middle" class="ax">price £m →</text>';
   s+='<text transform="translate(13,'+((PT+H-PB)/2)+') rotate(-90)" text-anchor="middle" class="ax">projected points over the window →</text>';
   s+='</svg>';
   $("#slchart").innerHTML=s+
-    "<div class='chartlegend'><span><i class='dot' style='background:var(--s2)'></i>five biggest overperformers, labelled</span>"+
+    "<div class='chartlegend'><span><i class='dot' style='background:var(--s2)'></i>five biggest overperformers, labelled" +
+    (placed.dropped.length ? " (" + placed.dropped.length + " without room — hover the orange dots)" : "") + "</span>"+
+    "<span><i class='dot' style='background:var(--s1);opacity:.42'></i>other likely starters · hover any dot</span>"+
     "<span><i style='background:var(--ink-2);height:0;border-top:2px dashed var(--ink-2)'></i>fitted price line</span></div>";
+  const sgn = v => (v>=0?"+":"−")+Math.abs(v).toFixed(1);
+  hoverNearest($("#slchart"), pts, p =>
+    "<b>"+esc(p.n)+(p.t?" <span class='muted' style='font-weight:400'>"+esc(ab(p.t))+"</span>":"")+"</b>"+
+    "£"+p.x.toFixed(1)+"m · <span class='tv'>"+p.y.toFixed(1)+"</span> pts over the window<br>"+
+    "<span class='tv'>"+sgn(p.res)+"</span> vs what that price buys"+(lab.has(p)?" · top-5 overperformer":""));
 }
 
 /* ======================= my squad =======================
@@ -2199,11 +3771,16 @@ function renderSquad(){
   const budget = (m.squad_value || 0) + (m.bank || 0);
   const horizonLabel = S.sqHorizon === "1" ? ("GW" + D.meta.first_clean)
                                            : ("GW" + S.from + "–" + S.to);
+  // Bank is a RANGE while a pending transfer's selling price is unknown; the low end is
+  // what the transfer search below spends, so a move it offers fits in the game.
+  const bankTxt = m.bank_hi != null && m.bank_hi !== m.bank
+    ? "bank " + (m.bank ?? 0).toFixed(1) + "–" + m.bank_hi.toFixed(1) + " (low end used)"
+    : "bank " + (m.bank ?? 0).toFixed(1);
 
   $("#sqkpis").innerHTML =
     kpi("Team", m.entry_name || "—", m.manager || "") +
     kpi("Squad value", (m.squad_value ?? 0).toFixed(1),
-        "bank " + (m.bank ?? 0).toFixed(1) + " · budget " + budget.toFixed(1)) +
+        bankTxt + " · budget " + budget.toFixed(1)) +
     kpi("Overall", m.overall_points != null ? m.overall_points : "—",
         m.overall_rank ? "rank " + m.overall_rank.toLocaleString() : "") +
     kpi("Your XI, " + horizonLabel, yourTotal.toFixed(1),
@@ -2211,10 +3788,32 @@ function renderSquad(){
     kpi("Best XI available", opt ? opt.total.toFixed(1) : "—",
         opt ? ("+" + (opt.total - yourTotal).toFixed(1) + " left on the bench") : "");
 
-  $("#sqcap").innerHTML = "As picked in <b>GW" + m.gw + "</b>" +
-    (m.active_chip ? " with the <b>" + esc(m.active_chip) + "</b> chip" : "") +
-    ". Projections are for <b>" + horizonLabel + "</b>. Rows the model has no projection " +
-    "for are flagged — that means the player left the league or the board is stale.";
+  // Say exactly what this squad IS. It is the last gameweek the public feed will publish,
+  // which after that gameweek finishes means the XI AFTER automatic substitutions — not a
+  // lineup set for the next one — plus any pending transfers typed into
+  // data/my_squad_pending.json. The chip is the one played in that gameweek. This caption
+  // used to read "As picked in GW3 with the wildcard chip" over a GW4 squad, from a
+  // snapshot four days old, with nothing on the page saying so.
+  const ageD = m.fetched_at ? (Date.now() - Date.parse(m.fetched_at)) / 864e5 : null;
+  const fetched = m.fetched_at
+    ? "Fetched <b>" + esc(m.fetched_at.slice(0, 16).replace("T", " ")) + " UTC</b>" +
+      (ageD > 1 ? " <span class='pill warnpill'>" + Math.floor(ageD) + "d old</span>" : "")
+    : "<span class='pill warnpill'>fetch time unknown</span>";
+  $("#sqcap").innerHTML = fetched + " — <b>GW" + m.gw + "</b> picks" +
+    (m.gw_finished ? " as played (after automatic substitutions)" : "") +
+    (m.active_chip ? ", " + esc(m.active_chip) + " played that week" : "") +
+    (m.pending && m.pending.length
+      ? ", plus <b>" + m.pending.length + " pending GW" + m.pending_gw + " transfer" +
+        (m.pending.length > 1 ? "s" : "") + "</b> (" + esc(m.pending.join("; ")) +
+        ") entered by hand, because FPL does not publish them before the deadline"
+      : "") +
+    ". Your GW" + (m.pending_gw || (m.gw + 1)) + " lineup and captain are not public " +
+    "until the deadline, so the XI shown is the last one FPL published. " +
+    "Refresh with <code>python src/fpl_entry.py</code>. Projections are for <b>" +
+    horizonLabel + "</b>. £ is the list price when fetched (a pending buy shows the price " +
+    "paid), not your selling price. Rows the " +
+    "model has no projection for are flagged — that means the player left the league or " +
+    "the board is stale.";
   $("#sqlist").innerHTML = squadTable(rows, opt);
 
   if (opt){
@@ -2245,6 +3844,7 @@ function squadTable(rows, opt){
       "' style='min-width:0;padding:1px 5px'>" + r.pos + "</span> " + esc(r.n) + flags +
       (r.last ? lastPill(r.player) : "") +
       "<span class='pill'>" + esc(ab(r.t)) + "</span>" + diff +
+      (r.pend ? "<span class='pill' title='Pending transfer, entered by hand'>pending</span>" : "") +
       (r.miss ? "<span class='pill warnpill'>no projection</span>" : "") +
       "</td><td>" + r.cost.toFixed(1) + "</td><td><b>" + r.ep.toFixed(2) + "</b></td></tr>";
   };
@@ -2696,12 +4296,13 @@ function leagueMean(key){
 
 function renderTrend(t){
   const g = TGW[t] || {}, r = RES[t] || {};
-  const W = 560, H = 260, PL = 40, PR = 14, PT = 12, PB = 30;
+  // PR holds the end labels; at 14 they ran off the right edge of the viewBox
+  const W = 560, H = 260, PL = 34, PR = 78, PT = 12, PB = 30;
   const xs = WIDX, n = xs.length;
   if (!n){ $("#ttrend").innerHTML = "<p class='muted'>Empty window.</p>"; return; }
   const series = [
-    {k:"lam_for", res:"xgf", col:"var(--s1)", name:"Expected goals for"},
-    {k:"lam_against", res:"xga", col:"var(--s2)", name:"Expected goals against"},
+    {k:"lam_for", res:"xgf", col:"var(--s1)", name:"Expected goals for", short:"for"},
+    {k:"lam_against", res:"xga", col:"var(--s2)", name:"Expected goals against", short:"against"},
   ];
   let vals = [];
   series.forEach(s => { xs.forEach(i => {
@@ -2709,10 +4310,12 @@ function renderTrend(t){
     if(a!==null&&a!==undefined) vals.push(a); if(b!==null&&b!==undefined) vals.push(b); }); });
   if(!vals.length){ $("#ttrend").innerHTML = "<p class='muted'>No fixture λ for this window.</p>";
     $("#ttrendlegend").innerHTML=""; return; }
-  const ymax = Math.ceil(Math.max(...vals, 1) * 2) / 2, ymin = 0;
+  const ay = niceTicks(0, Math.max(...vals, 1), 5);
+  const ymax = ay.hi, ymin = 0;
   const X = j => PL + (n===1 ? (W-PL-PR)/2 : j*(W-PL-PR)/(n-1));
   const Y = v => H-PB - (v-ymin)/((ymax-ymin)||1)*(H-PT-PB);
-  let s = '<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="'+H+'" role="img" aria-label="Expected goals by gameweek">';
+  let s = '<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="'+H+'" role="img" aria-label="Expected goals by gameweek">'+
+          '<rect class="hit" x="0" y="0" width="'+W+'" height="'+H+'"/>';
   // GOOD-RUN BANDS, painted first so every mark sits on top of them
   const runs = goodRuns(j => teamEdge(t, xs[j]), 3);
   const halfStep = n > 1 ? (W-PL-PR)/(n-1)/2 : (W-PL-PR)/2;
@@ -2720,13 +4323,12 @@ function renderTrend(t){
     const x0 = Math.max(PL, X(a)-halfStep), x1 = Math.min(W-PR, X(b)+halfStep);
     s += '<rect x="'+x0+'" y="'+PT+'" width="'+(x1-x0)+'" height="'+(H-PT-PB)+
          '" fill="var(--pole-good)" fill-opacity="0.10"/>';
-    s += '<text x="'+((x0+x1)/2)+'" y="'+(PT+11)+'" text-anchor="middle" class="ax">GW'+
+    s += '<text x="'+((x0+x1)/2)+'" y="'+(PT+11)+'" text-anchor="middle" class="ax halo">GW'+
          GWS[xs[a]]+'–'+GWS[xs[b]]+' kind run</text>';
   });
-  const ticks = 4;
-  for(let k=0;k<=ticks;k++){ const v = ymin + (ymax-ymin)*k/ticks, y = Y(v);
+  ay.ticks.forEach(v => { const y = Y(v);
     s += '<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" class="gl"/>';
-    s += '<text x="'+(PL-7)+'" y="'+(y+3.5)+'" text-anchor="end" class="ax">'+v.toFixed(1)+'</text>'; }
+    s += '<text x="'+(PL-7)+'" y="'+(y+3.5)+'" text-anchor="end" class="ax">'+ay.fmt(v)+'</text>'; });
   s += '<line x1="'+PL+'" y1="'+(H-PB)+'" x2="'+(W-PR)+'" y2="'+(H-PB)+'" class="axline"/>';
   const step = Math.max(1, Math.ceil(n/12));
   xs.forEach((i,j)=>{ if(j%step) return;
@@ -2739,8 +4341,7 @@ function renderTrend(t){
       '" fill="none" stroke="'+ser.col+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
     xs.forEach((i,j)=>{ const v = r[ser.res]?r[ser.res][i]:null;
       if(v===null||v===undefined) return;
-      s += '<circle cx="'+X(j)+'" cy="'+Y(v)+'" r="5" fill="'+ser.col+'" stroke="var(--surface)" stroke-width="2">'+
-        '<title>GW'+GWS[i]+' actual '+ser.name.toLowerCase()+': '+v.toFixed(2)+'</title></circle>'; });
+      s += '<circle cx="'+X(j)+'" cy="'+Y(v)+'" r="5" fill="'+ser.col+'" stroke="var(--surface)" stroke-width="2"/>'; });
   });
   // MEAN REFERENCE LINES. The club's own mean across the window, and the league's, both
   // over the same window. Deliberately NOT a least-squares trend: lambda here varies with
@@ -2753,27 +4354,55 @@ function renderTrend(t){
     const m=s1/n1, y=Y(m);
     s += '<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" stroke="'+ser.col+
          '" stroke-width="1.5" stroke-dasharray="5 4" stroke-opacity="0.75"/>';
-    s += '<text x="'+(PL+4)+'" y="'+(y-5)+'" class="ax" fill="'+ser.col+'">club mean '+m.toFixed(2)+'</text>';
+    s += '<text x="'+(PL+4)+'" y="'+(y-5)+'" class="lbl">club mean '+m.toFixed(2)+'</text>';
     const lm = leagueMean(ser.k);
     if(lm!==null){ const ly=Y(lm);
       s += '<line x1="'+PL+'" y1="'+ly+'" x2="'+(W-PR)+'" y2="'+ly+
            '" stroke="var(--ink-muted)" stroke-width="1" stroke-dasharray="2 4"/>'; }
   });
   const lmFor = leagueMean("lam_for");
-  if(lmFor!==null) s += '<text x="'+(W-PR-2)+'" y="'+(Y(lmFor)-5)+'" text-anchor="end" class="ax">league mean</text>';
-  // direct-label the endpoints rather than every point
+  if(lmFor!==null) s += '<text x="'+(W-PR-2)+'" y="'+(Y(lmFor)-5)+'" text-anchor="end" class="ax halo">league mean '+lmFor.toFixed(2)+'</text>';
+  /* END LABELS: the series name and its last value, in the right margin. When the two
+     lines finish close together the labels are pulled apart to a line-height and a
+     leader ties each back to its own line end, rather than overprinting. */
+  const ends = [];
   series.forEach(ser => {
     let last=null, lj=null;
     xs.forEach((i,j)=>{ const v=g[ser.k]?g[ser.k][i]:null; if(v!==null&&v!==undefined){ last=v; lj=j; } });
-    if(last!==null) s += '<text x="'+(X(lj)+7)+'" y="'+(Y(last)+3.5)+'" class="ax" fill="'+ser.col+'">'+last.toFixed(2)+'</text>';
+    if(last!==null) ends.push({ser, v:last, x:X(lj), y:Y(last), ly:Y(last)});
+  });
+  if (ends.length === 2){
+    const [a, b] = ends[0].y <= ends[1].y ? ends : [ends[1], ends[0]];
+    const gap = 13 - (b.ly - a.ly);
+    if (gap > 0){ a.ly -= gap/2; b.ly += gap/2; }
+  }
+  ends.forEach(e => {
+    const lx = e.x + 12;
+    if (Math.abs(e.ly - e.y) > 2)
+      s += '<line class="leader" x1="'+(e.x+3)+'" y1="'+e.y+'" x2="'+(lx-2)+'" y2="'+e.ly+'"/>';
+    s += '<text x="'+lx+'" y="'+(e.ly+4)+'" class="lbl">'+e.ser.short+' <tspan font-weight="650" fill="var(--ink)">'+
+         e.v.toFixed(2)+'</tspan></text>';
   });
   s += '</svg>';
   $("#ttrend").innerHTML = s;
+  // one tooltip per gameweek, listing both series — projected and, once played, realised
+  const f2 = v => v===null||v===undefined ? "—" : (+v).toFixed(2);
+  hoverColumns($("#ttrend"), xs.map((i,j) => {
+    const opp = g.opp ? g.opp[i] : null, h = g.h ? g.h[i] : null;
+    const played = series.some(ser => r[ser.res] && r[ser.res][i] !== null && r[ser.res][i] !== undefined);
+    let html = "<b>GW"+GWS[i]+(opp ? " · "+esc(ab(opp))+" "+(h===1?"(H)":h===0?"(A)":"") : " · no fixture")+"</b>";
+    series.forEach(ser => {
+      html += "<span class='tk' style='background:"+ser.col+"'></span>xG "+ser.short+" <span class='tv'>"+
+              f2(g[ser.k] ? g[ser.k][i] : null)+"</span> projected"+
+              (played ? " · <span class='tv'>"+f2(r[ser.res] ? r[ser.res][i] : null)+"</span> realised" : "")+"<br>";
+    });
+    return {px: X(j), html};
+  }), PT, H-PB);
   const anyRes = series.some(ser => xs.some(i => r[ser.res] && r[ser.res][i] !== null && r[ser.res][i] !== undefined));
   $("#ttrendlegend").innerHTML =
     series.map(ser=>"<span><i style='background:"+ser.col+"'></i>"+esc(ser.name)+" — projected</span>").join("") +
     (anyRes ? "<span><i class='dot' style='background:var(--ink-muted)'></i>dot = realised xG (match played)</span>"
-            : "<span class='muted'>no played fixtures inside this window</span>") +
+            : "<span class='muted'>realised-xG dots appear once a fixture in this window is played</span>") +
     "<span><i style='background:var(--ink-2);height:0;border-top:2px dashed var(--ink-2)'></i>dashed = mean over the window (club, then league)</span>" +
     (runs.length ? "<span><i style='background:var(--pole-good);opacity:.35;height:10px'></i>shaded = 3+ straight weeks above this club's own season average</span>" : "");
 }
@@ -2787,62 +4416,119 @@ function renderSoS(){
   const LAB = {all:"overall opponent quality", att:"opponent defences (what attackers face)",
                def:"opponent attacks (what defenders face)"};
   $("#soscap").innerHTML = "Mean fitted strength of the opponents each club faces over <b>GW" +
-    S.from + "–" + S.to + "</b> — " + LAB[mode] + ". Bars run left (kindest schedule) to right " +
-    "(toughest). This holds the club itself out, so unlike the expected-goals chart above it " +
-    "compares schedules rather than sides. Venue is not folded in; home fixtures are counted " +
-    "separately in the tiles at the top.";
+    S.from + "–" + S.to + "</b> — " + LAB[mode] + ". Bars grow from the <b>league-average " +
+    "schedule</b>: left of the line is kinder than average, right is tougher, and a bar's length " +
+    "is how far from typical that run is. This holds the club itself out, so unlike the " +
+    "expected-goals chart above it compares schedules rather than sides. Venue is not folded " +
+    "in; home fixtures are counted separately in the tiles at the top.";
   const rows = D.teams.map(t => ({t, v: sosRaw(t, mode), h: homeCount(t)}))
                       .filter(r => r.v !== null).sort((a,b) => a.v - b.v);
   if(!rows.length){ $("#soschart").innerHTML = "<p class='muted'>No opponent-strength data.</p>"; return; }
-  const W=760, rowH=20, PT=8, PL=104, PR=58, H=PT+rows.length*rowH+26;
-  const lo=Math.min(...rows.map(r=>r.v)), hi=Math.max(...rows.map(r=>r.v));
-  const X = v => PL + (v-lo)/((hi-lo)||1)*(W-PL-PR);
+  /* DIVERGING FROM THE AVERAGE. The bars used to start at the kindest club's value, so
+     bar length was v − min: the kindest schedule always drew as a 2px stub, and every
+     other bar's length depended on which club happened to be kindest. Opponent strength
+     is a centred log-scale quantity with no natural zero, so the honest baseline is the
+     average of the twenty schedules being compared, and the bar is the deviation. */
+  const avg = rows.reduce((a, r) => a + r.v, 0) / rows.length;
+  rows.forEach(r => { r.d = r.v - avg; });
+  const W=760, rowH=22, PT=22, PL=112, PR=10, LBL=50, H=PT+rows.length*rowH+24;
+  const lo=Math.min(0, ...rows.map(r=>r.d)), hi=Math.max(0, ...rows.map(r=>r.d));
+  const X = d => PL + LBL + (d-lo)/((hi-lo)||1)*(W-PL-PR-2*LBL);
+  const xb = X(0);
+  const sd = v => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(3);
   let s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="'+H+'" role="img" aria-label="Strength of schedule by club">';
   rows.forEach((r,j)=>{
-    const y=PT+j*rowH, sel=r.t===S.team;
-    const w=Math.max(2, X(r.v)-PL);
-    s+='<text x="'+(PL-8)+'" y="'+(y+13)+'" text-anchor="end" class="ax"'+
-       (sel?' fill="var(--s2)" font-weight="700"':'')+'>'+esc(r.t)+'</text>';
-    s+='<rect x="'+PL+'" y="'+(y+3)+'" width="'+w+'" height="'+(rowH-8)+'" rx="4" fill="'+
-       (sel?"var(--s2)":"var(--s1)")+'" fill-opacity="'+(sel?1:0.28)+'"><title>'+
-       esc(r.t+" — mean opponent strength "+r.v.toFixed(3)+", "+r.h+" of "+WIDX.length+" at home")+
-       '</title></rect>';
-    s+='<text x="'+(PL+w+7)+'" y="'+(y+13)+'" class="ax"'+(sel?' fill="var(--s2)" font-weight="700"':'')+'>'+
-       r.v.toFixed(3)+'</text>';
+    const y=PT+j*rowH, sel=r.t===S.team, xt=X(r.d);
+    s+='<g class="hrow" data-i="'+j+'">';
+    s+='<rect class="hit" x="0" y="'+y+'" width="'+W+'" height="'+rowH+'" rx="4"/>';
+    s+='<text x="'+(PL-8)+'" y="'+(y+15)+'" text-anchor="end" class="lbl'+(sel?' hi':'')+'">'+esc(r.t)+'</text>';
+    s+='<path d="'+hbarPath(xb, xt, y+5, rowH-10, 4)+'" fill="'+(sel?"var(--s2)":"var(--s1)")+
+       '" fill-opacity="'+(sel?1:0.35)+'"/>';
+    const right = r.d >= 0;
+    s+='<text x="'+(right ? xt+6 : xt-6)+'" y="'+(y+15)+'" text-anchor="'+(right?"start":"end")+
+       '" class="lbl'+(sel?' hi':'')+'">'+sd(r.d)+'</text>';
+    s+='</g>';
   });
-  s+='<text x="'+PL+'" y="'+(H-6)+'" class="ax">← kindest schedule</text>';
-  s+='<text x="'+(W-PR)+'" y="'+(H-6)+'" text-anchor="end" class="ax">toughest →</text>';
+  s+='<line x1="'+xb+'" y1="'+(PT-4)+'" x2="'+xb+'" y2="'+(PT+rows.length*rowH+2)+'" class="refline"/>';
+  s+='<text x="'+xb+'" y="'+(PT-9)+'" text-anchor="middle" class="ax">'+rows.length+'-club average · '+avg.toFixed(3)+'</text>';
+  s+='<text x="'+(xb-8)+'" y="'+(H-6)+'" text-anchor="end" class="ax">← kinder than average</text>';
+  s+='<text x="'+(xb+8)+'" y="'+(H-6)+'" class="ax">tougher than average →</text>';
   s+='</svg>';
   $("#soschart").innerHTML=s;
+  hoverRows($("#soschart"), j => { const r = rows[j];
+    return "<b>"+esc(r.t)+" · #"+(j+1)+" of "+rows.length+" (1 = kindest)</b>"+
+      "mean opponent strength <span class='tv'>"+r.v.toFixed(3)+"</span><br>"+
+      "<span class='tv'>"+sd(r.d)+"</span> vs the "+rows.length+"-club average<br>"+
+      r.h+" of "+WIDX.length+" at home"; });
 }
 
 function renderScatter(){
   if(!HASTEAM){ $("#tscatter").innerHTML = "<p class='muted'>Needs team_projections_season.csv.</p>"; return; }
-  const W=760,H=380,PL=52,PR=20,PT=16,PB=42;
+  const W=760,H=400,PL=52,PR=20,PT=16,PB=44;
   const pts = D.teams.map(t=>({t, x:(TM[t]||{}).def_strength, y:(TM[t]||{}).att_strength}))
     .filter(p=>p.x!==null&&p.x!==undefined&&p.y!==null&&p.y!==undefined);
   if(!pts.length){ $("#tscatter").innerHTML="<p class='muted'>No strength data.</p>"; return; }
   const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y);
-  const pad=(a)=>{const lo=Math.min(...a),hi=Math.max(...a),d=(hi-lo)*0.12||0.1;return [lo-d,hi+d];};
-  const [x0,x1]=pad(xs),[y0,y1]=pad(ys);
+  const pad=(a)=>{const lo=Math.min(...a),hi=Math.max(...a),d=(hi-lo)*0.08||0.1;return [lo-d,hi+d];};
+  const ax=niceTicks(...pad(xs), 6), ay=niceTicks(...pad(ys), 5);
+  const x0=ax.lo, x1=ax.hi, y0=ay.lo, y1=ay.hi;
   const X=v=>PL+(v-x0)/((x1-x0)||1)*(W-PL-PR);
   const Y=v=>H-PB-(v-y0)/((y1-y0)||1)*(H-PT-PB);
   let s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="'+H+'" role="img" aria-label="Attack against defence strength">';
-  for(let k=0;k<=4;k++){ const y=PT+k*(H-PT-PB)/4; s+='<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" class="gl"/>'; }
-  const mx=(x0+x1)/2, my=(y0+y1)/2;
-  s+='<line x1="'+X(mx)+'" y1="'+PT+'" x2="'+X(mx)+'" y2="'+(H-PB)+'" class="axline"/>';
-  s+='<line x1="'+PL+'" y1="'+Y(my)+'" x2="'+(W-PR)+'" y2="'+Y(my)+'" class="axline"/>';
-  pts.forEach(p=>{
-    const sel = p.t===S.team;
-    s+='<circle cx="'+X(p.x)+'" cy="'+Y(p.y)+'" r="'+(sel?7:5)+'" fill="'+(sel?"var(--s2)":"var(--s1)")+
-       '" fill-opacity="'+(sel?1:0.72)+'" stroke="var(--surface)" stroke-width="2"><title>'+
-       esc(p.t+" — attack "+p.y.toFixed(3)+", defence "+p.x.toFixed(3))+'</title></circle>';
-    s+='<text x="'+(X(p.x)+9)+'" y="'+(Y(p.y)+3.5)+'" class="ax"'+(sel?' fill="var(--s2)" font-weight="700"':'')+'>'+esc(ab(p.t))+'</text>';
+  // Gridlines on round values, both axes, so a position can be read as a number at all —
+  // the old chart had four unlabelled horizontal lines and no scale on either axis.
+  ay.ticks.forEach(v=>{ const y=Y(v);
+    s+='<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" class="gl"/>';
+    s+='<text x="'+(PL-7)+'" y="'+(y+3.5)+'" text-anchor="end" class="ax">'+ay.fmt(v)+'</text>'; });
+  ax.ticks.forEach(v=>{ const x=X(v);
+    s+='<line x1="'+x+'" y1="'+PT+'" x2="'+x+'" y2="'+(H-PB)+'" class="gl"/>';
+    s+='<text x="'+x+'" y="'+(H-PB+15)+'" text-anchor="middle" class="ax">'+ax.fmt(v)+'</text>'; });
+  /* THE CROSSHAIRS ARE THE LEAGUE AVERAGE. They were drawn at the midpoint of the padded
+     axis range, which is a property of the chart's margins, not of the league: a club
+     could sit in the "better attack" half while being below the average attack. Drawn at
+     the mean of the clubs plotted, each quadrant now means what its corner label says. */
+  const mx=xs.reduce((a,b)=>a+b,0)/xs.length, my=ys.reduce((a,b)=>a+b,0)/ys.length;
+  s+='<line x1="'+X(mx)+'" y1="'+PT+'" x2="'+X(mx)+'" y2="'+(H-PB)+'" class="refline"/>';
+  s+='<line x1="'+PL+'" y1="'+Y(my)+'" x2="'+(W-PR)+'" y2="'+Y(my)+'" class="refline"/>';
+  pts.forEach(p=>{ p.sel=p.t===S.team; p.px=X(p.x); p.py=Y(p.y); p.r=p.sel?7:5; });
+  const obs = pts.map(p=>({x:p.px, y:p.py, r:p.r, p}));
+  /* Quadrant names, in the corners, only where no club sits under them. */
+  const quad = [["better attack · weaker defence", PL+6, PT+12, "start"],
+                ["better attack · better defence", W-PR-6, PT+12, "end"],
+                ["weaker attack · weaker defence", PL+6, H-PB-6, "start"],
+                ["weaker attack · better defence", W-PR-6, H-PB-6, "end"]];
+  const reserved = [];
+  quad.forEach(([txt, x, y, anc]) => {
+    const w = textW(txt, 10.5), x0r = anc==="end" ? x-w : x;
+    const r = {x0:x0r, x1:x0r+w, y0:y-10, y1:y+2};
+    if (obs.some(o => o.x+o.r > r.x0 && o.x-o.r < r.x1 && o.y+o.r > r.y0 && o.y-o.r < r.y1)) return;
+    reserved.push(r);
+    s+='<text x="'+x+'" y="'+y+'" text-anchor="'+anc+'" class="ax halo" font-style="italic">'+txt+'</text>';
   });
+  { const w = textW("league average", 10.5), r = {x0:X(mx)+4, x1:X(mx)+4+w, y0:H-PB-16, y1:H-PB-2};
+    if (!reserved.some(q => q.x0 < r.x1 && q.x1 > r.x0 && q.y0 < r.y1 && q.y1 > r.y0)){
+      reserved.push(r);
+      s+='<text x="'+(X(mx)+4)+'" y="'+(H-PB-6)+'" class="ax halo">league average</text>'; } }
+  [...pts.filter(p=>!p.sel), ...pts.filter(p=>p.sel)].forEach(p=>{
+    s+='<circle cx="'+p.px+'" cy="'+p.py+'" r="'+p.r+'" fill="'+(p.sel?"var(--s2)":"var(--s1)")+
+       '" fill-opacity="'+(p.sel?1:0.72)+'" stroke="var(--surface)" stroke-width="2"/>';
+  });
+  // the selected club claims its label first, then the outliers, which have the room
+  const cands = [...pts].sort((a,b)=>(b.sel-a.sel) ||
+      (Math.hypot(b.px-X(mx),b.py-Y(my)) - Math.hypot(a.px-X(mx),a.py-Y(my))))
+    .map(p=>({x:p.px, y:p.py, r:p.r, text:ab(p.t), bold:p.sel, src:obs.find(o=>o.p===p)}));
+  const placed = placeLabels(cands, obs, {x0:PL+2, x1:W-PR-2, y0:PT, y1:H-PB-2}, reserved);
+  s+=placed.svg;
   s+='<text x="'+((PL+W-PR)/2)+'" y="'+(H-8)+'" text-anchor="middle" class="ax">Defence strength →</text>';
   s+='<text transform="translate(14,'+((PT+H-PB)/2)+') rotate(-90)" text-anchor="middle" class="ax">Attack strength →</text>';
   s+='</svg>';
-  $("#tscatter").innerHTML=s;
+  $("#tscatter").innerHTML=s + (placed.dropped.length
+    ? "<div class='chartlegend'><span class='muted'>No room to label " +
+      placed.dropped.map(c=>esc(c.text)).join(", ") + " — hover a dot for any club.</span></div>" : "");
+  hoverNearest($("#tscatter"), pts, p => { const m = TM[p.t] || {};
+    return "<b>"+esc(p.t)+"</b>attack <span class='tv'>"+p.y.toFixed(3)+"</span>"+
+      (m.att_rank ? " (#"+m.att_rank+")" : "")+"<br>defence <span class='tv'>"+p.x.toFixed(3)+"</span>"+
+      (m.def_rank ? " (#"+m.def_rank+")" : "")+"<br><span class='muted'>click a club card above to select it</span>"; });
 }
 
 /* ======================= controls ======================= */
@@ -2944,7 +4630,7 @@ function render(){
   DISTC = {};
   $("#wcount").textContent = "GW"+S.from+"–"+S.to+" · "+WIDX.length+" gameweek"+(WIDX.length===1?"":"s");
   POPCACHE = {};
-  if(S.tab==="players"){ renderTable(); renderProfile(); }
+  if(S.tab==="players"){ renderCaptaincy(); renderTable(); renderProfile(); }
   else if(S.tab==="fixtures") renderFixtures();
   else if(S.tab==="shortlist") renderShortlist();
   else if(S.tab==="squad"){ renderSquad(); renderNotebook(); }
@@ -3005,16 +4691,22 @@ $("#tbl tbody").onclick=e=>{
   if(lk!==undefined){ const c=+lk;
     S.locked.has(c)?S.locked.delete(c):S.locked.add(c);
     if(S.locked.has(c)) S.banned.delete(c);      // a player cannot be both
-    saveMarks(S); renderTable(); return; }
+    // a lock is an input to the captaincy enumeration as well as the defender one
+    saveMarks(S); renderCaptaincy(); renderTable(); return; }
   const bn=e.target.dataset.ban;
   if(bn!==undefined){ const c=+bn;
     S.banned.has(c)?S.banned.delete(c):S.banned.add(c);
     if(S.banned.has(c)) S.locked.delete(c);
-    saveMarks(S); renderTable(); return; }
+    saveMarks(S); renderCaptaincy(); renderTable(); return; }
   const pin=e.target.dataset.pin;
   if(pin!==undefined){ S.pins.has(pin)?S.pins.delete(pin):S.pins.add(pin); renderTable(); renderProfile(); return; }
   const op=e.target.dataset.open;
   if(op!==undefined){ e.preventDefault(); S.focus = (S.focus===op? null : op); renderProfile(); } };
+$("#capbasis").onclick=e=>{ const b=e.target.dataset.cb; if(!b) return; S.capBasis=b;
+  $$("#capbasis button").forEach(x=>x.setAttribute("aria-pressed", String(x.dataset.cb===b)));
+  renderCaptaincy(); renderTable(); };
+$("#capn").onchange=e=>{ S.capN=+e.target.value; renderCaptaincy(); };
+$("#capbadge").onchange=e=>{ S.capBadge=e.target.checked; renderTable(); };
 $("#profmode").onclick=e=>{ const m=e.target.dataset.pm; if(!m) return; S.profMode=m;
   $$("#profmode button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.pm===m))); renderProfile(); };
 $("#fxview").onclick=e=>{ const v=e.target.dataset.fv; if(!v) return; S.fxView=v;
@@ -3036,17 +4728,147 @@ $("#squadbar").onclick=e=>{
 $("#sqhorizon").onchange=e=>{ S.sqHorizon=e.target.value; renderSquad(); };
 $("#sqft").onchange=e=>{ S.sqFT=+e.target.value; renderSquad(); };
 $("#sqhit").oninput=e=>{ S.sqHit=+e.target.value||0; renderSquad(); };
+/* Shortlist + rotation. Every change persists; the candidate filters re-render both
+   halves of the tab, the rotation-only ones just the table and the active-filter bar. */
+const slChanged  = () => { saveShortlist(); renderShortlist(); };
+const rotChanged = () => { saveShortlist(); renderSlActive(); renderRotation(); };
+// typed numbers wait for a pause: a four-player enumeration per keystroke is felt
+const bindNum = (id, key, then) => { let t = null;
+  $(id).oninput = e => { S[key] = numIn(e.target.value); clearTimeout(t); t = setTimeout(then, 200); }; };
 $("#rotn").onchange=e=>{ S.rotN=+e.target.value;
-  if(S.rotK>=S.rotN) { S.rotK=S.rotN-1; $("#rotk").value=String(S.rotK); }
-  renderRotation(); };
-$("#rotk").onchange=e=>{ S.rotK=+e.target.value; renderRotation(); };
-$("#rotsort").onchange=e=>{ S.rotSort=e.target.value; renderRotation(); };
-$("#rotmax").oninput=e=>{ const v=e.target.value.trim(); S.rotMax = v===""?null:+v; renderRotation(); };
-$("#slpos").onclick=e=>{ const v=e.target.dataset.slp; if(!v) return; S.slPos=v; renderShortlist(); };
-$("#slband").onchange=e=>{ S.slBand=+e.target.value; renderShortlist(); };
-$("#sln").onchange=e=>{ S.slN=+e.target.value; renderShortlist(); };
-$("#slmax").oninput=e=>{ const v=e.target.value.trim(); S.slMax = v===""?null:+v; renderShortlist(); };
-$("#slown").oninput=e=>{ const v=e.target.value.trim(); S.slOwn = v===""?null:+v; renderShortlist(); };
+  if(S.rotK>=S.rotN) S.rotK=S.rotN-1;
+  saveShortlist(); renderSlControls(); renderRotation(); };
+$("#rotk").onchange=e=>{ S.rotK=+e.target.value; rotChanged(); };
+$("#rotsort").onchange=e=>{ S.rotSort=e.target.value; rotChanged(); };
+bindNum("#rotmin", "rotMin", rotChanged);
+bindNum("#rotmax", "rotMax", rotChanged);
+bindNum("#rotparkmax", "rotParkMax", rotChanged);
+bindNum("#rotmingain", "rotMinGain", rotChanged);
+$("#rotclub").onchange=e=>{ S.rotClub=e.target.value; rotChanged(); };
+$("#rotreal").onchange=e=>{ S.rotReal=e.target.checked; rotChanged(); };
+$("#rotpool").onchange=e=>{ S.rotPool=+e.target.value; rotChanged(); };
+$("#rotshow").onchange=e=>{ S.rotShow=+e.target.value; rotChanged(); };
+$("#rotpos").onclick=e=>{ const v=e.target.dataset.rotp; if(!v) return; S.rotPos=v;
+  saveShortlist(); renderSlControls(); renderRotation(); };
+/* Whole-squad rotation. The own/start selects rebuild each other — lowering `own` has to
+   pull `start` down with it, or the page would carry a start count its squad cannot
+   field — so they re-render the slot row rather than just re-running the search. */
+$("#rotmode").onclick=e=>{ const v=e.target.dataset.rm; if(!v||v===S.rotMode) return;
+  S.rotMode=v; saveShortlist(); renderRotation(); };
+$("#sqrotslots").onchange=e=>{
+  const o=e.target.dataset.sqown, k=e.target.dataset.sqstart;
+  if(o){ S.sqOwn[o] = Math.max(1, Math.min(+e.target.value, SL_SQ_MAXOWN[o]));
+         // reset to the maximum rotation, own-1, rather than keeping whatever the last
+         // clamp left: raising `own` back up otherwise leaves a start count you did not
+         // choose, in a search whose answer looks perfectly reasonable
+         S.sqStart[o] = Math.max(1, S.sqOwn[o] - 1); }
+  else if(k){ S.sqStart[k] = Math.max(1, Math.min(+e.target.value, S.sqOwn[k])); }
+  else return;
+  saveShortlist(); renderRotation(); };
+bindNum("#sqbudget", "sqBudget", rotChanged);
+$("#sqperprice").onchange=e=>{ S.sqPerPrice=+e.target.value; rotChanged(); };
+$("#sqshow").onchange=e=>{ S.sqShow=+e.target.value; rotChanged(); };
+$("#slpos").onclick=e=>{ const v=e.target.dataset.slp; if(!v) return; S.slPos=v; slChanged(); };
+$("#slband").onchange=e=>{ S.slBand=+e.target.value; slChanged(); };
+$("#sln").onchange=e=>{ S.slN=+e.target.value; slChanged(); };
+$("#slsort").onchange=e=>{ S.slSort=e.target.value; slChanged(); };
+bindNum("#slmin", "slMin", slChanged);
+bindNum("#slmax", "slMax", slChanged);
+bindNum("#slownmin", "slOwnMin", slChanged);
+bindNum("#slown", "slOwn", slChanged);
+bindNum("#slminpts", "slMinPts", slChanged);
+$("#slsquad").onclick=e=>{ const v=e.target.dataset.sq; if(!v||e.target.disabled) return; S.slSquad=v; slChanged(); };
+$("#slclubcap").onchange=e=>{ S.slClubCap=e.target.checked; slChanged(); };
+const addPriceRange = (lo, hi) => {
+  if (lo === null && hi === null) return false;
+  if (lo === null) lo = hi; if (hi === null) hi = lo;
+  if (lo > hi) [lo, hi] = [hi, lo];
+  lo = Math.round(lo*10)/10; hi = Math.round(hi*10)/10;
+  if (!S.slXRanges.some(r => r[0] === lo && r[1] === hi)) S.slXRanges.push([lo, hi]);
+  S.slXRanges.sort((a, b) => a[0] - b[0]);
+  return true;
+};
+$("#slxadd").onclick=()=>{
+  if (!addPriceRange(numIn($("#slxlo").value), numIn($("#slxhi").value))) return;
+  $("#slxlo").value = ""; $("#slxhi").value = ""; slChanged(); };
+[$("#slxlo"), $("#slxhi")].forEach(el => el.onkeydown = e => { if (e.key === "Enter") $("#slxadd").click(); });
+$("#slxranges").onclick=e=>{ const x=e.target.closest("[data-slxr]"); if(!x) return;
+  S.slXRanges.splice(+x.dataset.slxr, 1); slChanged(); };
+/* A price toggle is a one-point range. Turning one OFF adds [p,p]; turning it back ON has
+   to survive the case where that price is covered by a WIDER typed range, so it splits
+   every range that contains it rather than only deleting an exact match — otherwise the
+   button would light up and change nothing. */
+$("#slxprices").onclick=e=>{
+  if (e.target.id === "slxnone"){ S.slXRanges = []; slChanged(); return; }
+  const x = e.target.closest("[data-slxp]"); if(!x) return;
+  const p = Math.round(+x.dataset.slxp * 10) / 10;
+  if (!slPriceExcluded(p)){ addPriceRange(p, p); slChanged(); return; }
+  const out = [];
+  for (const r of S.slXRanges){
+    if (!(p >= r[0] - 1e-9 && p <= r[1] + 1e-9)){ out.push(r); continue; }
+    // keep whatever of the range lies either side of the price being re-admitted
+    if (r[0] <= p - 0.1 + 1e-9) out.push([r[0], Math.round((p - 0.1) * 10) / 10]);
+    if (r[1] >= p + 0.1 - 1e-9) out.push([Math.round((p + 0.1) * 10) / 10, r[1]]);
+  }
+  S.slXRanges = out.sort((a, b) => a[0] - b[0]);
+  slChanged(); };
+$("#slteams").onclick=e=>{ const x=e.target.closest("[data-slteam]"); if(!x) return;
+  const t=x.dataset.slteam; S.slXTeams.has(t)?S.slXTeams.delete(t):S.slXTeams.add(t); slChanged(); };
+$("#slteamall").onclick=()=>{ S.slXTeams.clear(); slChanged(); };
+$("#slteamnone").onclick=()=>{ S.slXTeams = new Set(D.teams); slChanged(); };
+$("#slteaminv").onclick=()=>{ S.slXTeams = new Set(D.teams.filter(t => !S.slXTeams.has(t))); slChanged(); };
+$("#slbands").onclick=e=>{
+  const xb=e.target.closest("[data-xband]");
+  if(xb){ const [lo,hi]=xb.dataset.xband.split(",").map(Number); addPriceRange(lo,hi); slChanged(); return; }
+  const xt=e.target.closest("[data-xteam]");
+  if(xt){ S.slXTeams.add(xt.dataset.xteam); slChanged(); return; }
+  if(slMarkClick(e)) return;
+};
+/* The marks, wherever they are clicked. Ban and lock are mutually exclusive — a player
+   cannot be both forced into every combination and removed from all of them — so each
+   one clears the other, the rule the Players tab already follows. */
+function slMarkClick(e){
+  const bn = e.target.closest("[data-slban]");
+  if (bn){ const c = +bn.dataset.slban; S.banned.add(c); S.locked.delete(c);
+    saveMarks(S); renderShortlist(); return true; }
+  const lk = e.target.closest("[data-sllock]");
+  if (lk){ const c = +lk.dataset.sllock;
+    if (S.locked.has(c)) S.locked.delete(c); else { S.locked.add(c); S.banned.delete(c); }
+    saveMarks(S); renderShortlist(); return true; }
+  return false;
+}
+$("#rottable").onclick = e => { slMarkClick(e); };
+/* "Clear all" in the active bar clears the FILTERS; how the page is laid out (position,
+   band width, rows, ranking, rotation size) is a view choice and survives it. "Reset
+   filters" puts everything back to the defaults. */
+$("#slactive").onclick=e=>{
+  if(e.target.id==="slclearall"){
+    const keep = {slPos:S.slPos, slBand:S.slBand, slN:S.slN, slSort:S.slSort, rotPos:S.rotPos,
+                  rotN:S.rotN, rotK:S.rotK, rotSort:S.rotSort, rotPool:S.rotPool, rotShow:S.rotShow};
+    slApply(S, null); Object.assign(S, keep);
+    syncShortlistControls(); slChanged(); return; }
+  const x=e.target.closest("[data-slclear]"); if(!x) return;
+  slClear(x.dataset.slclear); syncShortlistControls(); slChanged();
+};
+$("#slreset").onclick=()=>{ slApply(S, null); syncShortlistControls(); slChanged(); };
+const presetStatus = msg => { $("#slpresetstatus").textContent = msg;
+  clearTimeout(presetStatus.t); presetStatus.t = setTimeout(() => $("#slpresetstatus").textContent = "", 2500); };
+$("#slpresetsave").onclick=()=>{
+  const name=$("#slpresetname").value.trim();
+  if(!name){ presetStatus("name the view first"); $("#slpresetname").focus(); return; }
+  const P=loadPresets(); P[name]=slSnapshot(S);
+  if(!savePresets(P)){ presetStatus("browser storage is unavailable; views cannot be saved"); return; }
+  $("#slpresetname").value=""; renderPresetList(); $("#slpreset").value=name;
+  presetStatus("saved “" + name + "”"); };
+$("#slpresetname").onkeydown=e=>{ if(e.key==="Enter") $("#slpresetsave").click(); };
+$("#slpresetload").onclick=()=>{
+  const name=$("#slpreset").value, P=loadPresets(); if(!name||!P[name]) return;
+  slApply(S, P[name]); syncShortlistControls(); $("#slpreset").value=name; slChanged();
+  presetStatus("loaded “" + name + "”"); };
+$("#slpresetdel").onclick=()=>{
+  const name=$("#slpreset").value, P=loadPresets(); if(!name||!P[name]) return;
+  delete P[name]; savePresets(P); $("#slpreset").value=""; renderPresetList();
+  presetStatus("deleted “" + name + "”"); };
 $("#sosmode").onclick=e=>{ const m=e.target.dataset.sm; if(!m) return; S.sosMode=m;
   $$("#sosmode button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.sm===m))); renderSoS(); };
 $("#theme").onclick=()=>{
@@ -3130,6 +4952,8 @@ document.addEventListener("mouseover", e=>{
 document.addEventListener("mouseout", e=>{ if(e.target.closest("[data-fx]")) hideTip(); });
 
 loadMarks(S);
+loadShortlist(S);
+syncShortlistControls();
 loadNotes();
 $("#ntteam").oninput = e => { NOTES.team = e.target.value; saveNotes(); };
 $("#ntadd").onclick = () => {
@@ -3177,6 +5001,24 @@ $("#ntimport").onchange = e => {
 buildRamps();
 buildControls();
 aggHint();
+/* A basis with nothing behind it is offered as a live control today and quietly ranks
+   every week on the projection while claiming to rank on the tail. If no gameweek's
+   draws reconcile with this board, the button says so and cannot be pressed. */
+(function(){
+  const b = $("#capbasis button[data-cb='haul']");
+  if (!b) return;
+  if (!TAILGWS.length){
+    b.disabled = true;
+    b.title = "No gameweek in this board has a posterior draws dump that reconciles with " +
+      "it, so there is no tail to rank on. DUMP_DRAWS=all python scripts/gw_board.py " +
+      "dumps every gameweek; the default dumps only the one being picked for.";
+    b.textContent = "P(haul) — none";
+  } else {
+    b.title = "Rank on P(>=10 raw points) from this board's own draws. Available for GW" +
+      TAILGWS.join(", GW") + "; every other week falls back to the projection and is " +
+      "labelled on its row.";
+  }
+})();
 setTab("players");
 </script>
 </body>
