@@ -865,6 +865,79 @@ that decides *what counts as a played gameweek*:
   machine that already has notes cannot wipe them. Notes on sold players are kept — the
   reasoning for selling is worth as much as the reasoning for holding.
 
+## fpl.page moved to RSC, 18 Sep 2026 — the team-news channel was dark, and said nothing
+`fpl.page` now ships the predicted-lineups article from a Next.js App Router build, which
+streams it as a React Server Components **flight payload** inside a single
+`self.__next_f.push([1, "..."])`. The club headings `fplpage.parse_blocks` keys on are no
+longer `<h2>` tags — they are not tags at all, but JSON element nodes:
+`["$","p",null,{"children":[["$","strong",null,{"children":"CHELSEA"}],": (80%)"]}]`.
+Exactly one real `<h2>` survives in the served markup: the publication date.
+
+**The failure was silent, which is what made it expensive.** `parse_blocks` found that one
+heading, classified it as the date, and returned ZERO clubs; `scrape` reported
+`0/0 clubs accepted` and exited 0. `lock_board` reads "no predicted-XI source" as "the
+preview is not published yet", waits, and at `LAST_CHANCE_H` locks without team news and
+says so — correctly, for the wrong reason. The module's own docstring is built around not
+trusting a near-miss scrape; nothing was built around the scrape returning nothing at all.
+
+How long it had been dark [VERIFIED]: GW5's deadline lock carries `team_news_sources = 0`,
+and GW4's lock predates that column entirely. Neither carried a predicted XI.
+
+**The fix** (`src/fplpage.py`). The payload is line-oriented JSON — `<hexid>:<element-json>`
+— so it is parsed rather than regexed, and each element tree is rendered back into the HTML
+shape the rest of the module already handles. Three choices worth recording:
+
+1. The legacy path runs FIRST and is untouched, so an article served as plain HTML — every
+   fixture in the selftest — parses exactly as it did. The flight path fires only when the
+   served markup yields no clubs, which costs one wasted parse on a genuinely empty stub.
+2. Club headings are promoted **structurally** — a paragraph that is one ALL-CAPS `<strong>`
+   and nothing else but an optional confidence figure — not against a whitelist of club
+   names. A spelling `CLUB_NORM` does not know must still produce a block and get `.title()`d
+   as it always did, rather than vanish.
+3. The publication date is carried across from the served markup. Without it `as_of` is
+   None and `predicted_xi` falls back to the file's mtime, which dates the SCRAPE rather
+   than the preview and so mis-weights the source through `source_weight`.
+
+The selftest asserts both paths on the same fixtures, that a prose paragraph is never
+promoted to a club heading, and that an article with no clubs returns `[]` rather than
+raising. Harness green afterwards: 39/39 selftests, 7/7 acceptance, 10/10 board invariants.
+
+**Live on GW5**: 14 club blocks, 13 accepted, 143 players; Liverpool rejected for having no
+graphic in its block yet. The article was half-published — alphabetical through Liverpool,
+so Man City, Man United, Newcastle, Nott'm Forest, Sunderland and Tottenham had no XI at
+all. That is the article's state and not a parse failure: a re-scrape 18h later returned
+the same 13 clubs. Haaland therefore went into GW5 with no team news against him.
+
+**Board effect, GW5** [VERIFIED]: mean |delta| 0.192 pts over 659 players against the
+morning's lock, 71 players moved more than 0.5. The predicted XI's own contribution is the
+`p_start_prior -> p_start_prior_predxi` shift: Welbeck 0.297 -> 0.802 (named), João Pedro
+0.629 -> 0.515 (omitted, with Welbeck named ahead of him).
+
+### The open question this surfaced, deliberately not answered here
+`OMIT_CONFIDENCE = 0.35` is calibrated for an UNEXPLAINED omission — the Saka/Guéhi case
+the module documents, where a player is simply absent from one outlet's XI and pinning him
+to 0.01 would delete a large projection on one editor's judgment. GW5 was not that case.
+The source named João Pedro in its ⚠️ doubts line, wrote prose about it ("It doesn't sound
+like Joao Pedro will make this one"), omitted him from the XI, and the FPL feed
+independently carried him at `chance_play = 0.75`. Three consistent signals were treated as
+one editorial silence, and `apply_injury_ceiling` did nothing because 0.515 already sits
+below the 0.75 ceiling. **A 51.5% start prior on a 74.4%-owned player was the largest single
+soft spot this board carried into a deadline.** [JUDGMENT]
+
+Not changed here. Raising `OMIT_CONFIDENCE`, or conditioning it on whether the source also
+names the player as a doubt, is a modelling change that needs its own out-of-sample rule
+fixed before the result is seen — not a side effect of repairing a scraper. The same applies
+to the per-player start-probability `band` / `p_band` the graphic carries and this module
+already writes but does not wire into the priors.
+
+### What it cost, recorded so it is not re-learned
+GW5's board WITH team news was rebuilt 2026-09-18 16:40 UTC, ~50 minutes inside the 17:30
+deadline, and was never locked — the machine slept before the downstream exports finished.
+`score_gw._locked()` will therefore score the 07:11 lock, which carries none of it.
+`lock_board` refuses post-deadline locks and `--force-late` renames its output
+`_LATE_not_a_prediction`; the repo has no convention for "computed in time, locked late",
+and one was not invented after the fact to flatter the record.
+
 ## Verified, no change needed
 - 26/27 position reclassifications are correct in the frame (Wieffer DEF, Sessegnon DEF,
   Lewis-Skelly MID); `DEFCON_THRESHOLD` keys off `pos` — no stale-position scoring bug.
