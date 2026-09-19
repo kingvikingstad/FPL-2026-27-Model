@@ -130,6 +130,7 @@ def _coldstart_row(name, team, pos, price, own, cal, k0=1.5, kstart=4.0):
             "npxgi_alpha": inv90 * k0, "npxgi_beta": k0,
             "xa_alpha": xa90 * k0, "xa_beta": k0,
             "defcon_alpha": dc90 * k0, "defcon_beta": k0,
+            "defcon_prior_alpha": dc90 * k0,        # all prior: no club evidence
             "start_a": start * kstart, "start_b": (1 - start) * kstart,
             "sub_app_rate": c["subrate"], "cold_start": True}
 

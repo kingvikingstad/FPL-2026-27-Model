@@ -184,10 +184,8 @@ The referee's verdict was that the board path is sound and the study record carr
   market gate cannot test. It needs a within-player negative-binomial dispersion for DEF
   CBIT and a held-out calibration by shrunk-rate band (fit GW1-19, score GW20-38). The −21%
   board headline passes through this composition.
-- **`defcon_env` on prior-only players** `[JUDGMENT]`, pre-existing, widened by the
-  exposure fix. The whole alpha (prior plus evidence) is scaled by
-  xGA_27[club] / xGA_25/26[club]. For the 22 January arrivals whose 25/26 DefCon is all
-  null, the pooled prior should be referenced to league xGA, not the 25/26 club's.
+- **`defcon_env` on prior-only players** — split implemented 2026-09-16 but **HELD, not
+  validated**: the stats-referee showed it amplifies an unfitted DEF xGA beta (§7.1).
 - **Backfill the null rows from FPL's official value.** Optional and lossless: 275 of 293
   rows are joinable through the audit's own join, and the January arrivals would stop
   falling to the prior.
@@ -209,3 +207,84 @@ The referee's verdict was that the board path is sound and the study record carr
 - `src/pms_priors.py` has no consumer. Only its column name was updated.
 - A GK's DefCon gamma is still drawn (and consumes RNG) although it can never pay. This
   is harmless, but it is why a DefCon-only change moves GK rows by MC noise.
+
+## 7. `defcon_env` references each share of alpha to where it was measured (2026-09-16)
+
+**Status: HELD — do not merge as a validated correction.** See §7.1.
+
+**The bias** `[DERIVED]`. `apply_defcon_environment` scaled the whole DefCon alpha by
+xGA_27[club] / xGA_25/26[25/26 club] (press: the same ratio of `press_factor`). Alpha is
+prior plus evidence. The evidence was produced at the 25/26 club; the prior (a pooled,
+role, position, re-listed or cold-start price-calibrated rate) was pooled over the
+league. Referencing the prior to one club over-credits it at a club that conceded less
+than average and under-credits it at one that conceded more, by the full club/league
+ratio for a player who is all prior. Players with no 25/26 club already used the league
+reference, so two identical priors got different factors depending on whether FPL had
+ever listed the player at a PL club.
+
+**The fix.** `to_priors` and `roster._coldstart_row` carry `defcon_prior_alpha`
+(= prior rate x k0). `defcon_env` scales that share by xGA_27[club] / mean xGA_25/26 and
+`press_factor^beta` (the league press factor is 1 by construction), and the remainder by
+the club ratio as before; each factor is clipped separately. A frame without the column
+raises instead of reverting to whole-alpha scaling. Selftest: a pure prior with a known
+high-xGA club equals the same prior with no club; pure evidence at an unchanged club is
+unchanged; mixed, press and per-share clip cases.
+
+**Scope is wider than the January arrivals.** The same bias applied to every prior share:
+40 DEF in `ms_priors` whose 25/26 DefCon is all null, the prior share of every established
+player (board DEF not on a cold start: median 17%, upper quartile 29%), and 111 cold-start rows that FPL had listed at a 25/26
+PL club (e.g. Mfuni, listed at Man City, now Coventry: 1.88/1.16 clipped to 1.6 -> 1.33).
+
+**Board A/B** `[VERIFIED]`, same seed, `LIVE_FPL=off`, model `mean`, GW1-38 (next GW 5):
+- `ms_priors` identical in every existing column; only `defcon_prior_alpha` is new.
+- Isolation: 0 players whose `mean` moved without `defcon_ev` moving; GK bit-identical.
+- `defcon_ev` per GW, GW1-6: DEF 0.2439 -> 0.2404 (-1.4%), MID 0.0972 -> 0.0984,
+  FWD 0.0040 -> 0.0042. Whole-board GW1-6 total rank rho 0.9998, top-50 50/50; DEF rho
+  0.9996, top-20 20/20. New/old factor: DEF median 1.000, range 0.82-1.11.
+- Movers, GW1-6 points: Gabriel -0.63, Mfuni -0.57, White -0.44, Vuskovic -0.41, Hincapie
+  -0.34 (Arsenal's prior shares were referenced to xGA 0.75); Yalcouye +0.30, A.Garcia
+  +0.24, Cook +0.21, Branthwaite +0.20. Disasi +0.03 (factor 0.92 -> 1.02; he barely plays).
+- Level check: mean 26/27 projected xGA 1.457 against the 25/26 league 1.414 is
+  composition (three promoted for three relegated); on the 17 common clubs it is
+  1.348 -> 1.355. The evidence ratio carries the same level, so no new shift.
+
+**Still `[JUDGMENT]`.** The league reference is the unweighted club mean of xGA, while
+`RATE_DEF_POOLED` pools appearances (minutes-weighted). The evidence reference is the
+player's end-of-season 25/26 club; a January mover with measured DefCon at two clubs is
+referenced to one. Both pre-existing in kind.
+
+### 7.1 Stats-referee pass (2026-09-16): biased as shipped
+
+The split is the right *form*, and the A/B verifies the *implementation*: nothing moves
+except `defcon_ev`. Nothing in it shows the new numbers are *accurate*. What decides that
+is an elasticity that was never fitted:
+
+- **`XGA_BETA["DEF"] = 1.0` is a judgment (regime handoff §4.2), and the data the prior
+  was pooled from contradict it** `[VERIFIED, reproduced]`. On `studies/defcon_matchups.csv`
+  (2,934 DEF appearances of 60+ minutes), the club CBIT rate regressed on log 25/26 club xGA
+  (weighted by exposure) gives beta **0.174**, club bootstrap 95% CI **(-0.002, 0.488)**, and
+  **0.221** after adjusting for the CB/FB mix. The rate at Arsenal (xGA 0.75) is 7.04
+  against 7.68 pooled. beta=1 predicts 4.1.
+- Before the split, beta only acted on club *movers*: a player who stayed had a factor of
+  about 1. The split applies it to every prior share as a cross-club elasticity. For
+  Arsenal the prior-share error goes from about +17% (old) to **-32%** (new, clipped at
+  0.6). It is larger and has changed sign, so the headline movers (Gabriel, White,
+  Hincapie) are mostly over-steep beta, not a corrected bias. The prior clip binds on 21 of
+  215 DEF rows (Arsenal 8, Hull 13). Movers' evidence share was already over-scaled by
+  the same beta.
+- **Press league reference is not 1** `[VERIFIED]`. The mean of `press_factor` over the 20
+  PPDA_2526 clubs is 1.0234 (1.0117 after the square root), so MID/FWD prior shares sit about
+  1.2% high. Fix: divide by the empirical club mean, as DEF does.
+- xGA denominator `[VERIFIED]`: unweighted 1.4142 against 1.4195 exposure-weighted (CB
+  1.4114, FB 1.4298). Negligible. Including relegated clubs is right.
+- Splitting alpha against the exact form r27*(a0+c)/(k0+m*r26) `[DERIVED]`: median
+  difference +0.02% for regulars. The large gaps come from the clip, not the split.
+- Cold-start `dc90` is an unweighted mean over players with 450+ minutes, not
+  price-calibrated. Its seasons are `[CHECK]`. MID 8.4 / FWD 4.7 have no recorded source.
+
+**What turns this into a validated correction.** First a pre-registered fit of DEF beta:
+a Poisson GLM `dc ~ role FE + beta*log(xGA_club)`, offset log(mins_dc/90), SEs clustered by
+club, plus a within-player version and a planted-beta simulation (0.2, 1.0) on real
+exposures. The decision rule is fixed before the fit. Then the press reference fix, then a
+same-seed A/B, scored on 26/27 GW1-4 DEF CBIT by club tercile. If beta refits near 0.2,
+the split is the correct estimator and its board effect shrinks by roughly 5x.
