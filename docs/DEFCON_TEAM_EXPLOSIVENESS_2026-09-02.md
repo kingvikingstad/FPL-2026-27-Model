@@ -1,5 +1,13 @@
 # DefCon by team and matchup, and team explosiveness — 2 Sep 2026
 
+> **DefCon numbers below are SUPERSEDED (2026-09-10)** — measured on an upstream column
+> that counted recoveries for defenders in GW2-10, and with a row-level permutation null
+> and EB shrink that ignored a club-match's shared shock. Corrected: the opponent rating
+> still ships, narrowly and display-only (split-half r=+0.526 vs the 0.5 gate; swing
+> 0.142); the matchup null is re-founded on a block permutation null plus repeatability
+> (r=+0.005) — both legs recorded below were faulty. The explosiveness results are
+> unaffected. See [DEFCON_SOURCE_CORRECTION_2026-09-10](DEFCON_SOURCE_CORRECTION_2026-09-10.md).
+
 *`studies/defcon_team_matchups.py`, `studies/team_explosiveness_study.py`,
 `src/defcon_team.py`, `src/team_explosiveness.py`. Both pre-registered in their module
 docstrings before any coefficient was read.*

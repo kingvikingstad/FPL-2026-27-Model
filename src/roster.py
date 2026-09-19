@@ -82,8 +82,13 @@ def calibrate_cold_start(hist_csv=config.FPL_DATA_STATS,
                          min_minutes=450):
     d = pd.read_csv(hist_csv)
     d["pos"] = d.element_type.map({1: "GK", 2: "DEF", 3: "MID", 4: "FWD"})
+    # DefCon exposure: `minutes_dc` (minutes whose DefCon was measured) when the input
+    # carries it, as coldstart_hist.csv does; the legacy fpl-data-stats schema has only
+    # `minutes`, and falls back to it.
+    if "minutes_dc" not in d.columns:
+        d["minutes_dc"] = d["minutes"]
     ag = d.groupby(["id", "pos"]).agg(
-        minutes=("minutes", "sum"),
+        minutes=("minutes", "sum"), minutes_dc=("minutes_dc", "sum"),
         npxgi=("non_penalty_expected_goal_involvements", "sum"),
         xa=("expected_assists", "sum"),
         defcon=("defensive_contribution", "sum"),
@@ -92,7 +97,8 @@ def calibrate_cold_start(hist_csv=config.FPL_DATA_STATS,
         games=("minutes", "size"), price=("now_cost", "last")).reset_index()
     ag = ag[ag.minutes >= min_minutes]
     nnf = ag.minutes / 90.0
-    ag["inv90"] = ag.npxgi / nnf; ag["xa90"] = ag.xa / nnf; ag["dc90"] = ag.defcon / nnf
+    ag["inv90"] = ag.npxgi / nnf; ag["xa90"] = ag.xa / nnf
+    ag["dc90"] = ag.defcon / (ag.minutes_dc / 90.0).where(ag.minutes_dc > 0)
     ag["startrate"] = ag.starts / ag.games
     ag["subrate"] = (ag.apps - ag.starts).clip(lower=0) / ag.games
     cal = {}

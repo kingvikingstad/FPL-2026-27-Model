@@ -24,7 +24,9 @@ Env: GW_HI (default 38 = full season), SOLIO_W_OURS (default 0.5), SOLIO=off, MA
      SOLIO_MARKET_GW, XI_CONSTRAINT=off,
      FPL_SETPIECE=fpl|override|fill|observed (default fpl; `observed` is the
        unshrunk n=1 channel withdrawn on 2026-09-08 — see the note at its use),
-     INJURY_IMPACT=on (default off), TEAM_OVERRIDES=on (default off).
+     INJURY_IMPACT=on (default off), TEAM_OVERRIDES=on (default off),
+     FPL_DEFCON_FRAILTY=on (default off; per-match DefCon overdispersion for DEF,
+       read in src/defcon_frailty.py — see docs/DEFCON_THRESHOLD_CALIBRATION_2026-09-17.md).
 
 INSEASON: fold 26/27 results back into the priors — realised starts into the Beta
 minutes prior, and finished matches' xG (not scorelines) into the team model's E0
@@ -176,6 +178,9 @@ _INSEASON = _flag("INSEASON", "on", on_values=("on", "1", "true"))
 # happened when these two were first added and INSEASON=off. The banner caught it, which
 # is what it is for; the fix is to resolve here and act below.
 _EXP_MINUTES = _flag("INSEASON_EXP_MINUTES", "off", on_values=("on", "1", "true"))
+# Read inside bayes_model (defcon_frailty.enabled), resolved here ONLY so the banner reports it:
+# a board with per-match DefCon overdispersion switched on must not look like a default one.
+_flag("FPL_DEFCON_FRAILTY", "off", on_values=("on", "1", "true", "yes"))
 # ON BY DEFAULT since 2026-09-17. It shipped off because only the ratio w/kappa was
 # identified on the stand-in prior the calibration used. Both halves are now closed:
 # studies/start_prior_production.py re-fits on a replica of the INSTALLED prior (the cap

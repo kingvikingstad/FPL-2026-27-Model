@@ -33,7 +33,7 @@ agg = p.groupby(["player_id", "web_name", "pos", "team", "gameweek"], dropna=Fal
     mins=("mins", "sum"), npxg=("npxg", "sum"), xa=("xa_", "sum"), xgot=("xgot_", "sum"),
     np_goals=("np_goals", "sum"), assists=("assists", "sum"), shots=("total_shots", "sum"),
     sot=("shots_on_target", "sum"), tob=("tob", "sum"), cc=("chances_created", "sum"),
-    bcm=("big_chances_missed", "sum"), defcon=("defcon_raw", "sum"),
+    bcm=("big_chances_missed", "sum"), defcon=("defcon_fpl", "sum"),
     cbi=("cbi", "sum"), pts=("total_points", "first"),
 ).reset_index()
 

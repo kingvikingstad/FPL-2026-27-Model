@@ -27,6 +27,7 @@ import numpy as np, pandas as pd
 import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
 from multiseason import build_2425_panel
 import defcon_roles as dcr
+import defcon_series as dcs
 
 BASE = config.REPO
 
@@ -38,9 +39,24 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
     p25 = pd.read_pickle(config.PMS_PANEL)
     codes25 = pd.read_csv(f"{BASE}/2025-2026/players.csv")[["player_id", "player_code"]]
     p25 = p25.merge(codes25, on="player_id", how="left")
+    # DefCon evidence under the rule of the position the player is SCORED at in 26/27,
+    # not the one he was listed at in 25/26. Six players are re-listed across the two
+    # rules; without this a 26/27 defender who was a 25/26 midfielder carries CBIRT
+    # (recoveries) into a CBIT threshold — see defcon_series.
+    pos27 = _scoring_positions()
+    p25["pos_scored"] = p25["player_code"].map(pos27).fillna(p25["pos"])
+    p25["defcon_scored"] = dcs.fpl_defcon(p25, p25["pos"], "2025-2026",
+                                          score_pos=p25["pos_scored"])
+    dcs.assert_no_recoveries(p25, p25["defcon_scored"], p25["pos_scored"])
+    # Exposure for DefCon: minutes whose count was MEASURED. 2.4% of 25/26 league minutes
+    # (up to 16% of appearances in a late gameweek) carry every other stat but a null
+    # defensive block; counting them as minutes with no actions is fillna(0) by another
+    # route, and it dilutes exactly the players who played late in the season.
+    p25["mins_dc"] = dcs.exposure(p25["mins"], p25["defcon_scored"])
     a25 = p25.groupby(["player_code", "pos"], dropna=False).agg(
+        pos_scored=("pos_scored", "first"),
         mins=("mins", "sum"), npxg=("npxg", "sum"), xa=("xa_", "sum"),
-        defcon=("defcon_raw", "sum"),
+        defcon=("defcon_scored", "sum"), mins_dc=("mins_dc", "sum"),
         # chances created = the repo's key-pass equivalent, and the EXPOSURE for the
         # assist-quality term. See to_priors and studies/rate_components.py.
         kp=("chances_created", "sum"),
@@ -56,7 +72,7 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
     p24 = build_2425_panel()
     a24 = p24.groupby(["player_code", "pos"], dropna=False).agg(
         mins=("mins", "sum"), npxg=("npxg", "sum"), xa=("xa_", "sum"),
-        defcon=("defcon_raw", "sum"),
+        defcon=("defcon_fpl", "sum"),
         kp=("chances_created", "sum"),
         starts=("mins", lambda s: (s >= 60).sum()), games=("mins", "size"),
         apps=("mins", lambda s: (s > 0).sum()),
@@ -67,18 +83,22 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
     a24["pens"] = 0.0; a24["pens_miss"] = 0.0     # 24/25 lacks the penalty split
 
     # MINUTES THAT CAN ACTUALLY CARRY A DEFCON.
-    # `defensive_contributions` does not exist in 24/25 — the column reads as all zeros,
-    # so a24 contributes 750,949 minutes to the pooled denominator and exactly 0 to the
-    # numerator. Every DefCon rate was therefore diluted by that player's 24/25 share of
-    # minutes: measured r(24/25 share, dilution) = -1.000, i.e. arithmetic, not noise.
-    # Pooled defender rate came out at 6.41 per 90 against a measured 8.36; restricting
-    # the denominator to 25/26 gives 8.40. The other Gamma channels (npxg, xa) are
-    # genuinely present in both seasons and keep the pooled denominator.
-    a25["mins_dc"] = a25["mins"]
+    # `defensive_contributions` does not exist in 24/25 — the column is all NULL, and a
+    # sum over it is 0 — so a24 contributes 750,949 minutes to the pooled denominator and
+    # exactly 0 to the numerator. Every DefCon rate was therefore diluted by that player's
+    # 24/25 share of minutes: measured r(24/25 share, dilution) = -1.000, i.e. arithmetic,
+    # not noise. Pooled defender rate came out at 6.41 per 90; restricting the denominator
+    # to 25/26 gave 8.40 — a figure that was itself ~12% high, because the 25/26 DEF
+    # series it was measured on carried recoveries in GW2-10 (corrected 2026-09-10, see
+    # defcon_series; FPL's official DEF rate for 900+ minute defenders is 7.68).
+    # The other Gamma channels (npxg, xa) are genuinely present in both seasons and keep
+    # the pooled denominator. a25's `mins_dc` is aggregated above and excludes the 25/26
+    # appearances whose defensive block is null, for the same reason.
     a24["mins_dc"] = 0.0
+    a24["pos_scored"] = a24["player_code"].map(pos27).fillna(a24["pos"])
     both = pd.concat([a25, a24], ignore_index=True)
     ev = both.groupby("player_code", dropna=False).agg(
-        pos=("pos", "first"),
+        pos=("pos", "first"), pos_scored=("pos_scored", "first"),
         mins=("mins", "sum"), npxg=("npxg", "sum"), xa=("xa", "sum"),
         defcon=("defcon", "sum"), mins_dc=("mins_dc", "sum"), kp=("kp", "sum"),
         starts=("starts", "sum"),
@@ -89,7 +109,40 @@ def two_season_evidence(older_weight=0.5, min_minutes_total=270):
     ev = ev[ev.mins >= min_minutes_total].copy()
     ev["n_seasons"] = ev.player_code.map(
         both.groupby("player_code").size())
+    # A player re-listed ACROSS the DefCon rules (DEF <-> MID/FWD) is shrunk toward the
+    # pooled rate of the position he PLAYED, counted in the unit he will be PAID in: a
+    # 25/26 defender listed MID in 26/27 toward defenders' CBIRT, a 25/26 midfielder
+    # listed DEF toward midfielders' CBIT. The new label's own pool would be an unfitted
+    # mean-pull on an administrative relabel [stats-referee 2026-09-10: 8.46 vs 11.3 for
+    # DEF->MID, 7.68 vs 4.1 for MID->DEF]. Measured live from this panel, so no constant
+    # can drift from the series. NaN for everyone else, who keeps the usual prior.
+    cross = (ev["pos"].eq("DEF") != ev["pos_scored"].eq("DEF")) & \
+        ev["pos"].isin(["DEF", "MID", "FWD"]) & ev["pos_scored"].isin(["DEF", "MID", "FWD"])
+    rates = {k: _pooled_rate(p25, *k) for k in
+             set(zip(ev.loc[cross, "pos"], ev.loc[cross, "pos_scored"]))}
+    ev["dc_prior_relisted"] = [rates[(a, b)] if c else np.nan for a, b, c in
+                               zip(ev["pos"], ev["pos_scored"], cross)]
     return ev
+
+
+def _pooled_rate(p, evidence_pos, score_pos, min_mins=60):
+    """Pooled DefCon per 90 of `evidence_pos` players' 60+ minute 25/26 appearances,
+    counted under `score_pos`'s rule — the same basis as defcon_roles.RATE_DEF_POOLED."""
+    q = p[(p["pos"] == evidence_pos) & (p["mins"] >= min_mins)]
+    x = dcs.fpl_defcon(q, q["pos"], "2025-2026",
+                       score_pos=pd.Series(score_pos, index=q.index))
+    n90 = dcs.exposure(q["mins"], x).sum() / 90.0
+    return float(x.sum() / n90) if n90 > 0 else np.nan
+
+
+_POS = {"Goalkeeper": "GK", "Defender": "DEF", "Midfielder": "MID", "Forward": "FWD"}
+
+
+def _scoring_positions():
+    """player_code -> the 26/27 FPL position, i.e. the rule a DefCon count is paid on."""
+    p = pd.read_csv(f"{config.repo('2026-2027')}/players.csv")[["player_code", "position"]]
+    p = p.dropna(subset=["player_code"]).drop_duplicates("player_code")
+    return dict(zip(p["player_code"], p["position"].map(_POS)))
 
 
 # Seasons already represented in `two_season_evidence`. Deep history must not
@@ -267,10 +320,11 @@ def to_priors(ev, revert=0.70, k0=3.0, pen_xg=0.79, deep_starts=None):
     # with two appearances would have his noisy rate taken almost at face value. Below the
     # threshold the pooled prior is used, because that is the regime it was fitted for.
     SPLIT_MIN_N90 = 5.0
-    # DEF corrected 7.6 -> 8.590, the measured pooled per-90 rate over 2,934 appearances
-    # (studies/defcon_matchups.csv). The old value sat BELOW the measurement, so every
-    # thin-history defender was shrunk toward a target that was too low before any
-    # question of role arose. GK/MID/FWD are untouched — no equivalent measurement.
+    # DEF is the measured pooled per-90 rate over 2,934 appearances of 60+ minutes
+    # (studies/defcon_matchups.csv), 7.678 under FPL's CBIT rule. It read 8.590 until
+    # 2026-09-10, measured on an upstream column that counted recoveries for defenders in
+    # GW2-10 (defcon_series); the 7.6 it replaced was right all along.
+    # GK/MID/FWD are untouched — no equivalent measurement.
     PRIOR_DC = {"GK": 0.0, "DEF": dcr.RATE_DEF_POOLED, "MID": 8.4, "FWD": 4.7}
     # Centre-back / full-back split, applied ONLY to the DefCon prior mean. `pos` stays
     # DEF everywhere else, so the threshold, clean-sheet and goal multipliers are
@@ -280,6 +334,14 @@ def to_priors(ev, revert=0.70, k0=3.0, pen_xg=0.79, deep_starts=None):
     for _, r in ev.iterrows():
         n90 = r.mins / 90.0
         pos = r.pos if r.pos in PRIOR_INV else "MID"
+        # The DefCon prior mean must be in the unit the evidence was counted in — CBIT for
+        # a 26/27 defender, CBIRT otherwise (two_season_evidence). For the few players
+        # re-listed across those rules it is `dc_prior_relisted`: their OWN position's
+        # pool converted to the scoring unit. Everyone else, including MID <-> FWD
+        # re-listings (CBIRT either way), keeps the prior of the position he played.
+        rel = getattr(r, "dc_prior_relisted", np.nan)
+        dc_prior = (float(rel) if pd.notna(rel) else
+                    (dcr.prior_rate(pos, _roles.get(r.player_code)) or PRIOR_DC[pos]))
         # deep history extends the minutes Beta only; the Gamma priors keep the
         # repo's Opta-sourced two-season evidence untouched
         d_st = hs.get(r.player_code, 0.0) if hs else 0.0
@@ -295,8 +357,7 @@ def to_priors(ev, revert=0.70, k0=3.0, pen_xg=0.79, deep_starts=None):
             # pooled n90 here halved the implied hit rate for every player who featured
             # in 24/25, and inverted the ordering so cold-start defenders (on the 7.6
             # prior) out-rated established ones (diluted to 6.31).
-            "defcon_alpha": (dcr.prior_rate(pos, _roles.get(r.player_code))
-                             or PRIOR_DC[pos]) * k0 + revert * r.defcon,
+            "defcon_alpha": dc_prior * k0 + revert * r.defcon,
             "defcon_beta": k0 + revert * (getattr(r, "mins_dc", r.mins) / 90.0),
             "start_a": 2.0 + revert * (r.starts + d_st),
             "start_b": 2.0 + revert * (max(r.games - r.starts, 0)
