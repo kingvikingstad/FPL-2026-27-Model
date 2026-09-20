@@ -23,8 +23,14 @@ Every number below is the corrected one. What changed, and why:
 2. **Several claims were tagged above what the estimators identify.** Retagged below:
    the lag-1 gap is *persistence*, not identified state dependence; "a `streak_k` term
    would be redundant" and "momentum is dead — precisely Result 2" are **withdrawn**
-   (untested, not null); the benching asymmetry has no null and is descriptive only; the
-   Enzo/O'Reilly "right shape" check was mechanical and is removed as evidence.
+   (untested, not null); the Enzo/O'Reilly "right shape" check was mechanical and is
+   removed as evidence.
+   *Closed 2026-09-17* (`studies/start_persistence_followup.py`, pre-registered): the
+   benching asymmetry now has its null and is a **tested null** — runs of non-starts are
+   informative beyond a player's own rate, but not *more* so than runs of starts
+   (Result 3). And one lag is **not** enough: the match before last still moves the next
+   one against a first-order conditional null (Result 5), which is the premise the
+   recency weight rests on.
 3. **"λ moves only the order" was wrong** `[DERIVED]`. See *What renormalisation does not do*.
 4. **Production renormalised over the club's history instead of the player's own
    window.** Fixed. It moves 0 of 658 players on 26/27 data to date — see *How it ships*.
@@ -117,10 +123,11 @@ Read it narrowly, because of two caveats:
   does **not** mean a streak adds nothing beyond the forecaster's prior (last season plus
   the season to date). Whether a `streak_k` term improves a real forecast is
   **untested** — not a null.
-- **z is overstated.** It uses the permutation SD only and ignores the sampling variance
-  of `h_obs` (stats-referee's estimate: z at k=8 roughly 1.9 → 1.5 on the pre-fix
-  numbers; not re-derived here). Bootstrapping the excess with the null recomputed inside
-  each resample would fix it; not done.
+- **z is overstated — superseded 2026-09-17.** It uses the permutation SD only and ignores
+  the sampling variance of `h_obs`. Read the `z` column in this table as indicative only.
+  `start_persistence_followup.py` reports every net with a 95% cluster bootstrap over
+  `player_code` in which the null is recomputed inside each resample, covering both
+  sources; those intervals (Results 3 and 5) supersede `z`.
 
 `h_obs` and `n` are exact. `h_null`, the CI, `excess` and `z` are resampled (N_PERM=200,
 N_BOOT=300) and move by ~0.003 between runs.
@@ -128,18 +135,71 @@ N_BOOT=300) and move by ~0.003 between runs.
 **Power.** At k=20 the null SD is 0.024. That rules out an excess ≳ +0.05 there; it
 does not rule out ±0.03.
 
-## Result 3 — runs of non-starts: descriptive only `[CHECK]`
+## Result 3 — runs of non-starts: informative, but not *more* so `[VERIFIED 2026-09-17]`
 
-P(start next | *k* consecutive **non**-starts), native, raw:
+The null this curve lacked has now been run — `studies/start_persistence_followup.py`,
+pre-registered in the file, same permutation null, cluster-bootstrap CIs with the null
+recomputed inside every resample. Native scope:
 
-| k | 1 | 2 | 3 | 5 | 8 | 10 | 20 |
-|---|---|---|---|---|---|---|---|
-| h | 0.290 | 0.165 | 0.126 | 0.091 | 0.054 | 0.042 | 0.010 |
+| k | 1 | 2 | 3 | 5 | 6 | 8 |
+|---|---|---|---|---|---|---|
+| h_obs | 0.290 | 0.165 | 0.126 | 0.091 | 0.080 | 0.054 |
+| null | 0.412 | 0.292 | 0.215 | 0.123 | 0.094 | 0.059 |
+| **net** | **−0.122** | **−0.127** | **−0.089** | −0.032 | −0.015 | −0.005 |
+| 95% CI | [−.133,−.112] | [−.140,−.117] | [−.101,−.078] | [−.043,−.022] | [−.026,−.003] | [−.016,+.004] |
 
-This curve has **no null**. It is the raw hazard, and so exactly the frailty-confounded
-kind of curve this doc opens by warning against: long non-start runs select players who
-rarely start. "Being dropped is far more informative than being picked" was tagged
-`[VERIFIED]` and is withdrawn until the permutation null is run for the non-start state.
+**R2 — INFORMATIVE.** A run of non-starts does lower the next-start probability beyond
+the player's own season rate, decisively at k = 1–3 and fading to nothing by k ≈ 8, the
+same window the start-side excess dies in. Most of the raw curve's steepness is still
+frailty (the null falls from 0.412 to 0.059 on its own), but not all of it.
+
+**R1 — NOT SHOWN, and the withdrawn claim stays withdrawn.** The asymmetry was
+pre-registered on the log-odds scale, because h_S ≈ 0.8 against h_N ≈ 0.1 makes an
+absolute comparison a statement about where the two sit rather than about how much each
+run tells you. ASYM = (−LO_N) − LO_S is **+0.00 [−0.12, +0.12] at k=3** and **−0.25
+[−0.46, −0.06] at k=6** — no asymmetry at k=3, and at k=6 it leans the *other* way. On
+the scale that makes them comparable, a run of non-starts carries about as much
+information as a run of starts, not more. "Being dropped is far more informative than
+being picked" is a **tested null**, not merely an untested claim. Replicated on the proxy
+seasons (ASYM −0.04 at k=3, +0.01 at k=6).
+
+## Result 5 — one lag is not enough `[VERIFIED 2026-09-17]`
+
+Does the last match tell you everything the sequence does? Against a **first-order
+conditional null** — each player-season keeps its own transition counts exactly and only
+the run lengths are re-drawn, so first-order structure and player heterogeneity survive
+and only higher-order structure is destroyed:
+
+| contrast | observed | null | net | 95% CI |
+|---|---|---|---|---|
+| lag-2 given he started last | 0.212 | 0.265 | **+0.057** | [+0.043, +0.068] |
+| lag-2 given he was benched last | 0.322 | 0.391 | **+0.096** | [+0.085, +0.106] |
+
+**FIRST-ORDER INADEQUATE**, replicated on proxy (+0.076, +0.114) and nogap (+0.065,
++0.057). A two-parameter Markov chain per player does not reproduce the data: the match
+*before* last still moves the next one. That is the premise the recency weight and the
+forgetting filter rest on, and it is now measured rather than assumed. It does **not**
+identify trust — drift in a player's role and genuine higher-order dependence both
+predict it, and this data cannot separate them.
+
+*The instrument was corrected before any real number was read.* The permutation null used
+elsewhere in this doc is invalid here: it destroys first-order dependence too, and on a
+synthetic first-order panel (p(stay)=0.9) it sits at +0.157 where the observed contrast is
+0.000 — it would have called first-order-by-construction data "inadequate". A parametric
+Markov null failed its calibration too (−0.064), because per-season transition rates
+estimated from 38 matches inject heterogeneity the real data lacks. The conditional
+run-length null passes both gates the study fixed in advance: −0.009 on a first-order
+panel, +0.159 on a second-order one. `calibrate()` re-runs both on every invocation and
+withholds the verdict if either fails.
+
+**T2 — z is retired.** The parent study's `z` used only the permutation spread. Every net
+above instead carries a 95% cluster bootstrap over `player_code` with the null recomputed
+inside each resample, so the interval covers sampling and null variation together.
+
+*Also measured:* the pooled lag-1 gap, net of the null, is **+0.209 [+0.200, +0.220]**.
+Pooled over all transitions rather than the parent study's within-player mean, so it is
+not restricted to the rotation-zone player-seasons that mean required — and it is less
+than half the +0.436 that headline reports.
 
 ---
 
@@ -174,7 +234,39 @@ k holds the nominal evidence count fixed, not the information in it:
 
 The estimator with the right concentration is a discounted Beta-Bernoulli filter,
 a_t = λ·a_{t−1} + (1−λ)·κ·m₀ + y_t (likewise b), fitted jointly with κ on the board's real
-endpoint, with cutoffs out to k≈30. **Not built**; it needs its own pre-registration.
+endpoint, with cutoffs out to k≈30. **Built and tested — see Result 6.**
+
+## Result 6 — the forgetting filter: INCONCLUSIVE, not adopted `[VERIFIED 2026-09-18]`
+
+`studies/start_forgetting.py`, pre-registered in the file. Three arms sharing one prior
+mean (so nothing can move by shifting the level): FLAT (today's update, prior capped at κ),
+GEOM (the shipped-off renormalised geometric weight), FILTER (the recursion above).
+Jointly fitted (κ, λ), LOSO over the three season-start folds, cutoffs to k=30.
+
+| endpoint | FILTER vs FLAT | folds positive | fitted |
+|---|---|---|---|
+| **rest of season** (pre-registered gate) | **+0.96%** | 3/3 | κ=3, λ=0.85–0.90 |
+| next 10 (secondary, non-gating) | +2.54% | 3/3 | κ=2, λ=0.80–0.85 |
+
+**It misses the 1% bar on the endpoint the board actually runs, so the filter is not
+adopted and `INSEASON_LAM` stays off.** The horizon pattern from Result 4 reproduces
+exactly: memory pays at ten matches (+2.5%) and washes out across a season (+1.0%). Only
+the ratio is identified — nine (κ, λ) pairs sit within 0.5% of the optimum.
+
+**The dispersion finding is worth more than the verdict.** Coverage of the central 80%
+Beta-Binomial predictive for starts in the next ten matches:
+
+| FLAT | GEOM | FILTER | nominal |
+|---|---|---|---|
+| 0.530 | 0.539 | 0.562 | 0.80 |
+
+Every arm is **far too confident**, the installed flat update worst of all. The filter
+narrows the gap and nowhere near closes it, and the reason is structural: the predictive
+still treats matches as conditionally independent given p, while real start sequences are
+serially correlated — the exact defect this whole line of work measured. Fixing how the
+mean weights evidence cannot fix the spread. That is a separate, larger problem than the
+one this study set out to test, and it needs its own pre-registration: it bears on every
+`p5..p95` the board reports, not just on the minutes prior.
 
 ## Result 4 — λ depends on horizon and on κ `[DERIVED]`
 
@@ -236,8 +328,12 @@ horizon sweep itself.
 
 ## How it ships
 
-**OFF by default, and it should stay off.** `INSEASON_LAM=0.75` with `INSEASON_KAPPA=4`
-reproduces the study's conditions:
+**`INSEASON_LAM` is OFF by default and should stay off** — Result 6 tested the better
+version of it and did not clear the bar. (`INSEASON_KAPPA` is a different flag and a
+different story: it was scored out of sample on GW2-4 and turned **ON** by default on
+2026-09-17, PROJECT_KNOWLEDGE §6.9b. Where this doc says λ "was fitted at κ=4, which
+`INSEASON_KAPPA` itself leaves off", read that as the state when λ was fitted.)
+Reproducing the study's conditions:
 
 ```bash
 INSEASON_KAPPA=4 INSEASON_LAM=0.75 python scripts/gw_board.py
@@ -298,7 +394,10 @@ match**, so raw and recency-weighted counts agree at source and λ = 1 is a true
 - A **streak / momentum term** is not built, and stays out under this module's standing
   rule (no form, streaks, momentum or confidence terms). It is **not** a tested null: see
   the hindsight caveat under Result 2. The earlier line "momentum is dead — precisely
-  Result 2" is withdrawn; Result 2 shows positive excess up to k≈6.
+  Result 2" is withdrawn; Result 2 shows positive excess up to k≈6, and Result 5 shows the
+  sequence carries information beyond the last match. What is now a tested null is the
+  *asymmetry* (Result 3), not the existence of order information. None of this licenses a
+  streak predictor: order is encoded as a weight on the likelihood's own observations.
 
 ## Limitations
 

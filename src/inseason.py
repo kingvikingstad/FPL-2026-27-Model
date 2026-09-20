@@ -592,13 +592,22 @@ def _slots_from_panel(G, mg):
                     how="inner")[["player_code", "gw", "m"]])
 
 
-def recency_starts(G, matches, lam=RECENCY_LAM, slots=None):
+def recency_starts(G, matches, lam=RECENCY_LAM, slots=None, charged=None):
     """Recency-weighted start count per (player_code, team).
 
     Weight u_d = lam**d on the d-th most recent gameweek HE IS CHARGED FOR (d = 0 is the
     latest), renormalised so his total weighted match mass equals his own `club_matches`.
     `slots` is that charge list — player_code, gw, m — exactly the frame `appearances`
     sums into `club_matches`; players it does not cover fall back to `_slots_from_panel`.
+    `charged` (player_code -> club_matches) is the denominator the Beta update will
+    actually use, and the weights are renormalised to IT rather than to the slot total.
+    On the `slots` path the two are equal by construction. They can differ on the
+    fallback, where `appearances` charges the current club's match count while the panel
+    places his starts at the clubs he played FOR: without this the weighted count was
+    normalised to one total and then divided by another, which is not a rate.
+    Renormalising to `charged` preserves his observed start RATE over the matches he
+    actually played, puts it on the charged denominator, and keeps w_starts <=
+    club_matches without leaning on the clip [fixed 2026-09-17, stats-referee].
 
     WHY PER PLAYER  [fixed 2026-09-16, flagged by stats-referee]. The first version
     renormalised over the CLUB's whole run of gameweeks and then summed a player's rows,
@@ -672,7 +681,13 @@ def recency_starts(G, matches, lam=RECENCY_LAM, slots=None):
     d = S.groupby("player_code").cumcount(ascending=False).astype(float)
     u = lam ** d
     mass = (u * S["m"]).groupby(S["player_code"]).transform("sum")
-    S["u"] = u * S.groupby("player_code")["m"].transform("sum") / mass
+    tot = S.groupby("player_code")["m"].transform("sum")
+    if charged is not None and len(charged):
+        c = pd.Series(charged).astype(float)
+        c.index = c.index.astype("int64")
+        t2 = S["player_code"].map(c)
+        tot = t2.where(t2.notna() & (t2 > 0), tot)
+    S["u"] = u * tot / mass
 
     # A start lands on his own weight for that gameweek; the result is keyed on
     # `team_now` so a player who moved stays ONE row and keeps his whole record.
@@ -766,7 +781,8 @@ def appearances(season="2026-2027", upto_gw=None, base=None, verbose=True,
     # stays because the raw path is cheaper and byte-identity is worth keeping, not
     # because the two answers still differ.
     if float(lam) != 1.0:
-        W = recency_starts(G, pl, lam, slots=slots)
+        W = recency_starts(G, pl, lam, slots=slots,
+                           charged=A.set_index("player_code")["club_matches"])
         A = A.merge(W, on=["player_code", "team"], how="left")
         A["w_starts"] = A["w_starts"].fillna(0.0).clip(lower=0.0)
         A["w_starts"] = np.minimum(A["w_starts"], A["club_matches"].astype(float))
@@ -1388,6 +1404,26 @@ def selftest():
         sys.stdout = _out
     assert wl == 0.0 and "WARNING recency" in _buf.getvalue(), \
         "a start that lands on no charged gameweek must raise the zero-weight warning"
+    # `charged` must not change the slots path, where slot total == club_matches already
+    wc = float(recency_starts(Gs, Ms, lam=0.75, slots=Ss,
+                              charged=pd.Series({3: 2.0}))["w_starts"].iloc[0])
+    assert abs(wc - 8.0 / 7.0) < 1e-9, f"charged must be a no-op on the slots path, got {wc}"
+
+    # --- minutes: the FALLBACK renormalises to the denominator actually charged
+    # A plays GW1 and GW2, B only GW2. Player 5 started GW1 for A, then moved to B and did
+    # not start GW2. The panel places him on 2 matches; `appearances` charges him B's single
+    # match. Normalising to the slot total and dividing by club_matches gives 1/1 = certainty
+    # from one start in two; renormalising to the charge gives 0.5/1, his actual rate.
+    Gf = pd.DataFrame({"player_code": [5, 5], "team": ["A", "B"], "team_now": ["B", "B"],
+                       "gw": [1, 2], "starts": [1, 0], "minutes": [90, 0]})
+    Mf = pd.DataFrame({"gameweek": [1, 2, 2], "home": ["A", "A", "B"],
+                       "away": ["X", "Y", "Z"]})
+    w_naive = float(recency_starts(Gf, Mf, lam=1.0)["w_starts"].iloc[0])
+    w_chg = float(recency_starts(Gf, Mf, lam=1.0,
+                                 charged=pd.Series({5: 1.0}))["w_starts"].iloc[0])
+    assert abs(w_naive - 1.0) < 1e-9, f"slot-total normalisation gives 1.0, got {w_naive}"
+    assert abs(w_chg - 0.5) < 1e-9, \
+        f"renormalising to club_matches must preserve his 1-in-2 rate, got {w_chg}"
 
     # --- minutes: the finished guard is per MATCH, not per gameweek
     # One finished match must not carry an unfinished one into the panel with it. This is

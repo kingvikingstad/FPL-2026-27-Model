@@ -111,6 +111,9 @@ gw_board_long.csv / gw_board_wide.csv. Horizon-aggregate runner: `scripts/run_fi
 
 **Studies (null/validation record):** `rotation`, `pit_ownership`, `variance`, `edge_study`,
 `multihorizon`, `retest`, `matchup_design` (style constructs — not built, see §7),
+`start_persistence` + `start_persistence_followup` (does a start predict the next start; the
+asymmetry is a **tested null** and a first-order chain is inadequate — §5, and
+docs/START_PERSISTENCE_2026-09-07.md), `start_recency`,
 `deep_history_study` (8 extra seasons of player-GW minutes — **tested null**, 0.0017 MAE
 vs the existing baseline; see docs/DEEP_HISTORY_FINDINGS.md. Re-run 2026-09-16 after the 22/23
 zero-`starts` fix in `fpl_history`: +0.0010 MAE, "no material gain" in every group, best
@@ -417,6 +420,24 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
   renormalising over the club's history rather than the player's charged window — fixed
   2026-09-16; it moves 0 of 658 players through GW4 because `team_at_gw` fills every player's club
   across the season `[VERIFIED]`.
+  **FOLLOW-UPS, pre-registered and run 2026-09-17** (`studies/start_persistence_followup.py`):
+  (1) The benching asymmetry now has its null and is a **TESTED NULL**. Runs of non-starts ARE
+  informative beyond a player's own season rate (net hazard −0.122/−0.127/−0.089 at k=1/2/3, CIs
+  excluding 0, gone by k≈8), but on the log-odds scale — the only scale on which h≈0.1 and h≈0.8
+  are comparable — they carry no MORE information than runs of starts: ASYM +0.00 [−0.12,+0.12] at
+  k=3 and −0.25 [−0.46,−0.06] at k=6. "Being dropped is far more informative" stays withdrawn, now
+  on evidence. (2) **One lag is not enough** `[VERIFIED]`: against a first-order CONDITIONAL null
+  (each player-season keeps its own transition counts; only run lengths are re-drawn) the
+  lag-2-given-lag-1 contrast is +0.057 [0.043,0.068] after a start and +0.096 [0.085,0.106] after a
+  non-start — FIRST-ORDER INADEQUATE, replicated on proxy and nogap. A per-player Markov chain
+  would not suffice, which is the premise the recency weight rests on; it does NOT identify trust
+  (drift and higher-order dependence both predict it). The instrument was corrected before any real
+  number was read: the permutation null is invalid for a lag-2 test (it destroys first-order
+  dependence too — +0.157 on a synthetic first-order panel where the truth is 0.000) and a
+  parametric Markov null failed calibration (−0.064); the conditional run-length null passes both
+  pre-set gates and is re-calibrated on every run. (3) `z` is retired in favour of cluster
+  bootstraps with the null recomputed inside each resample. Pooled lag-1 gap net of null:
+  **+0.209 [+0.200,+0.220]**, less than half the within-player +0.436 headline.
 
 ---
 
@@ -483,12 +504,16 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
    κ=4 and reallocates the very evidence whose total weight (a) is re-fitting, so run apart
    each would be credited with the other's gain — the same argument that already ties §6.8 to
    this item. Three levers, one A/B: `INSEASON_W_MIN`, `INSEASON_KAPPA`, `INSEASON_LAM`.
-   **Before that A/B is worth running, the λ leg needs refitting [2026-09-16, stats-referee]:**
-   the renormalised geometric weight fixes the nominal count but not the information, so λ is
-   not separable from κ/W and the posterior is over-concentrated (§5). The pre-registration
-   should name the endpoint the board is actually scored on (it defaults to `GW_HI=38`; λ=0.75
-   came from h=10 and fails rest-of-season), fit (w/κ, λ) JOINTLY — ideally as a discounted
-   Beta-Bernoulli filter — and extend cutoffs to k≈30. Until then `INSEASON_LAM` stays off.
+   **The λ leg was refitted and is a NULL [2026-09-18, `studies/start_forgetting.py`,
+   pre-registered].** A discounted Beta-Bernoulli filter (a_t = λa_{t-1} + (1-λ)κm₀ + y_t),
+   fitted JOINTLY with κ against the flat update and the shipped-off geometric weight, all three
+   arms sharing one prior mean, LOSO over the three season-start folds, cutoffs to k=30: on the
+   pre-registered endpoint (rest of season — what a `GW_HI=38` board projects) it gains **+0.96%,
+   3/3 folds — under the 1% bar → INCONCLUSIVE, not adopted.** At the non-gating h=10 endpoint it
+   gains +2.54%, reproducing the horizon dependence. Only the ratio is identified (9 (κ,λ) pairs
+   within 0.5%). **`INSEASON_LAM` stays OFF and no code path was added.** With (b) closed and κ now ON by
+   default, the λ leg simply does not join it: there is no third lever to A/B.
+   **A larger finding came out of its dispersion gate — see §6.12.**
    The prerequisite that used to sit here — a `gw_panel` correction the λ leg needed — is
    **CLOSED [2026-09-08]**, and the diagnosis first recorded for it was WRONG, which is
    worth carrying because the wrong version is the plausible one. The 22 starts that
@@ -539,6 +564,34 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
    board A/B, same seed, and a `stats-referee` pass — this moves the GK layer's mean AND
    its variance, and the CS engine beside it is market-validated at CS r=0.93.
 
+12. **THE START PREDICTIVE IS FAR TOO CONFIDENT OVER A HORIZON.** [VERIFIED 2026-09-18,
+   `studies/start_forgetting.py`] Fell out of that study's pre-registered dispersion gate and
+   is larger than the question it was gating. Coverage of the central 80% Beta-Binomial
+   predictive for a player's start count over the NEXT TEN matches, three estimators, LOSO
+   over three seasons:
+
+       installed flat update   0.530        renormalised geometric weight   0.539
+       discounted filter       0.562        nominal                         0.80
+
+   **Bias direction: intervals too NARROW, for every player and every arm.** The cause is
+   structural, not a tuning error: the predictive treats matches as conditionally independent
+   given `p`, while start sequences are serially correlated — measured in §5 (order carries
+   information over ~6 matches; a per-player first-order chain is already inadequate). Runs
+   make a ten-match start count more variable than a Binomial allows, so the spread is
+   understated whatever the mean does. Changing how evidence is WEIGHTED cannot fix it: the
+   filter, which was built for exactly this, closes barely a fifth of the gap.
+
+   **Why it matters beyond the minutes prior.** `project()` draws a start probability per
+   player and reuses it across the window, so every multi-gameweek `p5..p95`, every captaincy
+   tail and every P(haul) inherits this under-dispersion. §6.11 understates a keeper's MEAN;
+   this understates everyone's VARIANCE, and the two are independent defects.
+
+   **What it needs, and it is its own pre-registration:** a predictive with dependence —
+   Beta-Binomial with an explicit correlation, or carrying the filter state forward through
+   the simulated window rather than fixing `p` — validated on COVERAGE (PIT of realised
+   ten-match start counts), not on Brier. Do not adopt anything here on a mean-only endpoint;
+   that is the mistake this finding came from catching.
+
 ---
 
 ## 7. Deliberately NOT built (with reasons)
@@ -583,7 +636,10 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
   hindsight a forecaster never has, so it shows no information beyond the season rate, not beyond
   the forecaster's prior (§5). Whether a streak term improves a real forecast is untested; do not
   cite it as dead. The raw h(k) curve rising to 0.96 by k=20 is still a diagnosis and not a
-  finding. `INSEASON_LAM` is not a streak term under another name: it re-weights the estimator's
+  finding. What IS measured since (2026-09-17 follow-ups, §5): the sequence carries information
+  beyond the LAST match — a per-player first-order chain is inadequate — while the benching
+  asymmetry is now a tested null. Neither licenses a streak predictor.
+  `INSEASON_LAM` is not a streak term under another name: it re-weights the estimator's
   own observations and adds no predictor. Nor is it a rotation multiplier — it carries no
   fixture-conditional term, and congestion stays dead three ways over.
 

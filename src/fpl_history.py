@@ -62,10 +62,11 @@ SCHEMA ERAS — the same file is three different files
   instead of the proxy would be worse: `season_evidence` counts games as rows, so a
   missing start summed as 0 would restore the original defect.
 
-  Known latent gap: xG is nulled per row, but `season_evidence` sums it with skipna, so a
-  22/23 player-season gets GW16+ xG against full-season minutes (xG per 90 LOW). No
-  consumer reads xG from here today; fix with sum(min_count=1) and xG-exposure minutes
-  before wiring it in.
+  xG aggregation [fixed 2026-09-17]: nulling xG per row was not enough, because a skipna
+  sum turned an all-null player-season into 0.0 and set GW16+ xG against full-season
+  minutes (xG per 90 LOW). `season_evidence` now sums xG with min_count=1 and carries
+  `mins_xg`, the minutes of the rows that actually report xG — use it, not `mins`, as the
+  xG exposure. No consumer reads xG from here yet.
 
 Handled by deriving what is derivable and FLAGGING what is derived, never by silently
 filling. `position` comes from players_raw.element_type when the column is absent;
@@ -240,6 +241,10 @@ def load_history(seasons=SEASONS, verbose=True) -> pd.DataFrame:
 def season_evidence(panel: pd.DataFrame) -> pd.DataFrame:
     """Collapse the panel to one row per (player_code, season) — the shape
     `multiseason_priors` consumes as evidence."""
+    # xG exposure is the minutes of the rows that CARRY xG. A row nulled as a structural 0
+    # (22/23 GW1-15) or from a pre-xG season must not add minutes to the xG denominator,
+    # and an all-null player-season must stay null rather than summing to 0.0.
+    panel = panel.assign(_mins_xg=panel["mins"].where(panel["xg_raw"].notna(), 0.0))
     g = panel.groupby(["player_code", "season"], dropna=False)
     ev = g.agg(pos=("pos", lambda s: s.dropna().iloc[-1] if s.notna().any() else None),
                mins=("mins", "sum"),
@@ -247,8 +252,9 @@ def season_evidence(panel: pd.DataFrame) -> pd.DataFrame:
                games=("mins", "size"),
                apps=("mins", lambda s: (s > 0).sum()),
                points=("points", "sum"),
-               xg_raw=("xg_raw", "sum"),
-               xa_raw=("xa_raw", "sum"),
+               xg_raw=("xg_raw", lambda s: s.sum(min_count=1)),
+               xa_raw=("xa_raw", lambda s: s.sum(min_count=1)),
+               mins_xg=("_mins_xg", "sum"),
                # ANY, not first: a season derived for some gameweeks is not a season of
                # read starts, and `first` reported 22/23 by whichever row sorted first.
                starts_derived=("starts_derived", "any")).reset_index()
@@ -366,6 +372,17 @@ def selftest():
         assert g.loc[~e & (g["gw"] != 20), "xg_raw"].notna().all()
         assert bool(season_evidence(g)["starts_derived"].all()), \
             "a partly-derived season must not report itself as read"
+        # xG exposure counts only rows that report xG; an all-null player-season stays null
+        eg = season_evidence(g).set_index("player_code")
+        want = g[g["xg_raw"].notna()].groupby("player_code")["mins"].sum()
+        assert np.allclose(eg["mins_xg"], want.reindex(eg.index).fillna(0.0)), \
+            "mins_xg must be the minutes of xG-carrying rows only"
+        assert (eg["mins_xg"] < eg["mins"]).all(), "GW1-15 minutes must not enter xG exposure"
+        only_gap = season_evidence(g[g["gw"] <= 15])
+        assert only_gap["xg_raw"].isna().all() and (only_gap["mins_xg"] == 0).all(), \
+            "a player-season seen only in the empty gameweeks must have NULL xG, not 0.0"
+        old = season_evidence(panel[panel["season"] == "2016-17"])
+        assert old["xg_raw"].isna().all(), "a pre-xG season must aggregate to NULL xG"
 
         w = season_weights(["2023-24", "2024-25", "2025-26"], half_life=1.0)
         assert abs(w["2025-26"] - 1.0) < 1e-12 and abs(w["2024-25"] - 0.5) < 1e-12

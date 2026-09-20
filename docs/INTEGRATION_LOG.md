@@ -88,6 +88,84 @@ power calculation and the endpoint were written into the file before the first r
   gameweek's start prior as projected. Without it the board exposes no p_start at all and an
   A/B could only score points, where this effect is invisible.
 
+## Start persistence: a data defect, two estimator fixes, three pre-registered tests, 16-17 Sep 2026
+`src/fpl_history.py`, `src/inseason.py`, `studies/start_persistence{,_followup}.py`,
+`studies/start_recency.py`, `studies/start_prior_strength.py`, full record in
+`docs/START_PERSISTENCE_2026-09-07.md`. Prompted by a stats-referee review of the recency
+work. No flag changed; `INSEASON_LAM` stays OFF.
+
+- **DATA DEFECT [VERIFIED].** vaastav's 2022/23 `starts` column is a literal 0 for every row
+  in GW1-15 — FPL began publishing it at GW16 — and zero, not null, passed every presence
+  check. 8,491 rows, 2,818 of them players on 60+ minutes, read as non-starts, giving regular
+  starters a fake 14-gameweek zero block followed by an unbroken run. It inflated every
+  persistence number: within-player lag-1 +0.493 -> **+0.436**, streak excess at k=1
+  +0.190 -> **+0.164**, at k=8 +0.030 -> **+0.015**. `empty_native_gws` now finds such blocks
+  from the data (a native column summing to 0 across a gameweek that had minutes); it flags
+  exactly this one in ten seasons, and also catches the same block in `expected_goals` /
+  `expected_assists`. `starts_derived` became per ROW; native-only studies filter rows, not
+  seasons, so 22/23 enters as observed from GW16 and both folds survive. **κ=4 held**
+  (`start_prior_strength` re-run: ADOPT at every cutoff, w=1 optimum κ = 3/4/4/4), and
+  `deep_history_study`'s null held (+0.0010 MAE). `minutes_per_start` came back byte-identical.
+- **TWO ESTIMATOR FIXES.** `recency_starts` renormalised over the CLUB's run of gameweeks
+  rather than the player's charged window, so a short window put weights above 1 on recent
+  matches; it now renormalises over exactly the slots `appearances` sums into `club_matches`,
+  and to the charged denominator on the fallback path. Measured effect on 26/27: **0 of 658
+  players**, because `team_at_gw` fills every player's club across the season — the bound now
+  holds by construction rather than by that coincidence. A start that lands on no charged
+  gameweek now warns instead of vanishing. `season_evidence` sums xG with `min_count=1` and
+  carries `mins_xg`, so a structural zero cannot aggregate into a real 0.0.
+- **CLAIMS RETAGGED.** "λ moves only the order" was wrong — renormalising fixes the nominal
+  count, not the information (ESS caps at (1+λ)/(1−λ), 7 at λ=0.75), so λ trades off against κ
+  and the posterior is over-concentrated. The within-player lag-1 gap is persistence, not
+  identified state dependence. λ=0.75 is `[DERIVED]` only inside its study's conditions;
+  on the three season-start folds it is 0.70 at h=10, and rest-of-season falls to 2/3 folds.
+- **THREE PRE-REGISTERED TESTS** (`start_persistence_followup.py`, rules fixed in the file
+  before it ran). **T1:** the benching asymmetry is a **TESTED NULL** — runs of non-starts are
+  informative beyond a player's own rate (net −0.122/−0.127/−0.089 at k=1/2/3) but carry no
+  more information than runs of starts on the log-odds scale (ASYM +0.00 [−0.12,+0.12] at k=3,
+  −0.25 [−0.46,−0.06] at k=6). **T2:** `z` retired for cluster bootstraps with the null
+  recomputed inside each resample. **T3:** **one lag is not enough** — against a first-order
+  conditional null the lag-2-given-lag-1 contrast is +0.057 [0.043,0.068] after a start and
+  +0.096 [0.085,0.106] after a non-start, replicated on proxy and nogap. The instrument was
+  corrected mid-design, before any real number was read: the permutation null is invalid for a
+  lag-2 test (+0.157 on a synthetic first-order panel where the truth is 0.000), and a
+  parametric Markov null failed calibration (−0.064) because per-season rates estimated from 38
+  matches inject heterogeneity the data lacks. The conditional run-length null passes both
+  pre-set gates (−0.009 first-order, +0.159 second-order) and re-calibrates on every run.
+
+## Forgetting filter: a null, and a bigger finding underneath it, 18 Sep 2026
+`studies/start_forgetting.py`, evidence `studies/start_forgetting.csv`, pre-registered in the
+file before the first run (`research-preregistrar` was launched twice for it and failed both
+times — Opus session limit, then a stalled stream — so the rules were fixed in the file by the
+main session instead; recorded rather than hidden). No flag changed.
+
+- **The question.** Order in a player's realised matches carries information over ~6 matches
+  (§5) and a per-player first-order chain is already inadequate (17 Sep follow-ups), but the
+  shipped-off encoding — a geometric weight renormalised to sum to k — fixes the nominal
+  evidence count and not the information in it, so λ is not separable from κ and the posterior
+  is over-concentrated. This tested the estimator with the right concentration by construction:
+  a_t = λ·a_{t−1} + (1−λ)·κ·m₀ + y_t, fitted JOINTLY with κ.
+- **Design.** Three arms sharing ONE prior mean, so nothing can move by shifting the level:
+  FLAT (today's update, capped at κ), GEOM (the shipped-off weight), FILTER. LOSO over the
+  three season-start folds, cutoffs to k=30, endpoint pre-registered as rest-of-season because
+  `gw_board.py` defaults to GW_HI=38 — deliberately the harder endpoint, since the previous
+  study's error was picking h=10 after seeing a sweep.
+- **NULL at the gate.** FILTER +0.960% vs FLAT, positive 3/3 folds, κ=3, λ=0.85-0.90 — under
+  the pre-registered 1% bar, so **INCONCLUSIVE and not adopted**. At the non-gating h=10
+  endpoint it gains +2.54% (GEOM +2.07%), reproducing the horizon dependence exactly. Only the
+  ratio is identified: nine (κ, λ) pairs within 0.5% of the optimum. `INSEASON_LAM` stays OFF,
+  `update_minutes` keeps its exchangeable form, and the λ leg drops out of the §6.9 A/B, which
+  is now two levers rather than three.
+- **THE DISPERSION GATE IS THE REAL RESULT (§6.12).** Coverage of the central 80%
+  Beta-Binomial predictive for a player's start count over the next ten matches: **0.530 FLAT,
+  0.539 GEOM, 0.562 FILTER, against a nominal 0.80.** Every estimator is far too confident,
+  the installed one worst. The cause is structural — the predictive assumes matches are
+  conditionally independent given p while start sequences are serially correlated — so
+  re-weighting the mean cannot fix it, and the filter closes barely a fifth of the gap. It
+  reaches every multi-gameweek `p5..p95`, captaincy tail and P(haul) the board reports, since
+  `project()` fixes one start probability per player across the window. Logged as §6.12 with
+  its own pre-registration required; validate on coverage, never on Brier alone.
+
 ## Start-prior strength re-fit on the production prior (§6.9a), 17 Sep 2026
 `studies/start_prior_production.py`, evidence `studies/start_prior_production.csv`. It
 reruns `start_prior_strength.py`'s sweep (same grids, same Brier, same leave-one-season-out
