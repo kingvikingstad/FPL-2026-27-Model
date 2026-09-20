@@ -14,6 +14,9 @@ change was A/B'd against the board; every null is recorded with the evidence tha
 > Szoboszlai / −4.51 to Robinson), DefCon matchup and CB-vs-FB analysis added, early-season
 > dispersion measured but withheld. Detail in
 > [SETPIECE_DEFCON_FINDINGS](SETPIECE_DEFCON_FINDINGS.md). Headlines:
+> *[DefCon figures in this file superseded 2026-09-10 — see
+> [DEFCON_SOURCE_CORRECTION_2026-09-10](DEFCON_SOURCE_CORRECTION_2026-09-10.md): CB vs FB
+> is 3.5× (0.398 vs 0.114), EV 1.86 → 1.00, opponent swing 0.142 at r=+0.526.]*
 > **centre-backs hit DefCon 2.3× as often as full-backs** (0.480 vs 0.207) with identical
 > clean-sheet value, and **hard fixtures pay defenders nothing back** — DefCon volume is flat
 > in opponent strength while clean sheets collapse, so total defender EV falls monotonically

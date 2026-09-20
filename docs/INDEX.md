@@ -1,6 +1,6 @@
 # docs/ — what to read, and what not to
 
-29 files, ~64,000 words. Reading them in order is not a strategy; most of what is
+35 files, ~91,000 words. Reading them in order is not a strategy; most of what is
 here is the *record* of how a claim was established, not the claim itself. This
 index routes by question, and marks what is stale so nobody spends context on it.
 
@@ -21,8 +21,10 @@ Everything below is the evidence behind those two.
 | Minutes, congestion, penalties — the player layer | `PLAYER_LAYER_FINDINGS.md` |
 | Does the away side's travel distance move goals? Why is `FPL_TRAVEL` on despite failing the market gate? | `TRAVEL_DISTANCE_2026-09-10.md` |
 | Does a start predict the next start? | `START_PERSISTENCE_2026-09-07.md` |
-| Set-piece duty, DefCon matchups, early dispersion | `SETPIECE_DEFCON_FINDINGS.md` |
-| DefCon by team/matchup, and the explosiveness null | `DEFCON_TEAM_EXPLOSIVENESS_2026-09-02.md` |
+| Is the DefCon series itself right? The GW2-10 defender defect, and which DefCon findings survived it | `DEFCON_SOURCE_CORRECTION_2026-09-10.md` — **read this before quoting any DefCon number from the two rows below** |
+| Is P(DefCon hit) right given a defender's rate? Per-match overdispersion, and why it ships off | `DEFCON_THRESHOLD_CALIBRATION_2026-09-17.md` (pre-registration: `DEFCON_THRESHOLD_CALIBRATION_PREREG_2026-09-16.md`) |
+| Set-piece duty, DefCon matchups, early dispersion | `SETPIECE_DEFCON_FINDINGS.md` (its DefCon **numbers** predate the 2026-09-10 correction; the conclusions are re-scored in the row above) |
+| DefCon by team/matchup, and the explosiveness null | `DEFCON_TEAM_EXPLOSIVENESS_2026-09-02.md` (DefCon numbers predate the correction, as above; the explosiveness null is unaffected) |
 | Understat / shot-level integration | `SOCCERDATA_FINDINGS.md` |
 | Deep history (2016/17→) — what it does and does not support | `DEEP_HISTORY_FINDINGS.md` |
 | Regime change: why it widens κ and asserts no direction | `regime_weighting_note.md` |

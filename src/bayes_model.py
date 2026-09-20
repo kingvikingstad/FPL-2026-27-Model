@@ -33,6 +33,7 @@ import travel
 from schedule_2627 import schedule, PROMOTED
 from fpl_xp_model import (GOAL_POINTS, CLEAN_SHEET_PTS, ASSIST_POINTS,
                           DEFCON_THRESHOLD, DEFCON_PTS)
+import defcon_frailty as dfr
 
 rng = np.random.default_rng(7)
 # Seed for the PER-PLAYER generators used inside project(). Runners already rebind
@@ -134,6 +135,17 @@ def _team_rng(team, seed=None, gw=0):
                                   _TEAM_STREAM, _team_key(team), int(gw)])
 
 
+def _defcon_rng(p, seed=None, gw=0):
+    """A child stream for the DefCon COUNT only, keyed like _player_rng plus one entropy word.
+
+    numpy's poisson consumes a parameter-dependent number of bits, so any change to how the
+    DefCon count is drawn (defcon_frailty) would re-randomise every later draw in the player's
+    main stream: his minutes, goals and clean sheets would all move by MC noise and a
+    same-seed A/B could not tell the DefCon effect from that. On its own stream a DefCon
+    change moves the DefCon component and nothing else. [2026-09-17]
+    """
+    return np.random.default_rng([int(PROJECT_SEED if seed is None else seed),
+                                  _player_key(p), int(gw), 1])
 LEAGUE_MU = 1.40
 BET_NAME = {"Man Utd": "Man United", "Spurs": "Tottenham"}
 # per-position bonus that rides along with a goal (recovered in the earlier
@@ -523,6 +535,10 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, seed=None, return_draws=Fa
         pos = p.pos
         # this player's own stream — see _player_rng
         prng = _player_rng(p, seed, gw_lo)
+        drng = _defcon_rng(p, seed, gw_lo)                  # DefCon count only
+        # per-match DefCon overdispersion; 0 (plain Poisson) unless FPL_DEFCON_FRAILTY=on,
+        # and DEF only — see defcon_frailty
+        dc_phi = dfr.phi_for(pos)
         # availability draws (shared across the window -> nailed/rotation risk)
         p_start = prng.beta(p.start_a, p.start_b, S)         # (S,)
         # attacking involvement rate (per 90) and defcon rate draws
@@ -579,7 +595,7 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, seed=None, return_draws=Fa
                              -np.floor(conc / 2), 0.0)
             # defensive contribution threshold (per match)
             thr = DEFCON_THRESHOLD.get(pos, 999)
-            dc_cnt = prng.poisson(np.maximum(dc_rate * m90, 0))
+            dc_cnt = dfr.draw_count(drng, dc_rate, m90, dc_phi)
             dcp = np.where(dc_cnt >= thr, DEFCON_PTS, 0.0)
             appp = np.where(played60, 2.0, np.where(played, 1.0, 0.0))
             pts += appp + gp + ap + csp + concp + dcp

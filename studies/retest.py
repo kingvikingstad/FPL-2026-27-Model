@@ -33,7 +33,7 @@ RATE_COLS = {
     "npxg": "npxg", "xa": "xa_", "xgot": "xgot_", "tob": "tob",
     "shots": "total_shots", "sot": "shots_on_target", "cc": "chances_created",
     "bcm": "big_chances_missed", "dribbles": "successful_dribbles",
-    "cbi": "cbi", "tkl": "tkl", "rec": "rec", "defcon": "defcon_raw",
+    "cbi": "cbi", "tkl": "tkl", "rec": "rec", "defcon": "defcon_fpl",
     "saves": "saves_", "gp": "goals_prevented", "xgotf": "xgot_faced",
     "goals": "goals", "npgoals": "np_goals", "assists": "assists",
 }
@@ -86,9 +86,10 @@ for n_, b, se, pv in zip(o.names, o.beta, o.se, o.pval):
 print("\n" + "#"*76)
 print("# B. DEFENSIVE CONTRIBUTION — separate components vs the aggregate")
 print("#"*76)
-dc = d[d.pos.isin(["DEF", "MID", "FWD"])].copy()
+# a row with no measured DefCon is not a miss — drop it rather than score it 0
+dc = d[d.pos.isin(["DEF", "MID", "FWD"]) & d.defcon_fpl.notna()].copy()
 thr = np.where(dc.pos == "DEF", 10, 12)
-dc["hit"] = (dc.defcon_raw >= thr).astype(int)
+dc["hit"] = (dc.defcon_fpl >= thr).astype(int)
 print(f"DefCon award rate: {dc.hit.mean():.3f}  (n={len(dc)})")
 for lab, col in [("rolling aggregate defcon/90", "r_defcon"), ("rolling CBI/90", "r_cbi"),
                  ("rolling tackles/90", "r_tkl"), ("rolling recoveries/90", "r_rec")]:

@@ -51,7 +51,10 @@ def build_2425_panel():
     pen_att = num("penalties_scored") + num("penalties_missed")
     d["npxg"] = (num("xg") - 0.79 * pen_att).clip(lower=0)
     d["xa_"] = num("xa")
-    d["defcon_raw"] = num("defensive_contributions")
+    # DefCon did not exist in 24/25: the upstream column is 100% null. NaN, never 0 —
+    # and never summed from the components, which DO exist here and would invent a
+    # season of DEF DefCon evidence (defcon_series refuses the season for that reason).
+    d["defcon_fpl"] = np.nan
     d["pos"] = d.position.map({"Goalkeeper": "GK", "Defender": "DEF",
                                "Midfielder": "MID", "Forward": "FWD"})
     return d
@@ -60,7 +63,7 @@ def build_2425_panel():
 def season_rates(panel, min_minutes=450):
     g = panel.groupby(["player_code", "pos"], dropna=False)
     a = g.agg(mins=("mins", "sum"), npxg=("npxg", "sum"), xa=("xa_", "sum"),
-              defcon=("defcon_raw", "sum")).reset_index()
+              defcon=("defcon_fpl", "sum")).reset_index()
     a = a[a.mins >= min_minutes].copy()
     n90 = a.mins / 90.0
     a["inv90"] = (a.npxg + a.xa) / n90
@@ -81,7 +84,7 @@ def run_test(K_grid=(0, 180, 450, 900, 1800, 4000), max_gw=10):
     p25 = p25.merge(codes, on="player_id", how="left")
     cur = p25.groupby(["player_code", "pos", "gameweek"], dropna=False).agg(
         mins=("mins", "sum"), npxg=("npxg", "sum"), xa=("xa_", "sum"),
-        defcon=("defcon_raw", "sum"), pts=("total_points", "first")).reset_index()
+        defcon=("defcon_fpl", "sum"), pts=("total_points", "first")).reset_index()
     cur = cur.sort_values(["player_code", "gameweek"])
     g = cur.groupby("player_code")
     cur["cum_min"] = g["mins"].apply(lambda s: s.shift(1).cumsum()).values
