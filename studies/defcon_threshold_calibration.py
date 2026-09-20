@@ -514,6 +514,19 @@ def selftest(verbose=True):
     check(np.mean(so) - np.mean(sh) > 0.05,
           f"drift: G0 slope half-split {np.mean(sh):.3f} below odd/even {np.mean(so):.3f}")
 
+    # 7b. shock_split recovers a planted club-match shock and leaves the total dispersion alone
+    rec_s2, rec_tot = [], []
+    for s in range(10):
+        d, _ = synth_rows(7500 + s, phi=0.02, shock=0.15)
+        d60 = d[d["mins"] >= 60]
+        ph = phi_moment(d60["y"], d60["mins"] / 90, d60["player_code"])
+        s2, phi_in, _ = shock_split(d60, ph)
+        rec_s2.append(s2); rec_tot.append(s2 + phi_in - ph)
+    planted = np.exp(0.15 ** 2) - 1
+    check(abs(np.mean(rec_s2) - planted) < 0.4 * planted,
+          f"shock_split recovers planted shock variance: {np.mean(rec_s2):.4f} vs {planted:.4f}")
+    check(max(abs(x) for x in rec_tot) < 1e-9, "shock_split preserves total dispersion (s2 + phi' = phi)")
+
     # 7. planted under-dispersion: phi below band
     below = 0
     for s in range(10):
@@ -546,24 +559,115 @@ def load_rows():
     return p[["player_code", "gameweek", "club", "match_id", "opp", "mins", "y"]].reset_index(drop=True)
 
 
-def se_inflation(rows, role, phi, k, rm, R=100):
+def resid_corr_clubmatch(d60):
+    """Correlation of Pearson residuals between team-mates in the same club-match, about each
+    player's own rate. This is the design effect the clustered SEs exist for."""
+    lam = d60.groupby("player_code")["y"].transform("sum") / (d60["mins"] / 90).groupby(d60["player_code"]).transform("sum")
+    mu = lam * d60["mins"] / 90
+    pr = (d60["y"] - mu) / np.sqrt(mu.where(mu > 0))
+    cm = d60["club"].astype(str) + "|" + d60["match_id"].astype(str)
+    g = pr.groupby(cm)
+    num = float(((g.sum() ** 2) - (pr ** 2).groupby(cm).sum()).sum())
+    den = float(((g.size() - 1) * (pr ** 2).groupby(cm).sum()).sum())
+    return (num / den) if den > 0 else np.nan, float(mu.mean())
+
+
+def shock_split(d60, phi):
+    """Split the fitted dispersion into a club-match shared shock and a per-match frailty, so a
+    simulation reproduces BOTH the observed dispersion and the observed team-mate correlation.
+
+    rho = mu*s2 / (1 + lam*phi)  =>  s2 = rho*(1 + lam*phi)/mu, and phi' = phi - s2. Holding the
+    total at phi is what stops the shock double-counting variance the frailty already carries.
+    A simulation without the shock understates the replicate spread of every contrast and so
+    understates c — it read 1.01 on the deployed Brier against 1.18 with the shock in.
+    """
+    rho, mu_bar = resid_corr_clubmatch(d60)
+    lam_bar = float(d60["y"].sum() / (d60["mins"].sum() / 90))
+    if not np.isfinite(rho) or rho <= 0 or not phi > 0:
+        return 0.0, max(phi, 0.0), rho
+    s2 = min(rho * (1 + lam_bar * phi) / max(mu_bar, 1e-9), phi * 0.95)
+    return float(s2), float(phi - s2), rho
+
+
+def se_inflation(rows, role, phi, k, rm, R=100, opp_var=0.0, drift_sd=0.0, phi_opp_val=None):
     """c = replicate SD / mean clustered SE, simulated at the fitted phi on the REAL design
-    (same rows, minutes, clubs, matches), rates drawn from the fitted prior. Floored at 1."""
+    (same rows, minutes, clubs, matches), rates drawn from the fitted prior. Floored at 1.
+
+    The simulation carries every source of replicate-level structure the data show, because each
+    of them moves a contrast between replicates while leaving the clustered SE where it was, and
+    omitting one understates c:
+      * the club-match shared shock (shock_split) — a club's defenders share that match's shock;
+      * the opponent effect, `opp_var` (the drop from phi to phi_opp measures it);
+      * within-season per-player rate drift, `drift_sd` (the G0 half vs odd/even gap measures it).
+    TOTAL dispersion is held at `phi` throughout: the frailty is whatever is left after the shock
+    and the opponent variance are taken out, so no source is counted twice.
+    """
     P_codes = rows["player_code"].unique()
     stats_ = {"dB_E": ([], []), "dB_D": ([], []), "elpd_E": ([], [])}
     tr, te = halves(rows)
+    d60 = rows[tr & (rows["mins"] >= 60)]
+    s2, phi_in, _ = shock_split(d60, phi)
+    phi_in = max(phi_in - max(opp_var, 0.0), 1e-6)         # opponent variance also lives inside phi
+    cm_key = (rows["club"].astype(str) + "|" + rows["match_id"].astype(str)).to_numpy()
+    cm_uniq, cm_idx = np.unique(cm_key, return_inverse=True)
+    opp_uniq, opp_idx = np.unique(rows["opp"].astype(str).to_numpy(), return_inverse=True)
+    gw_c = (rows["gameweek"].to_numpy(float) - 19.5) / 19.0
+    pl_uniq, pl_idx = np.unique(rows["player_code"].to_numpy(), return_inverse=True)
+    sig = np.sqrt(np.log(1 + s2)) if s2 > 0 else 0.0
+    sig_o = np.sqrt(np.log(1 + opp_var)) if opp_var > 0 else 0.0
     for s in range(R):
         rng = np.random.default_rng(9000 + s)
         mu = np.array([rm.get(role.get(pc, "ALL"), rm["ALL"]) for pc in P_codes])
         lam_p = dict(zip(P_codes, rng.gamma(mu * k, 1 / k)))
         lam = rows["player_code"].map(lam_p).to_numpy()
+        if sig_o > 0:
+            lam = lam * np.exp(rng.normal(-sig_o ** 2 / 2, sig_o, len(opp_uniq)))[opp_idx]
+        if drift_sd > 0:
+            lam = lam * np.exp(rng.normal(0, drift_sd, len(pl_uniq))[pl_idx] * gw_c)
         m = rows["mins"].to_numpy() / 90.0
-        y = rng.poisson(lam * rng.gamma(m / phi, phi)) if phi > 0 else rng.poisson(lam * m)
+        G = rng.gamma(m / phi_in, phi_in) if phi_in > 0 else m
+        if sig > 0:
+            G = G * np.exp(rng.normal(-sig ** 2 / 2, sig, len(cm_uniq)))[cm_idx]
+        y = rng.poisson(np.maximum(lam * G, 0))
         res = run_split(rows.assign(y=y.astype(float)), role, tr, te, phi=None, band=False)
         cmv = res["te"]["cm"].to_numpy(); plv = res["te"]["player_code"].to_numpy()
         for key, (means, ses) in stats_.items():
             means.append(res["c"][key].mean()); ses.append(se_pair(res["c"][key], cmv, plv)[0])
     return {key: max(1.0, float(np.std(mn, ddof=1) / np.mean(se))) for key, (mn, se) in stats_.items()}
+
+
+def calibrate_drift(rows, role, phi, k, rm, target_gap, grid=(0.0, 0.15, 0.30, 0.45), R=6):
+    """Per-player log-rate drift SD that reproduces the observed G0 gap (odd/even slope minus
+    half-split slope). Drift attenuates the half-split slope and leaves odd/even alone, so the
+    gap identifies it; see selftest check 6."""
+    tr, te = halves(rows)
+    o_tr, o_te = odd_even(rows)
+    m = rows["mins"].to_numpy() / 90.0
+    gw_c = (rows["gameweek"].to_numpy(float) - 19.5) / 19.0
+    pl_uniq, pl_idx = np.unique(rows["player_code"].to_numpy(), return_inverse=True)
+    P_codes = rows["player_code"].unique()
+    best, best_d = None, 0.0
+    for d in grid:
+        gaps = []
+        for s in range(R):
+            rng = np.random.default_rng(4100 + s)
+            mu = np.array([rm.get(role.get(pc, "ALL"), rm["ALL"]) for pc in P_codes])
+            lam = rows["player_code"].map(dict(zip(P_codes, rng.gamma(mu * k, 1 / k)))).to_numpy()
+            if d > 0:
+                lam = lam * np.exp(rng.normal(0, d, len(pl_uniq))[pl_idx] * gw_c)
+            y = rng.poisson(np.maximum(lam * (rng.gamma(m / phi, phi) if phi > 0 else m), 0)).astype(float)
+            r = rows.assign(y=y)
+            sl = []
+            for a, b in ((tr, te), (o_tr, o_te)):
+                res = run_split(r, role, a, b, band=False)
+                T = res["te"]
+                sl.append(g0_slope(T["y"], T["m"], res["arms"]["lam_D"], T["cm"], T["player_code"])[0])
+            gaps.append(sl[1] - sl[0])
+        err = abs(float(np.mean(gaps)) - target_gap)
+        print(f"  drift {d:.2f}: G0 gap {np.mean(gaps):+.3f} (target {target_gap:+.3f})")
+        if best is None or err < best:
+            best, best_d = err, d
+    return best_d
 
 
 def main():
@@ -608,11 +712,42 @@ def main():
     rec("phi", "phi_full_2526", phi_all, *band_all, "shipping constant for bayes_model")
     print(f"phi full 25/26 {phi_all:+.4f}  band [{band_all[0]:+.4f}, {band_all[1]:+.4f}]  (shipping constant)")
 
-    # ---- held-out contrasts --------------------------------------------------------------
+    # The shipping constant and the code must not drift apart silently.
+    import defcon_frailty as _dfr
+    assert abs(phi_all - _dfr.PHI_DEF) < 5e-5, (
+        f"defcon_frailty.PHI_DEF is {_dfr.PHI_DEF}, this run fits {phi_all:.6f}; "
+        f"update the constant (and re-run the board A/B) or explain the divergence")
+
+    # ---- odd/even replication and G0, needed before the SE simulation is calibrated --------
     c, arms, T = main_["c"], main_["arms"], main_["te"]
     cmv, plv = T["cm"].to_numpy(), T["player_code"].to_numpy()
     ph_use = max(phi_tr, 0.0)
-    cfac = se_inflation(rows, role, ph_use, main_["k"], main_["role_means"])
+    o_tr, o_te = odd_even(rows)
+    oe = run_split(rows, role, o_tr, o_te, band=False)
+    oe_elpd = float(oe["c"]["elpd_E"].mean())
+    g0, g0se = g0_slope(T["y"], T["m"], arms["lam_D"], cmv, plv)
+    g0e, g0ese = g0_slope(T["y"], T["m"], arms["lam_E"], cmv, plv)
+    oT = oe["te"]
+    g0o, g0ose = g0_slope(oT["y"], oT["m"], oe["arms"]["lam_D"], oT["cm"], oT["player_code"])
+
+    # ---- SE inflation c, on a design carrying every structure the data show -----------------
+    _s2, _phi_in, _rho = shock_split(rows[tr & (rows["mins"] >= 60)], ph_use)
+    rec("diag", "clubmatch_shock_var", _s2, note=f"rho {_rho:.4f}; frailty net of it {_phi_in:.4f}")
+    _po_for_c, _ = phi_opp(tr60, seed=3, band=False)
+    opp_var = max(ph_use - float(_po_for_c), 0.0)
+    print(f"\nSE simulation: shock var {_s2:.4f} (rho {_rho:.4f}), opponent var {opp_var:.4f}; "
+          f"calibrating drift to the G0 gap {g0o - g0:+.3f} ...")
+    drift_sd = calibrate_drift(rows, role, ph_use, main_["k"], main_["role_means"], g0o - g0)
+    rec("diag", "opp_var_for_se_sim", opp_var, note="phi minus phi_opp")
+    rec("diag", "drift_sd_for_se_sim", drift_sd, note=f"calibrated to G0 gap {g0o - g0:+.3f}")
+    cfac_base = se_inflation(rows, role, ph_use, main_["k"], main_["role_means"])
+    cfac_aug = se_inflation(rows, role, ph_use, main_["k"], main_["role_means"],
+                            opp_var=opp_var, drift_sd=drift_sd)
+    cfac = {kk: max(cfac_base[kk], cfac_aug[kk]) for kk in cfac_base}
+    for kk in cfac:
+        rec("se_inflation", kk, cfac[kk], note=f"shock-only {cfac_base[kk]:.3f}, "
+            f"+opponent+drift {cfac_aug[kk]:.3f}; the larger is used")
+    print(f"  c shock-only {cfac_base}\n  c +opp+drift {cfac_aug}\n  c used {cfac}")
     res = {}
     for key in ("dB_E", "dB_D", "elpd_E"):
         se0, two = se_pair(c[key], cmv, plv)
@@ -633,19 +768,26 @@ def main():
     print(f"dBrier D2-D1 {res['dB_D'][0]:+.6f} (SE {res['dB_D'][1]:.6f})  NI upper {ni_ub:+.6f}")
     print(f"ELPD E2-E1 {res['elpd_E'][0]:+.5f}/row  z {zE:+.2f}   M {M:.4f}")
 
-    # ---- odd/even replication ------------------------------------------------------------
-    o_tr, o_te = odd_even(rows)
-    oe = run_split(rows, role, o_tr, o_te, band=False)
-    oe_elpd = float(oe["c"]["elpd_E"].mean())
+    # ---- odd/even replication, and the sensitivity on the registered sub-sample --------------
     oe_same = np.sign(oe_elpd) == np.sign(res["elpd_E"][0])
     rec("oddeven", "phi_odd", oe["phi_tr"]); rec("oddeven", "elpd_E_even", oe_elpd)
     print(f"odd/even: phi {oe['phi_tr']:+.4f}  ELPD {oe_elpd:+.5f}  same sign {oe_same}")
+    # DESIGN DEVIATION (pre-registration §4 powered 143 players present in BOTH halves; the run
+    # scores all test rows). Players with no train-half evidence sit on the role prior alone, and
+    # that is where a frailty over-predicts the tail — so report the gating contrasts on the
+    # registered sub-sample too. Sensitivity, never a re-decision.
+    ev_n = tr60.groupby("player_code").size()
+    keep = T["player_code"].isin(ev_n[ev_n >= 2].index).to_numpy()
+    print(f"registered sub-sample: {int(keep.sum())} of {len(T)} test rows "
+          f"({T['player_code'][keep].nunique()} players with >=2 train-half 60+ rows)")
+    for key in ("dB_E", "dB_D", "elpd_E"):
+        v = float(c[key][keep].mean())
+        se = se_pair(c[key][keep], cmv[keep], plv[keep])[0] * cfac[key]
+        rec("sensitivity", key, v, note=f"players with >=2 train-half rows; SE={se:.6f}; "
+            f"n={int(keep.sum())}")
+        print(f"  {key}: {v:+.6f} (SE {se:.6f})  [full sample {float(c[key].mean()):+.6f}]")
 
     # ---- G0 (shrinkage/drift; does not gate frailty) ---------------------------------------
-    g0, g0se = g0_slope(T["y"], T["m"], arms["lam_D"], cmv, plv)
-    g0e, g0ese = g0_slope(T["y"], T["m"], arms["lam_E"], cmv, plv)
-    oT = oe["te"]
-    g0o, g0ose = g0_slope(oT["y"], oT["m"], oe["arms"]["lam_D"], oT["cm"], oT["player_code"])
     g0_flag = (g0 + 1.96 * g0se < G0_BAND[0]) or (g0 - 1.96 * g0se > G0_BAND[1])
     rec("G0", "slope_D1_half", g0, g0 - 1.96 * g0se, g0 + 1.96 * g0se)
     rec("G0", "slope_E1_half", g0e, g0e - 1.96 * g0ese, g0e + 1.96 * g0ese)
@@ -654,15 +796,28 @@ def main():
           f"E1 {g0e:.3f}  odd/even D1 {g0o:.3f}  -> open k0 item: {g0_flag}")
 
     # ---- band reliability (report only) -----------------------------------------------------
+    # The deployed composition against the EB one. It is prior AND expected minutes: the E arms
+    # are scored at the REALISED test-half minutes while D must forecast them from the train
+    # half, so this gap is not attributable to k0/revert alone. SE is clustered and c-inflated.
+    d_DE = (arms["P_D1"].to_numpy() - c["H"]) ** 2 - (arms["P_E1"].to_numpy() - c["H"]) ** 2
+    se_DE = se_pair(d_DE, cmv, plv)[0] * cfac["dB_E"]
+    rec("brier", "D1_minus_E1", float(d_DE.mean()), note=f"SE={se_DE:.6f}; deployed COMPOSITION "
+        f"(prior + expected minutes) vs EB prior at realised minutes — not the prior alone")
+    print(f"D1 - E1 Brier {d_DE.mean():+.6f} (SE {se_DE:.6f})  [composition, incl. a minutes oracle for E]")
+
     q = pd.qcut(arms["P_D1"], 5, labels=False, duplicates="drop")
-    print("\nband (D1 quintile)   n    obs    " + "  ".join(f"{a:>6}" for a in ("P0", "N0", "E1", "E2", "D1", "D2")))
+    print("\nband (D1 quintile)   n    obs   se_obs  " + "  ".join(f"{a:>6}" for a in ("P0", "N0", "E1", "E2", "D1", "D2")))
     for b in sorted(q.unique()):
         s = q == b
-        obs = c["H"][s.to_numpy()].mean()
+        sm = s.to_numpy()
+        obs = c["H"][sm].mean()
+        se_obs = cluster_se(c["H"][sm], cmv[sm])
         preds = [arms.loc[s, f"P_{a}"].mean() for a in ("P0", "N0", "E1", "E2", "D1", "D2")]
-        print(f"  Q{b + 1}               {int(s.sum()):4d}  {obs:.3f}  " + "  ".join(f"{p_:.3f}" for p_ in preds))
+        print(f"  Q{b + 1}               {int(s.sum()):4d}  {obs:.3f}  {se_obs:.3f}  "
+              + "  ".join(f"{p_:.3f}" for p_ in preds))
         for a, p_ in zip(("P0", "N0", "E1", "E2", "D1", "D2"), preds):
-            rec("band", f"Q{b + 1}_{a}", p_, note=f"obs {obs:.4f} n {int(s.sum())}")
+            rec("band", f"Q{b + 1}_{a}", p_, note=f"obs {obs:.4f} se_obs {se_obs:.4f} "
+                f"n {int(s.sum())} z {(p_ - obs) / se_obs:+.2f}")
     for a in ("D1", "D2", "E1", "E2"):
         P = np.clip(arms[f"P_{a}"].to_numpy(), 1e-6, 1 - 1e-6)
         X = np.column_stack([np.ones(len(P)), np.log(P / (1 - P))])

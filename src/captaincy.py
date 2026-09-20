@@ -76,6 +76,12 @@ def point_draws(players, tm, tsamp, gw_lo, gw_hi, S=4000):
         if nfix == 0: continue
         Sd = min(S, lam_for.shape[1])
         pos = p.pos
+        # The DefCon count comes off its OWN per-player stream, as in bayes_model.project. On the
+        # shared `rng` a frailty draw would consume extra bits and re-randomise every later draw
+        # here — minutes, goals, clean sheets, and every subsequent player — so the captaincy
+        # tail could not be A/B'd against the same seed. [2026-09-18]
+        drng = bm._defcon_rng(p, gw=gw_lo)
+        dc_phi = dfr.phi_for(pos)
         p_start = rng.beta(max(p.start_a, 1e-3), max(p.start_b, 1e-3), Sd)
         safe = lambda a, b, hi, dflt: np.clip(np.nan_to_num(
             rng.gamma(max(float(np.nan_to_num(a, nan=dflt)), 1e-6),
@@ -106,7 +112,7 @@ def point_draws(players, tm, tsamp, gw_lo, gw_hi, S=4000):
             concp = np.where(np.isin(pos, ["GK", "DEF"]) & p60, -np.floor(conc / 2), 0.0)
             thr = DEFCON_THRESHOLD.get(pos, 999)
             # same composition as bayes_model.project, frailty included (off by default)
-            dcp = np.where(dfr.draw_count(rng, dc, m90, dfr.phi_for(pos)) >= thr, DEFCON_PTS, 0.0)
+            dcp = np.where(dfr.draw_count(drng, dc, m90, dc_phi) >= thr, DEFCON_PTS, 0.0)
             app = np.where(p60, 2.0, np.where(played, 1.0, 0.0))
             pts += app + gp + ap + csp + concp + dcp
         names.append({"player": p.web_name, "pos": pos, "team": p.team,
