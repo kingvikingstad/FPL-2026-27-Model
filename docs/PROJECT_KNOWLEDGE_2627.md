@@ -668,7 +668,25 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
    understated whatever the mean does. Changing how evidence is WEIGHTED cannot fix it: the
    filter, which was built for exactly this, closes barely a fifth of the gap.
 
-   **Why it matters beyond the minutes prior.** `project()` draws a start probability per
+   **[CORRECTED 2026-09-28] Where it actually reaches — narrower than the next paragraph says.**
+   `project()` holds p across fixtures WITHIN one call. The canonical board makes one call
+   per gameweek and re-draws p each week (`_player_rng` is keyed on gw). So the
+   under-dispersion reaches only:
+   - DGWs, and there are none on the 26/27 list as of 28 Sep;
+   - the non-canonical `project(lo, hi)` callers, none of which feeds a decision.
+
+   Per-GW percentiles, the captaincy tail, `lock_team` and P(haul) read one gameweek. There a
+   start is Bernoulli(E[p]) and the Beta's spread is irrelevant. The horizon solver sums
+   MEANS, which no dispersion fix changes. A consumer that summed canonical draws across
+   weeks would see ZERO serial start dependence instead: a larger defect, latent for the same
+   reason.
+
+   **Status: RECORDED, NOT BUILT.** The registration is filed DORMANT in
+   `studies/start_dependence.py`. It uses H = 6, PIT coverage, and two mean-preserving arms
+   (a widened Beta-Binomial, and a stationary-start Markov chain). It activates when a
+   consumer sums draws across weeks or prices horizon risk. DGWs are out of its scope,
+   because pair dependence 3 days apart is untested and adjacent to congestion.
+   **Why it matters beyond the minutes prior** (as first written). `project()` draws a start probability per
    player and reuses it across the window, so every multi-gameweek `p5..p95`, every captaincy
    tail and every P(haul) inherits this under-dispersion. §6.11 understates a keeper's MEAN;
    this understates everyone's VARIANCE, and the two are independent defects.
