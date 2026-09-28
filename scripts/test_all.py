@@ -91,6 +91,11 @@ OPTIONAL_INPUTS = ("fpl-data-stats.csv",)
 # child rather than policing the character set of every print statement.
 CHILD_ENV = dict(_os.environ)
 CHILD_ENV["PYTHONIOENCODING"] = "utf-8"
+# The team-news ledger (data/team_news/ledger.csv) is APPEND-ONLY evidence for
+# studies/omit_doubt.py. A harness board carries the same empty env fingerprint as a real
+# deadline build, so its rows could never be told apart afterwards. The write path is
+# covered by `team_news --selftest`; the harness's boards must not append.
+CHILD_ENV["TEAM_NEWS_LEDGER"] = "off"
 
 
 def run(cmd, timeout=1800, env=None):

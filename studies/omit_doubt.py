@@ -144,9 +144,28 @@ Acceptance: a board A/B bit-identical on `mean`, plus offline selftests.
   6. A selftest fixture for the 25/26 heading format ("ARSENAL (89%)", no colon) before
      any retro scrape [CHECK].
 
+INSTRUMENT STATUS, 2026-09-28 (src/team_news.py; registration above untouched)
+  1. DONE, one deviation: the doubt flag lives in the LEDGER, resolved to player_code by
+     `predicted_xi.resolve` within club, not as a column on the fpl.page XI rows — one
+     authoritative definition instead of two name-matching routes. Raw doubt names are
+     kept per capture (doubts.csv); a doubts paragraph the parser misses now warns and is
+     listed in meta.json instead of yielding [] silently.
+  2. DONE: article.html + every graphic per capture, config.TEAM_NEWS/gw{N}/{stamp}_fplpage/.
+  3. DONE: gw_board appends every covered player's pre-team-news Beta, n_start/n_sources,
+     doubt_flag, band/p_band, chance_play, p after consensus and after the ceiling, with
+     run_ts, deadline and an env fingerprint (PRED_XI_GW exempt: lock_board pins it).
+     test_all sets TEAM_NEWS_LEDGER=off so harness boards never enter the evidence.
+  4. DONE: team_news/ and team_news_ledger.csv are committed manifest nodes.
+  5. OPEN: full-history Core-Insights clone (needed for the FIT set, not for GW6+ capture).
+  6. OPEN: 25/26 heading-format selftest fixture (needed before any retro scrape).
+  Acceptance: GW5 board with the ledger on vs off bit-identical on mean/sd/p5/p95 over
+  4,002 player-gameweeks. First real ledger run (GW5, post-deadline, plumbing only):
+  38 omitted-AND-doubt-flagged players at 12 covered clubs — above the 8-15/gw planning
+  figure, so the n_D >= 200 trigger may come sooner than GW20-25.
+
 RESULT
 ------
-(not run — blocked on INSTRUMENT)
+(not run — capture live from GW6; fit set blocked on items 5-6)
 """
 
 

@@ -140,6 +140,17 @@ _NODES = [
          note="Solio JSON, every 4h by the 'FPL Solio Snapshot' task; NOT regenerable"),
     Node("odds_snapshots/", config.ODDS_SNAPSHOTS, "committed",
          note="football-data E0 odds; `python src/fixture_market.py --fetch`; NOT regenerable"),
+    # Team-news evidence for studies/omit_doubt.py, registered 2026-09-28 with the capture
+    # itself. Both are append-only logs taken at the moment of a scrape or a board build;
+    # neither can be rebuilt afterwards (the article is edited, the graphics are third-party
+    # hosted, the pre-team-news prior is gone once the next build overwrites it). Committed.
+    Node("team_news/", config.TEAM_NEWS, "committed",
+         note="per-capture fpl.page article, graphics, doubts line; fplpage.scrape; NOT regenerable"),
+    Node("team_news_ledger.csv", config.TEAM_NEWS_LEDGER, "committed",
+         columns=("gw", "run_ts", "player_code", "team", "p_pre", "named", "doubt_flag",
+                  "p_cons", "p_ceil"),
+         nonnull=("gw", "run_ts", "player_code", "p_pre"),
+         note="per board run, every player at a covered club; gw_board; NOT regenerable"),
     # The manager's squad, registered 2026-09-10 after the squad tab showed a four-day-old
     # mid-gameweek snapshot and doctor could not say so. Fetched by `src/fpl_entry.py`
     # from the public FPL API — not the upstream data repo, and not a pipeline build step,

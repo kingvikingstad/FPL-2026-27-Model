@@ -138,6 +138,12 @@ os.makedirs(SOLIO_SNAPSHOTS, exist_ok=True)
 # source is rolling and keeps no history either, so the same reasoning applies. Second
 # source for per-fixture market lambda — see src/fixture_market.py.
 ODDS_SNAPSHOTS = os.path.join(DATA, "odds_snapshots")
+# Team-news captures (raw fpl.page article, line-up graphics, doubts line) and the per-run
+# team-news ledger. NOT regenerable: the article is edited after publication and the
+# graphics are third-party hosted, so a capture not taken is evidence lost. Committed, like
+# SOLIO_SNAPSHOTS. Written by src/team_news.py; see studies/omit_doubt.py INSTRUMENT.
+TEAM_NEWS = os.path.join(DATA, "team_news")
+TEAM_NEWS_LEDGER = os.path.join(TEAM_NEWS, "ledger.csv")
 os.makedirs(ODDS_SNAPSHOTS, exist_ok=True)
 # The pre-registered model-vs-market study (docs/MODEL_VS_MARKET_PREREG_2026-09-16.md).
 # The LOOKS marker is one-way: each entry records a look that has been taken and can

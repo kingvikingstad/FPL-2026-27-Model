@@ -369,7 +369,26 @@ if _flag("PRED_XI", "on"):
         # promote a player above what the injury feed permits (Doku: named by two of
         # three XIs, 25% chance of playing, ruled out in the manager's pre-match
         # remarks). `sig` here is the live FPL feed where it was reachable.
+        _plp_cons = _plp
         _plp, _ = pxi.apply_injury_ceiling(_plp, sig)
+        # Team-news ledger (studies/omit_doubt.py INSTRUMENT): every covered player's start
+        # prior before team news, after consensus and after the ceiling, with the doubt
+        # flag. Capture only — nothing reads it back — and a failure never costs the board.
+        if _flag("TEAM_NEWS_LEDGER", "on"):
+            try:
+                import team_news as tnw
+                _run = tnw._now()
+                _dl = tnw.deadline(PRED_XI_GW)
+                _led = tnw.ledger_rows(
+                    PRED_XI_GW, _dl, pl, _plp_cons, _plp,
+                    _cons if len(_cons) else pd.DataFrame(
+                        columns=["team", "player_code", "n_start", "n_sources"]),
+                    _sq, sig, xi_files=[m["path"] for m in _srcs],
+                    capture=tnw.latest_capture(PRED_XI_GW, before=_run), run_ts=_run)
+                print(f"[team-news] ledger +{tnw.append_ledger(_led)} rows "
+                      f"({int(_led['doubt_flag'].sum())} doubt-flagged)")
+            except Exception as _e:
+                print(f"[team-news] WARNING ledger not written ({type(_e).__name__}: {_e})")
         # Minutes management is a SEPARATE lever — a capped starter still starts.
         _plp, _ = pxi.apply_minutes_caps(_plp, gw=PRED_XI_GW)
         pl_by_gw[PRED_XI_GW] = _plp

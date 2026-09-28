@@ -259,12 +259,19 @@ def parse_blocks(html):
         if warn:
             doubts = [_text(x) for x in
                       re.findall(r"<strong[^>]*>(.*?)</strong>", warn.group(1), re.S)]
+        elif "⚠️" in block:
+            # A doubts paragraph longer than the 400-character window matches nothing and
+            # used to yield [] with no word said. Reported, not guessed: the capture keeps
+            # the raw article, so the names are recoverable (team_news.archive meta).
+            print(f"[fplpage] WARNING {raw}: doubts line present but not parsed "
+                  f"(longer than the 400-char window?)")
         out.append({
             "club": CLUB_NORM.get(raw.upper(), raw.title()),
             "raw_club": raw,
             "image_url": imgs[0] if imgs else None,
             "author_confidence": int(pct.group(1)) / 100.0 if pct else np.nan,
             "doubts": [d for d in doubts if d],
+            "doubts_line": "⚠️" in block,
         })
     return as_of, out
 
@@ -456,11 +463,16 @@ def _band_at(img, x, y, r, hues=None):
     return band, round(hue, 1)
 
 
-def scrape(gw, html=None, out=None, verbose=True, engine=None):
+def scrape(gw, html=None, out=None, verbose=True, engine=None, archive=None):
     """Fetch, read every club's graphic, validate, and return the frame.
 
     Only clubs yielding exactly 11 ringed names are kept. Everything rejected is
     reported, because a silently short XI is the failure this module exists to avoid.
+
+    `archive` (default: on unless `out is False`) keeps the raw article, every graphic
+    and the doubts line under config.TEAM_NEWS via `team_news.archive` — evidence for
+    studies/omit_doubt.py that cannot be re-fetched later. A failed archive is reported
+    and never fails the scrape.
     """
     html = html if html is not None else fetch(gw)
     as_of, blocks = parse_blocks(html)
@@ -468,6 +480,7 @@ def scrape(gw, html=None, out=None, verbose=True, engine=None):
         print(f"[fplpage] GW{gw}: {len(blocks)} club blocks, published {as_of}")
     eng = engine or _ocr()
     kept, dropped, problems = [], [], []
+    images = {}
     for b in blocks:
         if not b["image_url"]:
             dropped.append((b["club"], "no line-up graphic in the block")); continue
@@ -477,6 +490,7 @@ def scrape(gw, html=None, out=None, verbose=True, engine=None):
                 raw = r.read()
         except Exception as e:
             dropped.append((b["club"], f"image fetch failed: {type(e).__name__}")); continue
+        images[b["club"]] = raw
         rows, probs = read_lineup(raw, b["club"], engine=eng)
         problems += probs
         if len(rows) != 11:
@@ -498,6 +512,18 @@ def scrape(gw, html=None, out=None, verbose=True, engine=None):
         if len(df):
             print("[fplpage] band mix: "
                   + ", ".join(f"{k} {v}" for k, v in df["band"].value_counts().items()))
+    if archive is None:
+        archive = out is not False               # a dry run writes nothing
+    if archive:
+        try:
+            import team_news
+            cap = team_news.archive(gw, html, blocks, images, as_of, source=SOURCE_SUFFIX)
+            if verbose:
+                nd = sum(len(b["doubts"]) for b in blocks)
+                print(f"[fplpage] archived article, {len(images)} graphics and {nd} "
+                      f"doubt names -> {cap}")
+        except Exception as e:                                    # never costs the XI
+            print(f"[fplpage] WARNING archive failed ({type(e).__name__}: {e})")
     if out is None:
         out = os.path.join(config.DATA, f"predicted_xi_gw{int(gw)}_{SOURCE_SUFFIX}.csv")
     if out is not False and len(df):
