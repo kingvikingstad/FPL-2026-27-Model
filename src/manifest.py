@@ -32,7 +32,9 @@ Node kinds
   committed  transcribed or pinned by hand, lives in data/, in git. Checked, never built.
   derived    regenerable from the nodes above by `producer`. Staleness applies.
   cache      a memoisation any consumer regenerates on demand. Its mtime carries no
-             information about freshness, so it is never stale and never an input edge.
+             information about freshness, so it is never stale and never an input edge,
+             and its ABSENCE is not a finding — having no producer, no plan step could
+             name it, so reporting one would be a red light with nothing behind it.
   orphan     READ by live code, written by NOTHING in the tree. Cannot be refreshed,
              and will silently rot as the season moves. Always a finding.
   locked     predictions/ — NOT regenerable, and never rebuilt. Existence only.
@@ -453,7 +455,16 @@ def _check_local(nodes=None):
             n = NODES[n]
         if not n.exists():
             # A missing derived artifact is a build step not yet run, not a defect.
-            sev = "skip" if n.kind == "derived" else "MISSING"
+            # A missing CACHE is not a defect either, and for a stronger reason: a
+            # cache has no producer by design (see own_start_cal.pkl above), so no
+            # PLAN step can ever name it. Reporting MISSING on a cold tree therefore
+            # says something is wrong and hands you nothing to run — the check that
+            # is always red, warned against twice in this file. The first consumer
+            # writes it; absence is the normal pre-build state, not a finding.
+            # `locked` keeps MISSING deliberately: a locked board CANNOT be
+            # regenerated, so its absence is a real and standing finding — as is a
+            # missing external feed or hand-committed file.
+            sev = "skip" if n.kind in ("derived", "cache") else "MISSING"
             rows.append((n.name, sev,
                          "not built yet" if sev == "skip" else f"absent: {n.path}"))
             continue
@@ -598,6 +609,23 @@ def selftest():
         # an orphan reports ORPHAN even when it is perfectly well formed
         nd = Node("d.csv", c, "orphan", note="no producer")
         assert check([nd])[0][1] == "ORPHAN", check([nd])
+        # An ABSENT cache is not a problem. It has no producer, so no PLAN step can
+        # name it, and the first consumer writes it — reporting MISSING made doctor
+        # exit 1 on a cold tree with nothing to run. This is the regression guard.
+        gone = _os.path.join(tmp, "no_such_cache.pkl")
+        assert not _os.path.exists(gone)
+        ne = Node("e.pkl", gone, "cache", note="absent on a cold tree")
+        assert check([ne])[0][1] == "skip", check([ne])
+        # and "skip" is what the callers actually exempt from their problem tally
+        assert check([ne])[0][1] not in ("MISSING", "STALE", "EMPTY", "SCHEMA")
+        # An absent LOCKED node stays MISSING: it can never be regenerated, so its
+        # absence is a real standing finding, not a build step not yet run.
+        nf = Node("f/", _os.path.join(tmp, "no_such_locked"), "locked", note="absent")
+        assert check([nf])[0][1] == "MISSING", check([nf])
+        # ... and so does an absent external feed or hand-committed file.
+        for k in ("external", "committed"):
+            ng = Node("g.csv", _os.path.join(tmp, "no_such.csv"), k)
+            assert check([ng])[0][1] == "MISSING", (k, check([ng]))
     finally:
         del NODES["a.csv"], NODES["b.csv"], NODES["c.csv"]
     print(f"manifest selftest ok — {len(_NODES)} nodes, "
