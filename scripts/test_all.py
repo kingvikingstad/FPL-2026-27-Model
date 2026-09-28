@@ -82,6 +82,16 @@ SKIP_STUDIES = {"sd_design"}          # pre-registration arithmetic, needs no ru
 # real ones, so they are surfaced as SKIP with the reason.
 OPTIONAL_INPUTS = ("fpl-data-stats.csv",)
 
+# How long to wait for a killed child's pipes after the tree has been taken down. Bounded
+# on purpose: see `run`, where an unbounded drain cost two full days of harness time.
+KILL_DRAIN_S = 60
+
+# Determinism tolerance on the model `mean`. NOT a Monte Carlo allowance: `project()` seeds
+# a generator per player_code, so two runs of one tree agree exactly (measured 0.000000
+# over 25,346 rows, 2026-09-22). This is float-comparison slack, and anything above it is
+# a regression — see section 7.
+DETERMINISM_TOL = 1e-9
+
 
 # Children write to a PIPE here, not to a console. On Windows that makes stdout cp1252
 # (the console itself is UTF-8), so any script printing a Greek letter or an arrow dies
@@ -93,20 +103,63 @@ CHILD_ENV = dict(_os.environ)
 CHILD_ENV["PYTHONIOENCODING"] = "utf-8"
 
 
-def run(cmd, timeout=1800, env=None):
-    t0 = time.time()
+def _kill_tree(proc):
+    """Kill `proc` AND its descendants.
+
+    `Popen.kill()` kills only the direct child. On Windows a grandchild inherits the
+    stdout/stderr handles, so it keeps the pipe open after its parent dies — and the
+    drain that follows a kill then has nothing to wait for but a handle nobody will
+    close. `taskkill /T` takes the whole tree, which is the only thing that guarantees
+    the pipe is released.
+    """
+    if _os.name == "nt":
+        subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)],
+                       capture_output=True)
     try:
-        r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True,
-                           timeout=timeout, env=env or CHILD_ENV,
-                           encoding="utf-8", errors="replace")
-        out = (r.stderr or "") + (r.stdout or "")
-        if r.returncode != 0:
-            for opt in OPTIONAL_INPUTS:
-                if opt in out and "FileNotFoundError" in out:
-                    return "skip", time.time() - t0, f"optional input absent: {opt}"
-        return r.returncode == 0, time.time() - t0, out[-400:]
+        proc.kill()
+    except OSError:
+        pass
+
+
+def run(cmd, timeout=1800, env=None):
+    """Run one child under a cap that is ACTUALLY ENFORCED.
+
+    This used to be `subprocess.run(..., timeout=...)`, and the cap did not hold. CPython
+    reacts to a timeout by killing the direct child and then calling `communicate()` a
+    second time WITH NO TIMEOUT to drain the pipes; if anything in the tree still holds
+    them, the harness blocks inside its own timeout handler, having already decided the
+    child should die. [VERIFIED 2026-09-20] `studies/def_rotation.py` sat 22.7h against a
+    2400s cap and `studies/start_persistence.py` 9.6h, with the parent idle at 2s CPU and
+    no TIMEOUT ever recorded; the run only ended when both were killed by hand. That is
+    worse than a red harness: the cap reads as enforced, one core stays pinned, and every
+    other timing on the machine is distorted — CLAUDE.md's own note about `defcon_roles`
+    being reported as a 2000s TIMEOUT under concurrent load is the same failure seen from
+    the other side.
+
+    Now: kill the whole tree, then drain under a SECOND bounded wait, and report the
+    TIMEOUT. A cap that cannot be enforced is not a cap.
+    """
+    t0 = time.time()
+    proc = subprocess.Popen(cmd, cwd=ROOT, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, text=True, env=env or CHILD_ENV,
+                            encoding="utf-8", errors="replace")
+    try:
+        out_s, err_s = proc.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
-        return False, time.time() - t0, "TIMEOUT"
+        _kill_tree(proc)
+        try:
+            proc.communicate(timeout=KILL_DRAIN_S)
+            drained = ""
+        except subprocess.TimeoutExpired:
+            # the tree is dead but something still holds the pipe; do not wait on it
+            drained = f"; pipe still open after kill, output discarded"
+        return False, time.time() - t0, f"TIMEOUT at {timeout}s (tree killed{drained})"
+    out = (err_s or "") + (out_s or "")
+    if proc.returncode != 0:
+        for opt in OPTIONAL_INPUTS:
+            if opt in out and "FileNotFoundError" in out:
+                return "skip", time.time() - t0, f"optional input absent: {opt}"
+    return proc.returncode == 0, time.time() - t0, out[-400:]
 
 
 def section(name):
@@ -345,25 +398,56 @@ def main():
     print(f"  -> {sum(g for _, g in checks)}/{len(checks)} passed")
 
     if not quick:
-        section("7. DETERMINISM (re-run the board, compare)")
+        section("7. DETERMINISM (two boards back to back, live inputs pinned)")
+        # WHAT THIS USED TO MEASURE, AND WHY IT WAS NOT DETERMINISM [corrected 2026-09-22]
+        # It compared section 4's board against a re-run here, on `total` from
+        # gw_board_wide (the SOLIO-BLENDED column), with the child env inheriting
+        # LIVE_FPL=on. Three things then move between the two boards without the model
+        # changing at all: live availability, live prices, and the Solio feed each run
+        # re-fetches. The gap between the two is also unbounded — on 2026-09-20 two
+        # TIMEOUT studies sat between them and the boards were TWO DAYS apart, which
+        # reported max |delta| 50.5 against a 0.75 tolerance and read as a hard
+        # nondeterminism failure. Measured properly the same tree gave max |delta|
+        # 0.000000 over 25,346 player-gameweeks.
+        #
+        # So: build BOTH arms here, adjacently, with every live input pinned off, and
+        # compare the model `mean` per player-gameweek — the quantity the model owns.
+        # `project()` seeds an RNG per player_code, so the board is bit-identical by
+        # construction; the tolerance is therefore numerical, not Monte Carlo, and any
+        # drift above it is a real regression rather than noise.
+        #
+        # What this deliberately no longer covers: the Solio blend and the live
+        # availability fetch. Neither CAN be tested for reproducibility — they are
+        # network reads whose content changes — and including them is what made this
+        # check unable to tell a regression from a feed update.
         import tempfile
-        out = _os.path.join(tempfile.gettempdir(), "fpl_determinism")
-        _os.makedirs(out, exist_ok=True)
-        env = dict(CHILD_ENV); env["FPL_OUTPUTS"] = out
-        r = subprocess.run([PY, _os.path.join("scripts", "gw_board.py")],
-                           cwd=ROOT, env=env, capture_output=True, text=True,
-                           timeout=2400, encoding="utf-8", errors="replace")
-        if r.returncode != 0:
-            print("  FAIL board re-run errored"); allok = False
+        env = dict(CHILD_ENV)
+        env.update({"LIVE_FPL": "off", "SOLIO": "off"})
+        arms, failed = {}, False
+        for arm in ("a", "b"):
+            out = _os.path.join(tempfile.gettempdir(), f"fpl_determinism_{arm}")
+            _os.makedirs(out, exist_ok=True)
+            e = dict(env); e["FPL_OUTPUTS"] = out
+            good, secs, err = run([PY, _os.path.join("scripts", "gw_board.py")], 2400, e)
+            if good is not True:
+                print(f"  FAIL board arm {arm} errored after {secs:.0f}s")
+                for line in str(err).strip().splitlines()[-4:]:
+                    print(f"       | {line}")
+                failed = True
+                break
+            arms[arm] = _os.path.join(out, "gw_board_long.csv")
+        if failed:
+            allok = False
         else:
-            a = pd.read_csv(_os.path.join(config.OUTPUTS, "gw_board_wide.csv"))
-            c = pd.read_csv(_os.path.join(out, "gw_board_wide.csv"))
-            m = a.merge(c, on=["player", "team"], suffixes=("_a", "_b"))
-            d = (m["total_b"] - m["total_a"]).abs()
-            good = d.max() < 0.75          # Monte Carlo tolerance, S=1500
-            print(f"  {'ok  ' if good else 'FAIL'} max |delta| {d.max():.3f} over "
-                  f"{len(m)} players (tolerance 0.75, MC noise at S=1500)")
-            print(f"       mean |delta| {d.mean():.4f}")
+            a = pd.read_csv(arms["a"]); b = pd.read_csv(arms["b"])
+            m = a.merge(b, on=["player_code", "gw"], suffixes=("_a", "_b"))
+            d = (m["mean_b"] - m["mean_a"]).abs()
+            good = bool(len(m)) and d.max() <= DETERMINISM_TOL
+            print(f"  {'ok  ' if good else 'FAIL'} max |delta| {d.max():.6f} over "
+                  f"{len(m)} player-gameweeks (tolerance {DETERMINISM_TOL:g}; the board "
+                  f"is bit-identical by construction)")
+            print(f"       mean |delta| {d.mean():.6f}   "
+                  f"rows moved >1e-6: {int((d > 1e-6).sum())}")
             allok &= good
 
     section("RESULT")

@@ -25,6 +25,11 @@ from sklearn.model_selection import train_test_split
 from fpl_xp_model import ols_robust
 
 p = pd.read_pickle(config.PMS_PANEL).sort_values(["player_id", "gameweek"])
+# Realised points are a DOCUMENTED OPTIONAL input; without them this study has
+# nothing to model. Ask once, here, so the harness reports SKIP — rather than
+# crashing on a missing column four transformations later (see build_pms).
+from build_pms import require_points
+require_points(p)
 
 # ---------------------------------------------------------------------------
 # rolling leak-free per-90 rates from PER-MATCH data
