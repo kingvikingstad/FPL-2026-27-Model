@@ -19,8 +19,9 @@ Pre-registered in docs/DEFCON_THRESHOLD_CALIBRATION_PREREG_2026-09-16.md before 
 25/26 DEF CBIT, 60+ min, within-player moment estimator against a simulated true-Poisson band:
 phi GW1-19 +0.053 and GW20-38 +0.042, each outside a band of about +/-0.01; +0.047 net of
 opponent ratings, so opponent supply does not explain it. Held out on GW20-38: count log score
-+0.029/row (z +4.1), odd/even split the same sign; as-deployed Brier D2-D1 -0.00044, upper bound
-+0.00055 inside the +0.001 non-inferiority margin. It is NOT validated because on the
++0.029/row (z +3.6), odd/even split the same sign; as-deployed Brier D2-D1 -0.00044, upper bound
++0.00072 inside the +0.001 non-inferiority margin (SEs carry a simulated inflation factor built on
+the +0.130 within-club-match residual correlation, the opponent effect and within-season drift). It is NOT validated because on the
 Gamma-integrated arm Brier went the wrong way (+0.00028). The pre-registered verdict is
 therefore OFF-BY-DEFAULT, pending a 26/27 replication.
 
