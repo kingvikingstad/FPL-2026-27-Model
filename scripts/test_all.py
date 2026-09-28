@@ -301,7 +301,9 @@ def main():
     gate = [n for n in manifest.graph().values() if n.kind in ("external", "committed")]
     rows = []
     for name, status, detail in manifest.check(gate):
-        rows.append((name, status == "ok", 0.0, detail))
+        # `skip` is doctor's verdict too (an absent_ok store not yet started): same answer
+        # in both places, or the harness is red on a tree doctor calls clean.
+        rows.append((name, "skip" if status == "skip" else status == "ok", 0.0, detail))
     allok &= report(rows)
     stale = [n for n, s, _ in manifest.check() if s == "STALE"]
     if stale:
