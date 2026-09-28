@@ -105,6 +105,16 @@ def build():
     panel["mins"] = num("minutes_played")
 
     # ---- attach realised FPL points ---------------------------------------
+    # `fpl-data-stats.csv` is a DOCUMENTED OPTIONAL input (test_all.OPTIONAL_INPUTS), so a
+    # missing file must not fail the pipeline. It must not vanish either, which is what
+    # `except Exception: pass` did: the panel was written WITHOUT `total_points`, and two
+    # studies that need it died two layers away on `KeyError: total_points` from inside
+    # pandas, while five studies wired to notice the same absence skipped cleanly.
+    # [VERIFIED 2026-09-22, harness run of 2026-09-20: edge_study and retest both FAIL.]
+    # So: keep the schema stable by attaching the columns as all-null, and SAY SO. A
+    # consumer then sees a column that is present and empty — which it can test — instead
+    # of a column that is absent, which it cannot.
+    POINTS_COLS = ["total_points", "fpl_minutes", "published_defcon_gw"]
     try:
         h = pd.read_csv(config.FPL_DATA_STATS)
         h = h[["id", "gameweek", "total_points", "minutes", "defensive_contribution"]]
@@ -113,9 +123,35 @@ def build():
                               # named so it cannot be mistaken for `defcon_fpl`
                               "defensive_contribution": "published_defcon_gw"})
         panel = panel.merge(h, on=["player_id", "gameweek"], how="left")
-    except Exception:
-        pass
+    except FileNotFoundError:
+        for c in POINTS_COLS:
+            panel[c] = np.nan
+        print(f"[build_pms] WARNING realised FPL points NOT attached — "
+              f"{config.FPL_DATA_STATS} is absent (a documented optional input). "
+              f"{', '.join(POINTS_COLS)} are present but ALL NULL; any study that needs "
+              f"realised points must skip rather than model a null column.")
+    except Exception as e:
+        for c in POINTS_COLS:
+            if c not in panel.columns:
+                panel[c] = np.nan
+        print(f"[build_pms] WARNING realised FPL points NOT attached "
+              f"({type(e).__name__}: {e}); {', '.join(POINTS_COLS)} are ALL NULL.")
     return panel
+
+
+def require_points(panel):
+    """Fail the way an ABSENT OPTIONAL INPUT should fail, for a study that needs realised
+    points. `build` leaves `total_points` present-but-null when `fpl-data-stats.csv` is
+    missing, so a consumer cannot tell by a KeyError any more — it has to ask, and the
+    answer has to be shaped like the five studies that already skip on this input:
+    `test_all.run` reports SKIP when a child raises FileNotFoundError naming one of
+    `OPTIONAL_INPUTS`. Modelling an all-null target instead is the failure this replaces.
+    """
+    if "total_points" not in panel.columns or not panel["total_points"].notna().any():
+        raise FileNotFoundError(
+            f"realised FPL points unavailable: {config.FPL_DATA_STATS} "
+            f"(optional input fpl-data-stats.csv) is absent, so `total_points` is empty. "
+            f"This study models realised points and has nothing to run on.")
 
 
 if __name__ == "__main__":
