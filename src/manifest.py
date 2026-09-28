@@ -218,7 +218,7 @@ _NODES = [
                  "coldstart_hist.csv", "set_piece_takers.csv"),
          min_rows=1000,
          columns=("player_code", "player", "pos", "team", "cost", "gw", "mean",
-                  "blended", "sd", "app_ev", "att_ev", "cs_ev", "defcon_ev"),
+                  "blended", "sd", "app_ev", "att_ev", "cs_ev", "defcon_ev", "save_ev"),
          nonnull=("player_code", "mean", "team", "cost"),
          note="CANONICAL. One row per player-gameweek, with the point decomposition"),
     Node("gw_board_wide.csv", _out("gw_board_wide.csv"), "derived",

@@ -105,11 +105,18 @@ def build_players():
     P = P.merge(D1, on=["player", "team", "pos", "own", "cost"], how="left")
 
     # channel split over the horizon
+    # `model_attack_pts` is a RESIDUAL, so every named channel must be subtracted — without
+    # `save_ev` a keeper's save points (2026-09-28) would be labelled attack. A board built
+    # before the save term has no such column and contributes 0.
+    if "save_ev" not in board_l.columns:
+        board_l = board_l.assign(save_ev=0.0)
     ch = board_l.groupby(["player", "team"]).agg(
         model_cs_pts=("cs_ev", "sum"), model_defcon_pts=("defcon_ev", "sum"),
+        model_save_pts=("save_ev", "sum"),
         model_sd_mean=("sd", "mean"), model_p95_mean=("p95", "mean")).reset_index()
     P = P.merge(ch, on=["player", "team"], how="left")
-    P["model_attack_pts"] = P["model_total"] - P["model_cs_pts"] - P["model_defcon_pts"]
+    P["model_attack_pts"] = (P["model_total"] - P["model_cs_pts"] - P["model_defcon_pts"]
+                             - P["model_save_pts"])
 
     # Solio GW1 (already on the board where matched)
     sol = board_l[board_l.gw == 1][["player", "team", "solio"]].rename(
@@ -155,7 +162,7 @@ def build_players():
              + [f"model_gw{i}" for i in range(1, GW_HI + 1)]
              + ["ffs_total", "ffs_value_per_m"] + [f"ffs_gw{i}" for i in range(1, 7)]
              + ["ffs_minus_model_1_6", "solio_gw1", "ffs_matched"]
-             + ["model_attack_pts", "model_cs_pts", "model_defcon_pts",
+             + ["model_attack_pts", "model_cs_pts", "model_defcon_pts", "model_save_pts",
                 "model_sd_mean", "model_p95_mean"]
              + ["live_status", "live_chance_next", "live_news", "live_price",
                 "live_own", "live_ep_next"]

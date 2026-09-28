@@ -644,7 +644,7 @@ if _SOLIO:
 # tolerable only because the club disambiguates within one season, and not something to
 # leave in the path that validates the model.
 cols = ["player_code", "player", "pos", "team", "cost", "own", "gw", "mean", "solio",
-        "blended", "src", "sd", "app_ev", "att_ev", "cs_ev", "defcon_ev", "conc_ev",
+        "blended", "src", "sd", "app_ev", "att_ev", "cs_ev", "defcon_ev", "conc_ev", "save_ev",
         "p5", "median", "p95"]
 long_out = long_df[[c for c in cols if c in long_df.columns]].round(3)
 long_out.to_csv(os.path.join(config.OUTPUTS, "gw_board_long.csv"), index=False)

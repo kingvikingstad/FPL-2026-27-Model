@@ -146,6 +146,43 @@ def _defcon_rng(p, seed=None, gw=0):
     """
     return np.random.default_rng([int(PROJECT_SEED if seed is None else seed),
                                   _player_key(p), int(gw), 1])
+
+
+def _save_rng(team, seed=None, gw=0):
+    """Team-level stream for the SAVE count only: a save count belongs to the match and is
+    shared by whichever keeper plays, as goals conceded are (`_team_rng`). On its own
+    stream so switching FPL_GK_SAVES moves no other draw. [2026-09-28]"""
+    return np.random.default_rng([int(PROJECT_SEED if seed is None else seed),
+                                  _TEAM_STREAM, _team_key(team), int(gw), 1])
+
+
+def _keeper_save_rng(p, seed=None, gw=0):
+    """Per-keeper stream for thinning the club's saves by his own minutes."""
+    return np.random.default_rng([int(PROJECT_SEED if seed is None else seed),
+                                  _player_key(p), int(gw), 2])
+
+
+# Goalkeeper saves — PROJECT_KNOWLEDGE §6.11, studies/gk_saves.py (pre-registered). FPL pays
+# 1 pt per 3 saves and the composition below credited nothing, biasing every keeper DOWN.
+# E[saves | lam_against] = SAVE_R * lam_against, NB2 dispersion SAVE_ALPHA, fitted on 24/25 +
+# 25/26 team-matches (proportional arm, chosen by the registered rule; 80% coverage 0.804).
+# Saves are drawn from the SAME lam_against draw as concessions but independently of the
+# goals realisation: the residual correlation given lambda is +0.032. KNOWN BIAS of this
+# form [VERIFIED, stats-referee 2026-09-28]: the free elasticity is 0.61 (z = 4.8 and 4.1
+# against 1 in the two seasons), so the proportional form makes the GK gradient across clubs
+# ~65% too steep — Hull (lam 2.35) over-credited ~+0.30 pts/match, Arsenal (0.77) under-
+# credited ~-0.12. Kept because the pre-registered rule chose it; the Wald re-test on
+# independent 26/27 data is registered in studies/gk_saves.py (FOLLOW-UP).
+# ON by default (owner decision 2026-09-28): a missing scoring rule, not a hypothesis.
+# FPL_GK_SAVES=off restores the old composition for A/B.
+SAVES_PER_POINT = 3
+SAVE_R = 2.05922
+SAVE_ALPHA = 0.04439
+def gk_saves_on():
+    """FPL_GK_SAVES, read at call time so a runner can A/B it in one process."""
+    return _os.environ.get("FPL_GK_SAVES", "on").lower() not in ("off", "0", "false", "no")
+
+
 LEAGUE_MU = 1.40
 BET_NAME = {"Man Utd": "Man United", "Spurs": "Tottenham"}
 # per-position bonus that rides along with a goal (recovered in the earlier
@@ -522,6 +559,14 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, seed=None, return_draws=Fa
     # sees the same match in path s regardless of who is being simulated.
     conc_by_team = {team: _team_rng(team, seed, gw_lo).poisson(la)
                     for team, (_lf, la) in fix_by_team.items()}
+    # Saves: one realisation per (team, fixture, draw) from the same lam_against draw,
+    # gamma-Poisson for the NB2 spread.
+    gk_saves = gk_saves_on()
+    save_by_team = {}
+    if gk_saves:
+        for team, (_lf, la) in fix_by_team.items():
+            r = _save_rng(team, seed, gw_lo)
+            save_by_team[team] = r.poisson(r.gamma(1.0 / SAVE_ALPHA, SAVE_ALPHA * SAVE_R * la))
 
     out = []
     draw_rows = []
@@ -539,6 +584,7 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, seed=None, return_draws=Fa
         # per-match DefCon overdispersion; 0 (plain Poisson) unless FPL_DEFCON_FRAILTY=on,
         # and DEF only — see defcon_frailty
         dc_phi = dfr.phi_for(pos)
+        srng = _keeper_save_rng(p, seed, gw_lo) if (gk_saves and pos == "GK") else None
         # availability draws (shared across the window -> nailed/rotation risk)
         p_start = prng.beta(p.start_a, p.start_b, S)         # (S,)
         # attacking involvement rate (per 90) and defcon rate draws
@@ -556,6 +602,7 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, seed=None, return_draws=Fa
         pts = np.zeros(S)
         dc_pts = np.zeros(S); cs_pts = np.zeros(S)
         app_pts = np.zeros(S); att_pts = np.zeros(S); conc_pts = np.zeros(S)
+        save_pts = np.zeros(S)
         for f in range(nfix):
             start = prng.random(S) < p_start
             sub   = (~start) & (prng.random(S) < p.sub_app_rate)
@@ -598,9 +645,15 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, seed=None, return_draws=Fa
             dc_cnt = dfr.draw_count(drng, dc_rate, m90, dc_phi)
             dcp = np.where(dc_cnt >= thr, DEFCON_PTS, 0.0)
             appp = np.where(played60, 2.0, np.where(played, 1.0, 0.0))
-            pts += appp + gp + ap + csp + concp + dcp
+            # saves: the club's count, thinned by the share of the match he was on for
+            if srng is not None:
+                kept = srng.binomial(save_by_team[p.team][f], np.clip(mins / 90.0, 0.0, 1.0))
+                svp = np.floor(kept / SAVES_PER_POINT)
+            else:
+                svp = 0.0
+            pts += appp + gp + ap + csp + concp + dcp + svp
             dc_pts += dcp; cs_pts += csp
-            app_pts += appp; att_pts += gp + ap; conc_pts += concp
+            app_pts += appp; att_pts += gp + ap; conc_pts += concp; save_pts += svp
         q = np.percentile(pts, [5, 25, 50, 75, 95])
         if return_draws:
             draw_rows.append(pts.copy())
@@ -608,10 +661,10 @@ def project(players, tm, tsamp, gw_lo, gw_hi, S=1500, seed=None, return_draws=Fa
                     "own": p.own, "cost": p.cost, "nfix": nfix,
                     "mean": pts.mean(), "sd": pts.std(),
                     "defcon_ev": dc_pts.mean(), "cs_ev": cs_pts.mean(),
-                    # the remaining components, so the five sum back to `mean` exactly
+                    # the remaining components, so the six sum back to `mean` exactly
                     # and a decomposition needs no residual bucket
                     "app_ev": app_pts.mean(), "att_ev": att_pts.mean(),
-                    "conc_ev": conc_pts.mean(),
+                    "conc_ev": conc_pts.mean(), "save_ev": save_pts.mean(),
                     "p5": q[0], "p25": q[1], "median": q[2], "p75": q[3], "p95": q[4]})
     res = pd.DataFrame(out).sort_values("mean", ascending=False)
     if return_draws:

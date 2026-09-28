@@ -131,7 +131,7 @@ DEADLINE_WINDOW_H = 26.0
 # only ever makes a run later, never earlier. If the cron changes, re-derive this.
 LAST_CHANCE_H = 14.5
 KEEP = ["player_code", "player", "pos", "team", "cost", "own", "gw", "mean", "solio",
-        "blended", "src", "sd", "app_ev", "att_ev", "defcon_ev", "cs_ev", "conc_ev",
+        "blended", "src", "sd", "app_ev", "att_ev", "defcon_ev", "cs_ev", "conc_ev", "save_ev",
         "par", "p5", "median", "p95"]
 
 

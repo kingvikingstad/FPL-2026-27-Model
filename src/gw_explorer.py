@@ -74,6 +74,7 @@ METRICS = [
     ("cs_ev",         "Clean sheet pts",        "EV from the clean-sheet channel."),
     ("defcon_ev",     "DefCon pts",             "EV from defensive contributions."),
     ("conc_ev",       "Goals-conceded pts",     "EV of the goals-conceded deduction; negative."),
+    ("save_ev",       "Save pts",               "EV of goalkeeper save points (1 per 3 saves); zero for outfield players. Proportional to the club's expected goals against, so it RISES as the fixture gets harder — it partly offsets the clean-sheet channel rather than adding to it. Known bias: the gradient across clubs is ~65% too steep — the weakest defences over-credited by up to ~0.3 pts a match, the strongest under-credited by ~0.1 (studies/gk_saves.py)."),
     ("lam_for",       "Team xG for",            "Posterior lambda for the player's club in this fixture — the fixture strength, on the model's own scale."),
     ("lam_against",   "Team xG against",        "Posterior lambda against the player's club in this fixture."),
     ("p_clean_sheet", "P(clean sheet)",         "Posterior-predictive: the mean over draws of exp(-lambda_against), not exp(-mean lambda)."),
@@ -91,7 +92,7 @@ METRICS = [
 # and defence are fitted levels on a log scale, so their sum over six weeks is a number
 # with no referent. The view refuses to compute it and silently uses the mean instead
 # rather than offering a control that produces nonsense.
-ADDITIVE = {"blended", "mean", "app_ev", "att_ev", "cs_ev", "defcon_ev", "conc_ev",
+ADDITIVE = {"blended", "mean", "app_ev", "att_ev", "cs_ev", "defcon_ev", "conc_ev", "save_ev",
             "lam_for", "lam_against", "p_clean_sheet", "p_win", "par", "d_blended"}
 # Metrics where a LOWER number is the better outcome for the player holding the row, so
 # the heat scale has to run the other way. Only these three: `conc_ev` is already signed
@@ -132,6 +133,7 @@ PLAYER_COMPONENTS = [
     ("att_ev",    "Attack",           "sum",  False, "Goals and assists."),
     ("cs_ev",     "Clean sheets",     "sum",  False, "The clean-sheet channel."),
     ("defcon_ev", "DefCon",           "sum",  False, "Defensive contributions."),
+    ("save_ev",   "Saves",            "sum",  False, "Goalkeeper save points (1 per 3 saves); zero for outfield players."),
     ("app_ev",    "Minutes security", "mean", False, "Appearance points per fixture; the model's rotation read."),
     ("p95",       "Ceiling",          "mean", False, "Typical 95th-percentile week — the haul potential."),
     ("par",       "Value",            "sum",  False, "Points above the REPLACEMENT player at this position, summed over the window. This axis used to be points-per-£m; that construct divides by the WHOLE price, so it charges every player for the first ~4.0m that buys nothing a free slot would not have given you anyway, and it ranks near-floor squad-fillers above every premium. `par` divides nothing — it subtracts what the floor would have returned, gameweek by gameweek, so the window sum is the points the money above the floor actually bought."),

@@ -104,9 +104,79 @@ POWER     ~760 team-matches per season. The between-club range in saves per matc
           log-score effect at this n. R2's 0.005-nat margin is ~1% of the expected
           per-match log score and guards against adopting A2 on a small in-sample slope.
 
-RESULT
-------
-(not yet run)
+RESULT, 2026-09-28 — A1 (PROPORTIONAL) SHIPS; R3, R4, R5 pass
+---------------------------------------------------------------
+Registration committed first (0b16f8f), then run. 742 + 760 team-matches.
+
+  held-out log score of save points / team-match     24->25     25->24
+    A0 const                                          -0.9146    -1.0084
+    A1 prop                                           -0.9063    -0.9745
+    A2 elast                                          -0.8953    -0.9699
+  R1  A1 and A2 each beat A0 in both folds            -> conditioning adopted
+  R2  A2 - A1 = +0.0110 and +0.0046 against a 0.005 bar in BOTH folds -> FAILS in the
+      second fold by 0.0004 -> A1 ships.
+  R3  80% coverage of saves under A1, pooled: 0.804   -> PASS
+  R4  corr(save residual, concession residual | lam_hat) = +0.032 -> independent draw
+      given lam_against. §6.11's "same shot realisation" would have over-coupled them.
+  R5  FPL/FotMob saves, 26/27 single-match club-weeks (n=34): 1.000 -> no rescale
+  Shipped, refitted on 24/25+25/26 pooled: E[saves] = 2.0592 * lam_against, NB2
+  alpha = 0.04439. Pooled mean 2.910 saves, 0.626 save pts per team-match.
+
+WHAT THE RULE COST, recorded rather than argued away. A2's fitted elasticity is
+b = 0.611 (24/25) and 0.614 (25/26): stable, and well below the thinning value of 1.
+The secondary calibration shows the consequence — A1 over-predicts save points in the top
+lam_hat quintile (1.020 against 0.821 realised) and under-predicts the bottom (0.340
+against 0.402). So the shipped term OVER-rates keepers at the weakest defences by ~0.2 pts
+per match at the extreme, and the thinning structure is wrong in a specific direction
+(weaker defences face lower-quality shots on target, so c is not constant). The rule chose
+A1 by 0.0004 nats; switching now would be choosing the form after seeing the result.
+26/27 declared-secondary (n=34): A0 -0.8413, A1 -0.8032, A2 -0.7966.
+
+REFEREE (stats-referee, 2026-09-28): VERDICT biased, known direction, no guard violated; the
+registration diff since 0b16f8f touches only this RESULT text.
+  * R2's outcome is NOT evidence for b = 1. A2's b = 0.611 (SE 0.082) and 0.614 (SE 0.093):
+    b = 1 is rejected at z = 4.8 and 4.1, each fold alone. R2 was underpowered for the
+    question it decided — the floor(saves/3) log score discards most slope information
+    (per-fold SE of A2-A1 ~0.006, so a 0.005 margin in both folds sits at ~1 SE; simulated
+    power 0.82 against 0.89 for a Wald test on b). This must not be recorded anywhere as
+    "proportional thinning validated".
+  * On the board the bias is larger than the quintile table shows: Hull (lam 2.35) A1 1.28
+    vs A2 0.98 pts/match (+0.30); Arsenal (0.77) 0.22 vs 0.35 (-0.12). The club gradient
+    is ~65% too steep.
+  * R4 PASSED BUT WAS UNINFORMATIVE: if the whole NB shock were shared with goals, the
+    largest achievable rho is 0.082 < 0.10, so the threshold could not fail. The same
+    ceiling bounds the consequence (<~2% of GK points variance), and corr(save residual,
+    1[ga=0]) = -0.013 / +0.004 held out: no clean-sheet-state dependence. The independent
+    draw stands.
+  * A1's alpha (0.044) absorbs A1's own slope error (A2 pooled alpha 0.034); saves sd
+    ~1.5% too wide, negligible. alpha is unstable across seasons (0.067 vs 0.019), and mean
+    saves fell 3.04 -> 2.78: a season-level shift a fixed r does not carry.
+
+FOLLOW-UP — PRE-REGISTERED 2026-09-28, before any further 26/27 keeper data is read
+  (replaces the log-score re-test first written here, which reused the underpowered
+  endpoint and set a trigger, n >= 300, the feed may never reach this season):
+  DATA     26/27 PL team-matches with keeper_saves, EXCLUDING the 17 matches already read
+           above. lam_hat fitted on 24/25+25/26 pooled, frozen, applied to 26/27.
+  PRIMARY  NB2 regression log E[saves] = a + b log lam_hat; one-sided Wald test of
+           H0: b = 1 against b < 1 at alpha = 0.05.
+  TRIGGER  run once n >= 220 new team-matches (~0.8 power at b = 0.61, scaled from z=3.33
+           at n=300); run whatever n exists at GW38 if never reached, reporting power.
+  RULE     reject H0 -> A2 replaces A1, SAVE_R/SAVE_ALPHA refitted on 24/25+25/26+26/27
+           with alpha from A2 (~0.034); board gate G1-G4 re-run. Fail to reject -> A1
+           stands and the 24/25-25/26 slope is recorded as not replicated.
+  SECONDARY (non-gating) the A2-A1 save-points log score.
+
+BOARD GATE, 2026-09-28 (scripts/ab_gk_saves.py; gw_board GW1-10, same seed, LIVE_FPL=off,
+SOLIO=off, FPL_GK_SAVES off vs on) — ALL PASS, the flag defaults on:
+  G1  5,940 outfield rows bit-identical; 730 GK rows' non-save components bit-identical.
+  G2  club Spearman(starting-keeper save pts/match, lam_against) = +0.994 (18 clubs;
+      Arsenal 0.24, Man City 0.42 ... Coventry 0.93, Hull 1.27).
+  G3  min GK mean +0.013 (off: +0.007).
+  G4  0.664 save pts per starting-keeper match against 0.626 historical (+6.1%).
+  G5  (diagnostic) board minus closed form +0.003 per match on average.
+Starting keepers move +0.61 pts/gw. §6.11's "~+1.0 pt/gw, ~44%" was mean saves / 3; FPL pays
+floor(saves/3), and E[floor(S/3)] at a mean of 2.9 is ~0.63. The bias was ~27% of a
+starting keeper's projection — still the largest single term, still steepest at weak clubs.
 """
 import glob
 import numpy as np, pandas as pd

@@ -575,7 +575,37 @@ bump inside the GW1-6 horizon and no reset** — price them at prior strength).
 10. BPS/DEF refinement: concentrate the −10% haircut on `BONUS_PER_CS[DEF]`; full-back vs
    centre-back CBI split. ~~GK save-metric recompute (low priority)~~ — **that "low
    priority" was wrong; superseded by §6.11 below.**
-11. **GOALKEEPER SAVE POINTS ARE NOT MODELLED AT ALL.** [VERIFIED 2026-09-09] Not a
+11. **CLOSED 2026-09-28 — goalkeeper save points are modelled, `FPL_GK_SAVES` ON by default**
+   (owner decision: a missing scoring rule, not a hypothesis). Pre-registered in
+   `studies/gk_saves.py` (registration committed before the run). E[saves] = 2.059·λ_against
+   per (team, fixture, posterior draw), NB2 α = 0.044, drawn on a team stream and thinned by
+   the keeper's minutes; floor(saves/3) added; `save_ev` is a new board column.
+   - **Form:** proportional (A1) chosen by the registered rule. The free elasticity (A2) won
+     both folds but cleared the 0.005-nat margin in only one (+0.0046 in the other).
+     **This is NOT evidence for proportional thinning.** stats-referee: b = 0.611 / 0.614,
+     rejecting b = 1 at z = 4.8 / 4.1 in each fold alone. The log-score margin was
+     underpowered for this question.
+   - **Known bias of the shipped form [VERIFIED]:** the GK gradient across clubs is ~65% too
+     steep. Hull (λ 2.35) is over-credited ~+0.30 pts/match and Arsenal (0.77) under-credited
+     ~−0.12. The study's quintile table (top quintile 1.02 vs 0.82) understates this,
+     because the board's clubs sit at the 1st/99th percentiles of λ̂.
+     **OPEN, registered 2026-09-28 in `studies/gk_saves.py` FOLLOW-UP:** a one-sided Wald
+     test of b = 1 vs b < 1 on new 26/27 team-matches, at n ≥ 220 or at GW38. If it
+     rejects, A2 replaces A1.
+   - **Coupling:** residual corr(saves, goals | λ̂) = +0.032, so saves are independent of the
+     goals realisation given λ. The text below says "drawn from the SAME shot realisation";
+     taken literally, that would have over-coupled them. R4 as specified was uninformative:
+     the largest achievable ρ is 0.082, below its 0.10 threshold. The same ceiling bounds the
+     cost to under ~2% of GK variance, and there is no clean-sheet-state dependence held out.
+   - **Spread:** 80% coverage 0.804. The FPL/FotMob saves definition ratio is 1.000.
+   - **Board gate:** all pass. Outfield rows bit-identical; club Spearman(save pts, λ_against)
+     +0.994; starting keepers **+0.61 pts/gw**.
+   - **Size correction:** the "~+1.0 pt/gw, ~44%" below took mean saves ÷ 3. FPL pays
+     floor(saves/3), and E[floor(S/3)] at 2.9 saves is ~0.63. The bias was **~27%** of a
+     starting keeper's projection.
+   - **Still OUT, recorded as open:** penalty saves (+5 pts, ~0.1 pt/gw), and the save-driven BPS/bonus.
+   Original entry follows.
+   **GOALKEEPER SAVE POINTS ARE NOT MODELLED AT ALL.** [VERIFIED 2026-09-09] Not a
    refinement of an existing term — the term is absent. `bayes_model.project()` composes a
    keeper's match as `+2` for appearing and `−floor(conceded/2)`, and credits nothing for
    the saves he necessarily made to concede that many. `SAVES_PER_POINT = 3` and
