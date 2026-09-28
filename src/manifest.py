@@ -61,8 +61,11 @@ class Node:
     """One artifact. `inputs` are node names; `producer` is a script path or None."""
 
     def __init__(self, name, path, kind, producer=None, inputs=(), columns=(),
-                 nonnull=(), min_rows=0, note=""):
+                 nonnull=(), min_rows=0, note="", absent_ok=False):
         self.name = name
+        # An append-only store that starts empty and is first written by a later event
+        # (team_news/ before any capture). Absent -> skip; present -> every check applies.
+        self.absent_ok = absent_ok
         self.path = path
         self.kind = kind
         self.producer = producer
@@ -146,9 +149,12 @@ _NODES = [
     # itself. Both are append-only logs taken at the moment of a scrape or a board build;
     # neither can be rebuilt afterwards (the article is edited, the graphics are third-party
     # hosted, the pre-team-news prior is gone once the next build overwrites it). Committed.
-    Node("team_news/", config.TEAM_NEWS, "committed",
+    # absent_ok: the first write is a board build WITH that week's previews (the day before
+    # a deadline), so until then absence is the store not yet started, not a lost file. The
+    # GW5 run that exists was taken 10 days after that deadline and must not seed it.
+    Node("team_news/", config.TEAM_NEWS, "committed", absent_ok=True,
          note="per-capture fpl.page article, graphics, doubts line; fplpage.scrape; NOT regenerable"),
-    Node("team_news_ledger.csv", config.TEAM_NEWS_LEDGER, "committed",
+    Node("team_news_ledger.csv", config.TEAM_NEWS_LEDGER, "committed", absent_ok=True,
          columns=("gw", "run_ts", "player_code", "team", "p_pre", "named", "doubt_flag",
                   "p_cons", "p_ceil"),
          nonnull=("gw", "run_ts", "player_code", "p_pre"),
@@ -464,9 +470,12 @@ def _check_local(nodes=None):
             # `locked` keeps MISSING deliberately: a locked board CANNOT be
             # regenerated, so its absence is a real and standing finding — as is a
             # missing external feed or hand-committed file.
-            sev = "skip" if n.kind in ("derived", "cache") else "MISSING"
-            rows.append((n.name, sev,
-                         "not built yet" if sev == "skip" else f"absent: {n.path}"))
+            # `absent_ok` is the one exception, opted into per node: a store first written
+            # by a later event, so absence means "not started", not "lost".
+            sev = "skip" if n.kind in ("derived", "cache") or n.absent_ok else "MISSING"
+            detail = ("not captured yet" if n.absent_ok else "not built yet") \
+                if sev == "skip" else f"absent: {n.path}"
+            rows.append((n.name, sev, detail))
             continue
 
         # A cache is rewritten by whoever needs it, so it is always "current" by
@@ -626,6 +635,16 @@ def selftest():
         for k in ("external", "committed"):
             ng = Node("g.csv", _os.path.join(tmp, "no_such.csv"), k)
             assert check([ng])[0][1] == "MISSING", (k, check([ng]))
+        # An absent_ok committed store is skip while absent, and fully checked once present.
+        nh = Node("h.csv", _os.path.join(tmp, "no_such_store.csv"), "committed",
+                  columns=("gw",), absent_ok=True)
+        assert check([nh])[0][1] == "skip", check([nh])
+        with open(nh.path, "w") as _f:
+            _f.write("other\n1\n")
+        assert check([nh])[0][1] == "SCHEMA", check([nh])
+        # and the flag is only on the stores that are meant to start empty
+        assert {n.name for n in _NODES if n.absent_ok} == \
+            {"team_news/", "team_news_ledger.csv"}, [n.name for n in _NODES if n.absent_ok]
     finally:
         del NODES["a.csv"], NODES["b.csv"], NODES["c.csv"]
     print(f"manifest selftest ok — {len(_NODES)} nodes, "
