@@ -340,6 +340,9 @@ def _default_pred_xi_gw():
 
 PRED_XI_GW = int(os.environ.get("PRED_XI_GW") or _default_pred_xi_gw())
 pl_by_gw = {}
+# Resolved up front, not where it is used: that point is only reached when this week's
+# previews exist, and a week without them left the flag unrecorded and failed the banner.
+_TEAM_NEWS_LEDGER = _flag("TEAM_NEWS_LEDGER", "on")
 if _flag("PRED_XI", "on"):
     try:
         import predicted_xi as pxi
@@ -374,7 +377,7 @@ if _flag("PRED_XI", "on"):
         # Team-news ledger (studies/omit_doubt.py INSTRUMENT): every covered player's start
         # prior before team news, after consensus and after the ceiling, with the doubt
         # flag. Capture only — nothing reads it back — and a failure never costs the board.
-        if _flag("TEAM_NEWS_LEDGER", "on"):
+        if _TEAM_NEWS_LEDGER:
             try:
                 import team_news as tnw
                 _run = tnw._now()
